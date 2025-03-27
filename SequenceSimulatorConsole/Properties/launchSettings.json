@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "SequenceSimulatorConsole": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

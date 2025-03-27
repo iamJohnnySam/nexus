@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package LayoutModels;
+
+service LayoutSimulator {
+  rpc ExecuteCommand_GRPC (Job) returns (CommandReply);
+}
+
+message Job {
+  CommandType action = 1;
+  string transactionID = 2;
+  string target = 3;
+
+  map<int32, string> arguments = 4;
+
+  string rawAction = 5;
+  string rawCommand = 6;
+
+  /*
+  int32 endEffector = 7;
+  int32 slot = 8;
+  string podID = 9;
+  bool state = 10;
+  int32 capacity = 11;
+  string payloadType = 12;
+  string targetStation = 13;
+  */
+}
+
+message CommandReply {
+  ResponseType responseType = 1;
+  string response = 2;
+}
+
+
+enum CommandType {
+    Pick = 0;
+    Place = 1;
+    Door = 2;
+    DoorOpen = 3;
+    DoorClose = 4;
+    Map = 5;
+    Dock = 6;
+    SDock = 7;
+    Undock = 8;
+    Process0 = 9;
+    Process1 = 10;
+    Process2 = 11;
+    Process3 = 12;
+    Process4 = 13;
+    Process5 = 14;
+    Process6 = 15;
+    Process7 = 16;
+    Process8 = 17;
+    Process9 = 18;
+    Power = 19;
+    PowerOn = 20;
+    PowerOff = 21;
+    Home = 22;
+
+    ReadSlot = 23;
+    ReadPod = 24;
+
+    Pod = 25;
+    Payload = 26;
+
+    StartSim = 28;
+    StopSim = 29;
+    PauseSim = 30;
+    ResumeSim = 40;
+}
+
+enum CommandArgType{
+    EndEffector = 0;
+    Slot = 1;
+    TargetStation = 2;
+    PodID = 3;
+    DoorStatus = 4;
+    PowerStatus = 5;
+
+    Capacity = 6;
+    Type = 7;
+
+    Ignore = 8;
+}
+
+enum ResponseType{
+    Ack = 0;
+    Nack = 1;
+    Success = 2;
+    Error = 3;
+}
