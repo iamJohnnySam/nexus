@@ -12,4 +12,12 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SequenceSimulator\SequenceSimulator.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ScottPlot" Version="5.0.54" />
+	</ItemGroup>
+
 </Project>
