@@ -1,11 +1,12 @@
-﻿using Logger;
+﻿using LayoutModels.Stations;
+using Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutModels
+namespace LayoutModels.Readers
 {
     public class Reader : BaseStation, ITarget
     {
@@ -15,7 +16,7 @@ namespace LayoutModels
         private bool ReadSlot { get; set; }
 
         // CONSTRUCTORS
-        public Reader(string readerID, string readerType, Station targetStation, int slot): base(readerID, readerType)
+        public Reader(string readerID, string readerType, Station targetStation, int slot) : base(readerID, readerType)
         {
             StationID = readerID;
             TargetStation = targetStation;
@@ -24,7 +25,7 @@ namespace LayoutModels
 
             targetStation.PairReader(readerID, slot);
         }
-        public Reader(string readerID, string readerType, Station targetStation): base(readerID, readerType)
+        public Reader(string readerID, string readerType, Station targetStation) : base(readerID, readerType)
         {
             StationID = readerID;
             TargetStation = targetStation;

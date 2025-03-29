@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulatorSequence
+namespace SequenceSimulator
 {
     public static class Global
     {

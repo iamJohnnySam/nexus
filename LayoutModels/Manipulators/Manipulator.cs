@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
+using LayoutModels.Stations;
 using Logger;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Collections.Specialized.BitVector32;
 
-namespace LayoutModels
+namespace LayoutModels.Manipulators
 {
     public enum ManipulatorArmStates
     {
@@ -37,7 +38,7 @@ namespace LayoutModels
         public ManipulatorArmStates ArmState { get; private set; } = ManipulatorArmStates.retracted;
 
         // CONSTRUCTORS
-        public Manipulator(string manipulatorID, string ManipulatorType, Dictionary<int, Dictionary<string, Payload>> endEffectors, List<string> endEffectorsTypes, List<string> locations, float motionTime, float extendTime, float retractTime): base(manipulatorID, ManipulatorType, locations)
+        public Manipulator(string manipulatorID, string ManipulatorType, Dictionary<int, Dictionary<string, Payload>> endEffectors, List<string> endEffectorsTypes, List<string> locations, float motionTime, float extendTime, float retractTime) : base(manipulatorID, ManipulatorType, locations)
         {
             EndEffectors = endEffectors;
             EndEffectorTypes = endEffectorsTypes;
@@ -100,7 +101,7 @@ namespace LayoutModels
                 throw new ErrorResponse(ErrorCodes.PayloadNotAvailable, $"Manipulator {StationID} slot {slot} access on was empty.");
 
             PickPlace(true, tID, endEffector, station, slot);
-            
+
             OnPickUp?.Invoke(this, (endEffector, station.StationID, EndEffectors[endEffector]["payload"]));
         }
         public void Place(string tID, int endEffector, Station station, int slot)

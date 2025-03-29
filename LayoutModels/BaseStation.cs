@@ -1,4 +1,5 @@
-﻿using Logger;
+﻿using LayoutModels.Stations;
+using Logger;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,20 +10,6 @@ using System.Threading.Tasks;
 
 namespace LayoutModels
 {
-    public enum StationState
-    {
-        Idle,
-        Off,
-        UnDocked,
-        Opening,
-        Closing,
-        Mapping,
-        BeingAccessed,
-        Processing,
-        Extending,
-        Retracting,
-        Moving,
-    }
     public enum AccessibilityState
     {
         Accessible,
@@ -181,9 +168,9 @@ namespace LayoutModels
 
         public bool CheckIfDoorExists(string location)
         {
-            if (!Locations.ContainsKey(location))
+            if (!Locations.TryGetValue(location, out (bool accessLimited, AccessibilityState accessibility, float transitionTime) value))
                 throw new ErrorResponse(ErrorCodes.ProgramError, $"Station {StationID} does not have location {location}.");
-            return Locations[location].accessLimited;
+            return value.accessLimited;
         }
         public bool CheckAccessible(string location)
         {

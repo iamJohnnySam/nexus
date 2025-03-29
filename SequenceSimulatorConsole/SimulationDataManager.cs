@@ -1,5 +1,7 @@
 ﻿using LayoutModels;
-using SimulatorSequence;
+using LayoutModels.Manipulators;
+using LayoutModels.Stations;
+using SequenceSimulator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Collections.Specialized.BitVector32;
 
-namespace SimulatorSequenceConsole
+namespace SequenceSimulatorConsole
 {
     public class SimulationDataManager(Simulator Simulator, int runTime, int startTPutMeasure, bool showStationDetails)
     {
@@ -89,7 +91,7 @@ namespace SimulatorSequenceConsole
             if (simTimeCount >= limit)
             {
                 simTimeCount = 0;
-                simSpeed = limit / (DateTime.Now.Subtract(lastSimTime).TotalSeconds);
+                simSpeed = limit / DateTime.Now.Subtract(lastSimTime).TotalSeconds;
                 lastSimTime = DateTime.Now;
             }
         }
@@ -143,19 +145,19 @@ namespace SimulatorSequenceConsole
         void DetailedStationUpdate()
         {
             int i = 2;
-            foreach (Station station in sim.layout.Stations.Values)
+            foreach (Station station in sim.layout.StationList.Values)
             {
                 if (showStationDetails)
                 {
                     Console.SetCursorPosition(0, i);
                     StationDetails(station);
-                }   
+                }
                 else
                     WriteConsoleLine(i, $"{station.StationID,4} ({station.slots.Count,2}/{station.Capacity,-2}): {station.State,-14}");
                 i++;
             }
             i++;
-            foreach (Manipulator manipulator in sim.layout.Manipulators.Values)
+            foreach (Manipulator manipulator in sim.layout.ManipulatorList.Values)
             {
                 if (showStationDetails)
                 {
@@ -229,7 +231,7 @@ namespace SimulatorSequenceConsole
                                 {
                                     stringLen += WriteConsole("# ", ConsoleColor.DarkGreen);
                                 }
-                            } 
+                            }
                             else
                                 stringLen += WriteConsole("1 ", ConsoleColor.Blue);
                         }
@@ -246,7 +248,7 @@ namespace SimulatorSequenceConsole
                                     stringLen += WriteConsole("# ", ConsoleColor.DarkGreen);
                                 }
                             }
-                                
+
                             else
                                 stringLen += WriteConsole("1 ", null);
                         }
@@ -334,7 +336,7 @@ namespace SimulatorSequenceConsole
             int remainingSpace = Console.WindowWidth - stringLen;
             if (remainingSpace > 0)
                 Console.Write(new string(' ', remainingSpace));
-        } 
+        }
 
         void ManipulatorDetails(Manipulator manipulator)
         {
@@ -366,38 +368,24 @@ namespace SimulatorSequenceConsole
 
 
             // Manipulator State
-            switch (manipulator.State)
+            color = manipulator.State switch
             {
-                case StationState.Extending:
-                    color = ConsoleColor.Cyan;
-                    break;
-                case StationState.Retracting:
-                    color = ConsoleColor.DarkCyan;
-                    break;
-                case StationState.Moving:
-                    color = ConsoleColor.DarkGray;
-                    break;
-                default:
-                    color = null;
-                    break;
-            }
+                StationState.Extending => (ConsoleColor?)ConsoleColor.Cyan,
+                StationState.Retracting => (ConsoleColor?)ConsoleColor.DarkCyan,
+                StationState.Moving => (ConsoleColor?)ConsoleColor.DarkGray,
+                _ => null,
+            };
             stringLen += WriteConsole($"{manipulator.State,-15} ", color);
             stringLen += WriteConsole("| ");
 
 
             // Manipulator Arm State
-            switch (manipulator.ArmState)
+            color = manipulator.ArmState switch
             {
-                case ManipulatorArmStates.extended:
-                    color = ConsoleColor.Cyan;
-                    break;
-                case ManipulatorArmStates.retracted:
-                    color = ConsoleColor.DarkCyan;
-                    break;
-                default:
-                    color = null;
-                    break;
-            }
+                ManipulatorArmStates.extended => (ConsoleColor?)ConsoleColor.Cyan,
+                ManipulatorArmStates.retracted => (ConsoleColor?)ConsoleColor.DarkCyan,
+                _ => null,
+            };
             stringLen += WriteConsole($"{manipulator.ArmState,-14}, ", color);
             stringLen += WriteConsole("| Location: ");
 
@@ -449,7 +437,7 @@ namespace SimulatorSequenceConsole
                     {
                         if (logSectionLen > LogMessages.Count)
                             Console.ForegroundColor = ConsoleColor.Red;
-                        else if(logMessage.StartsWith("---"))
+                        else if (logMessage.StartsWith("---"))
                             Console.ForegroundColor = ConsoleColor.DarkGray;
                         else
                             Console.ResetColor();

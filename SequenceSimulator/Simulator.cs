@@ -1,4 +1,6 @@
 ﻿using LayoutModels;
+using LayoutModels.Manipulators;
+using LayoutModels.Stations;
 using Logger;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 using static System.Collections.Specialized.BitVector32;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace SimulatorSequence
+namespace SequenceSimulator
 {
     public class Simulator
     {
@@ -62,7 +64,7 @@ namespace SimulatorSequence
             IgnoreLotIDMatching = ignoreLotIDMatching;
 
             layout.InitializeLayout(xmlPath, false);
-            foreach (Manipulator manipulator in layout.Manipulators.Values)
+            foreach (Manipulator manipulator in layout.ManipulatorList.Values)
             {
                 manipulator.OnPickUp += Manipulator_OnPickUp;
                 long manipulatorTotalTime = (long)(manipulator.ExtendTime + manipulator.RetractTime + manipulator.MotionTime);
@@ -71,7 +73,7 @@ namespace SimulatorSequence
                     maxManipulatorTime = manipulatorTotalTime;
                 }
             }
-            foreach(Station station in layout.Stations.Values)
+            foreach(Station station in layout.StationList.Values)
             {
                 station.OnProcessCompleteEvent += Station_OnProcessCompleteEvent;
                 station.OnPayloadReceived += Station_OnPayloadAction;
@@ -180,9 +182,9 @@ namespace SimulatorSequence
         // Station Execution
         private void CheckStations()
         {
-            foreach (string stationID in layout.Stations.Keys)
+            foreach (string stationID in layout.StationList.Keys)
             {
-                Station station = layout.Stations[stationID];
+                Station station = layout.StationList[stationID];
                 station.Tick();
 
                 // Tick if busy
@@ -203,7 +205,7 @@ namespace SimulatorSequence
                     {
                         blockedStations.Add(station);
                     }
-                    Thread t = new Thread(() => CreatePodAndDock(transactionID++.ToString(), stationID));
+                    Thread t = new(() => CreatePodAndDock(transactionID++.ToString(), stationID));
                     t.Start();
                     Global.RunningThreads.Add(t);
                     continue;
@@ -221,7 +223,7 @@ namespace SimulatorSequence
                 }
 
                 bool runNoMoreWafers = false;
-                if (TotalTime > 3 * maxManipulatorTime && waitingTransfer.Count() == 0 && station.AllPayloadsSingularInputState && station.IsReadytoProcess)
+                if (TotalTime > 3 * maxManipulatorTime && waitingTransfer.Count == 0 && station.AllPayloadsSingularInputState && station.IsReadytoProcess)
                     runNoMoreWafers = true;
 
 
@@ -233,7 +235,7 @@ namespace SimulatorSequence
                         blockedStations.Add(station);
                     }
                     DropStationFromWaitingList(station.StationID);
-                    Thread t = new Thread(() => layout.ProcessStation(transactionID++.ToString(), stationID));
+                    Thread t = new(() => layout.ProcessStation(transactionID++.ToString(), stationID));
                     t.Start();
                     Global.RunningThreads.Add(t);
                     continue;
@@ -247,7 +249,7 @@ namespace SimulatorSequence
                         blockedStations.Add(station);
                     }
                     string process = station.PayloadStateMapping.FirstOrDefault(x => x.Value.NextLocation == station.StartLocation).Key;
-                    Thread t = new Thread(() => layout.ProcessStation(transactionID++.ToString(), stationID, process));
+                    Thread t = new(() => layout.ProcessStation(transactionID++.ToString(), stationID, process));
                     t.Start();
                     Global.RunningThreads.Add(t);
                     continue;
@@ -261,7 +263,7 @@ namespace SimulatorSequence
                         blockedStations.Add(station);
                     }
                     DropStationFromWaitingList(station.StationID);
-                    Thread t = new Thread(() => SwapPod(transactionID++.ToString(), stationID));
+                    Thread t = new(() => SwapPod(transactionID++.ToString(), stationID));
                     t.Start();
                     Global.RunningThreads.Add(t);
                     continue;
@@ -307,7 +309,7 @@ namespace SimulatorSequence
             layout.UndockPod(tID, stationID);
             lock (lockObject)
             {
-                blockedStations.Remove(layout.Stations[stationID]);
+                blockedStations.Remove(layout.StationList[stationID]);
             }
         }
 
@@ -317,7 +319,7 @@ namespace SimulatorSequence
             foreach((string thisPayloadID, string thisStationID, int swapSlot, bool _) in waitingTransfer.ToList())
             {
                 // Attempt Swap: Check needed wafer
-                Station thisStation = layout.Stations[thisStationID];
+                Station thisStation = layout.StationList[thisStationID];
 
                 if (!thisStation.slots.ContainsKey(swapSlot))
                 {
@@ -352,7 +354,7 @@ namespace SimulatorSequence
                 // Initiate motion
                 if (swapInPayloadID !=null && swapOutStation!=null && !thisStation.PodDockable)
                 {
-                    Station swapInStation = layout.Stations[waitingTransfer.FirstOrDefault(item => item.PayloadID == swapInPayloadID).StationID];
+                    Station swapInStation = layout.StationList[waitingTransfer.FirstOrDefault(item => item.PayloadID == swapInPayloadID).StationID];
                     int swapInSlot = waitingTransfer.FirstOrDefault(item => item.PayloadID == swapInPayloadID).Slot;
                     InitiateSwap(swapInPayloadID, thisPayloadID, swapInStation, swapInSlot, thisStation, swapSlot, swapOutStation, toSlot);
                 }
@@ -372,7 +374,7 @@ namespace SimulatorSequence
                     continue;
                 }
 
-                Station swapInStation = layout.Stations[swapInStationID];
+                Station swapInStation = layout.StationList[swapInStationID];
 
                 if (!swapInStation.slots.ContainsKey(swapInSlot) || swapInStation.IsSlotLocked(swapInSlot) || blockedStations.Contains(swapInStation))
                 {
@@ -412,7 +414,7 @@ namespace SimulatorSequence
             Station? unprocessableStation = null;
             List<string> unprocessableStationLocations = [];
 
-            foreach (Station nextStation in layout.Stations.Values)
+            foreach (Station nextStation in layout.StationList.Values)
             {
 
                 if (nextStation.State != StationState.Idle || blockedStations.Contains(nextStation) || nextStation.StationID == currentStation.StationID || IsAnyRobotEnRouteToStation(nextStation.StationID))
@@ -510,7 +512,7 @@ namespace SimulatorSequence
                 }
                 fromStation.LockSlot(fromSlot);
                 toStation.LockSlot(toSlot);
-                Thread t = new Thread(() => RunTransfer(transactionID++.ToString(), manipulator, fromStation, fromSlot, toStation, toSlot));
+                Thread t = new(() => RunTransfer(transactionID++.ToString(), manipulator, fromStation, fromSlot, toStation, toSlot));
                 t.Start();
                 Global.RunningThreads.Add(t);
                 waitingTransfer.Remove(waitingTransfer.FirstOrDefault(item => item.PayloadID == payloadID));
@@ -552,7 +554,7 @@ namespace SimulatorSequence
                 {
                     blockedPayloads.Add(swapOutPayloadID);
                 }
-                Thread t = new Thread(() => RunSwap(transactionID++.ToString(), manipulator, pickStation, pickSlot, swapStation, swapSlot, putStation, putSlot));
+                Thread t = new(() => RunSwap(transactionID++.ToString(), manipulator, pickStation, pickSlot, swapStation, swapSlot, putStation, putSlot));
                 t.Start();
                 Global.RunningThreads.Add(t);
             }
@@ -598,7 +600,7 @@ namespace SimulatorSequence
         {
             if (targetStation.PodDockable && !IgnoreLotIDMatching)
             {
-                foreach (Station checkStation in layout.Stations.Values)
+                foreach (Station checkStation in layout.StationList.Values)
                 {
                     if (checkStation.PodDockable && checkStation.PodID == incomingPayload.LotID)
                         return (checkStation, incomingPayload.StartingSlot);
@@ -607,14 +609,14 @@ namespace SimulatorSequence
             }
             else if (targetStation.PodDockable && IgnoreLotIDMatching)
             {
-                foreach (Station checkStation in layout.Stations.Values)
+                foreach (Station checkStation in layout.StationList.Values)
                 {
                     if(checkStation.PodDockable && (checkStation.AllPayloadsSingularOutputState))
                     {
                         return (checkStation, checkStation.GetNextAvailableSlot());
                     }
                 }
-                foreach (Station checkStation in layout.Stations.Values)
+                foreach (Station checkStation in layout.StationList.Values)
                 {
                     if (checkStation.PodDockable && (checkStation.slots.Count == 0))
                     {
@@ -631,9 +633,9 @@ namespace SimulatorSequence
 
         private void CheckManipulators()
         {
-            foreach (string manipulatorID in layout.Manipulators.Keys)
+            foreach (string manipulatorID in layout.ManipulatorList.Keys)
             {
-                Manipulator manipulator = layout.Manipulators[manipulatorID];
+                Manipulator manipulator = layout.ManipulatorList[manipulatorID];
 
                 if (manipulator.State != StationState.Idle)
                 {
@@ -644,7 +646,7 @@ namespace SimulatorSequence
         }
         private Manipulator? CheckAvailableAccessibleManipulators(Station station1, Station station2, Station? station3 = null)
         {
-            foreach(Manipulator manipulator in layout.Manipulators.Values)
+            foreach(Manipulator manipulator in layout.ManipulatorList.Values)
             {
                 if (manipulator.State == StationState.Off)
                 {
@@ -676,7 +678,7 @@ namespace SimulatorSequence
                 if (station3 != null)
                 {
                     station3Locations = station3.ConcurrentLocationAccess ? station3.Locations.Keys.ToList() : [station3.CurrentLocation];
-                    if (!manipulator.EndEffectorTypes.Contains(station2.PayloadType) || !HaveCommonElement(new List<IEnumerable<string>> { station2Locations, station3Locations, manipulatorLocations }))
+                    if (!manipulator.EndEffectorTypes.Contains(station2.PayloadType) || !HaveCommonElement([station2Locations, station3Locations, manipulatorLocations]))
                     {
                         continue;
                     }
@@ -710,7 +712,7 @@ namespace SimulatorSequence
             foreach (var list in lists.Skip(1))
             {
                 commonElements.IntersectWith(list);
-                return commonElements.ToList();
+                return [.. commonElements];
             }
 
             return null;
@@ -743,7 +745,7 @@ namespace SimulatorSequence
         }
         public void CreatePodAndDock(string tID, string stationID)
         {
-            Station station = layout.Stations[stationID];
+            Station station = layout.StationList[stationID];
             string podID = CreateFilledPod(tID, station.Capacity, station.Capacity, station.PayloadType);
             layout.DockPod(tID, stationID, podID);
             layout.OperateStationDoor(tID, stationID, false);
@@ -755,7 +757,7 @@ namespace SimulatorSequence
 
         private bool IsAnyRobotEnRouteToStation(string stationID)
         {
-            foreach (Manipulator manipulator in layout.Manipulators.Values)
+            foreach (Manipulator manipulator in layout.ManipulatorList.Values)
             {
                 if (manipulator.EnRouteStation == stationID || (manipulator.CurrentLocation == stationID && manipulator.ArmState != ManipulatorArmStates.retracted && (manipulator.State != StationState.Idle || manipulator.State != StationState.Off)))
                     { return true; }

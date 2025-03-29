@@ -1,4 +1,7 @@
-﻿using Logger;
+﻿using LayoutModels.Manipulators;
+using LayoutModels.Readers;
+using LayoutModels.Stations;
+using Logger;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,8 +26,8 @@ namespace LayoutModels
         public event EventHandler<LogMessage>? OnLogEvent;
 
         public ConcurrentDictionary<string, Pod> Pods { get; set; } = [];
-        public Dictionary<string, Station> Stations { get; set; } = [];
-        public Dictionary<string, Manipulator> Manipulators { get; set; } = [];
+        public Dictionary<string, Station> StationList { get; set; } = [];
+        public Dictionary<string, Manipulator> ManipulatorList { get; set; } = [];
         public Dictionary<string, Reader> Readers { get; set; } = [];
 
 
@@ -90,9 +93,9 @@ namespace LayoutModels
                 {
                     int j = i + 1;
                     string stationName = $"{identifier}{j++}";
-                    while (Stations.ContainsKey(stationName))
+                    while (StationList.ContainsKey(stationName))
                         stationName = $"{identifier}{j}";
-                    Stations.Add(stationName, new Station(
+                    StationList.Add(stationName, new Station(
                         stationID: stationName,
                         stationType: identifier,
                         payloadType: payloadType,
@@ -109,8 +112,8 @@ namespace LayoutModels
                         lowPriority: station.Element("LowPriority")?.Value == "1",
                         partialProcess: station.Element("PartialProcess")?.Value == "1",
                         acceptedCommands: (station.Element("AcceptedCommands")?.Value ?? "").Split(',').Select(loc => loc.Trim()).ToList()));
-                    Stations[stationName].OnLogEvent += LogEvent;
-                    Stations[stationName].Tickable = !autoMode;
+                    StationList[stationName].OnLogEvent += LogEvent;
+                    StationList[stationName].Tickable = !autoMode;
                 }
             }
         }
@@ -136,11 +139,11 @@ namespace LayoutModels
                 {
                     int j = i + 1;
                     string manipulatornName = $"{identifier}{j++}";
-                    while (Manipulators.ContainsKey(manipulatornName))
+                    while (ManipulatorList.ContainsKey(manipulatornName))
                         manipulatornName = $"{identifier}{j}";
-                    Manipulators.Add(manipulatornName, new Manipulator(manipulatornName, identifier, endEffectors, endEffectorsTypes, locations, motionTime, extendTime, retractTime));
-                    Manipulators[manipulatornName].OnLogEvent += LogEvent;
-                    Manipulators[manipulatornName].Tickable = !autoMode;
+                    ManipulatorList.Add(manipulatornName, new Manipulator(manipulatornName, identifier, endEffectors, endEffectorsTypes, locations, motionTime, extendTime, retractTime));
+                    ManipulatorList[manipulatornName].OnLogEvent += LogEvent;
+                    ManipulatorList[manipulatornName].Tickable = !autoMode;
                 }
             }
         }
@@ -156,13 +159,13 @@ namespace LayoutModels
                 int j = 1;
                 string targetStation = $"{stationID}{j}";
 
-                while (Stations.ContainsKey(targetStation))
+                while (StationList.ContainsKey(targetStation))
                 {
                     string readerName = $"{identifier}{j++}";
                     if (type == "PAYLOAD")
-                        Readers.Add(readerName, new Reader(readerName, identifier, Stations[targetStation], slot));
+                        Readers.Add(readerName, new Reader(readerName, identifier, StationList[targetStation], slot));
                     else
-                        Readers.Add(readerName, new Reader(readerName, identifier, Stations[targetStation]));
+                        Readers.Add(readerName, new Reader(readerName, identifier, StationList[targetStation]));
                     j++;
                     targetStation = $"{stationID}{j}";
 
@@ -201,12 +204,12 @@ namespace LayoutModels
         }
         private void CheckStationExist(string target)
         {
-            if (!Stations.ContainsKey(target))
+            if (!StationList.ContainsKey(target))
                 throw new NackResponse(NackCodes.TargetNotExist, $"Could not find station {target}.");
         }
         private void CheckManipulatorExist(string target)
         {
-            if (!Manipulators.ContainsKey(target))
+            if (!ManipulatorList.ContainsKey(target))
                 throw new NackResponse(NackCodes.TargetNotExist, $"Could not find manipulator {target}.");
         }
         private void CheckReaderExist(string target)
@@ -221,7 +224,7 @@ namespace LayoutModels
         }
         public void DockPod(string tID, string stationID, string podID)
         {
-            Stations[stationID].Dock(tID, Pods[podID]);
+            StationList[stationID].Dock(tID, Pods[podID]);
             bool removed = Pods.TryRemove(podID, out _);
             while (!removed)
             {
@@ -231,12 +234,12 @@ namespace LayoutModels
 
         public void UndockPod(Job command)
         {
-            Pod outgoingPod = Stations[command.Target].UnDock(command.TransactionID);
+            Pod outgoingPod = StationList[command.Target].UnDock(command.TransactionID);
             Pods.TryAdd(outgoingPod.PodID, outgoingPod);
         }
         public void UndockPod(string tID, string stationID)
         {
-            Pod outgoingPod = Stations[stationID].UnDock(tID);
+            Pod outgoingPod = StationList[stationID].UnDock(tID);
             bool added = Pods.TryAdd(outgoingPod.PodID, outgoingPod);
             while (!added)
             {
@@ -246,26 +249,26 @@ namespace LayoutModels
 
         public void ManipulatorPick(string tID, string manipulatorID, int EndEffector, string targetStationID, int slot)
         {
-            Manipulators[manipulatorID].Pick(tID, EndEffector, Stations[targetStationID], slot);
+            ManipulatorList[manipulatorID].Pick(tID, EndEffector, StationList[targetStationID], slot);
         } 
         
         public void ManipulatorPlace(string tID, string manipulatorID, int EndEffector, string targetStationID, int slot)
         {
-            Manipulators[manipulatorID].Place(tID, EndEffector, Stations[targetStationID], slot);
+            ManipulatorList[manipulatorID].Place(tID, EndEffector, StationList[targetStationID], slot);
         }
 
         public void ProcessStation(string tID, string stationID, string? process = null)
         {
-            Stations[stationID].Process(tID, process);
+            StationList[stationID].Process(tID, process);
         }
         public void ProcessStation(Job command)
         {
-            Stations[command.Target].Process(command.TransactionID);
+            StationList[command.Target].Process(command.TransactionID);
         }
 
         public void OperateStationDoor(string tID, string stationID, bool doorState)
         {
-            Station station = Stations[stationID];
+            Station station = StationList[stationID];
             if (station.Locations.Keys.Count == 1)
             {
                 station.Door(tID, station.Locations.Keys.First(), doorState);
@@ -277,7 +280,7 @@ namespace LayoutModels
         }
         public void OperateStationDoor(string tID, string stationID, string location, bool doorState)
         {
-            Stations[stationID].Door(tID, location, doorState);
+            StationList[stationID].Door(tID, location, doorState);
         }
 
         public static string GetID(int length)
@@ -302,11 +305,11 @@ namespace LayoutModels
                     CheckManipulatorExist(command.Target);
                     CheckStationExist(command.Arguments[(int)CommandArgType.TargetStation]);
 
-                    if (Manipulators[command.Target].State == StationState.Off)
+                    if (ManipulatorList[command.Target].State == StationState.Off)
                         throw new NackResponse(NackCodes.PowerOff, $"Simulator caught Manipulator {command.Target} power off.");
-                    if (Manipulators[command.Target].State != StationState.Idle)
+                    if (ManipulatorList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Manipulator {command.Target} busy.");
-                    if (!Manipulators[command.Target].EndEffectors.ContainsKey(Int32.Parse(command.Arguments[(int)CommandArgType.EndEffector])))
+                    if (!ManipulatorList[command.Target].EndEffectors.ContainsKey(Int32.Parse(command.Arguments[(int)CommandArgType.EndEffector])))
                         throw new NackResponse(NackCodes.EndEffectorMissing, $"Simulator caught Manipulator {command.Target} does not have End Effector.");
                     break;
 
@@ -315,11 +318,11 @@ namespace LayoutModels
                     CheckManipulatorExist(command.Target);
                     CheckStationExist(command.Arguments[(int)CommandArgType.TargetStation]);
 
-                    if (Manipulators[command.Target].State == StationState.Off)
+                    if (ManipulatorList[command.Target].State == StationState.Off)
                         throw new NackResponse(NackCodes.PowerOff, $"Simulator caught Manipulator {command.Target} power off.");
-                    if (Manipulators[command.Target].State != StationState.Idle)
+                    if (ManipulatorList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Manipulator {command.Target} busy.");
-                    if (!Manipulators[command.Target].EndEffectors.ContainsKey(Int32.Parse(command.Arguments[(int)CommandArgType.EndEffector])))
+                    if (!ManipulatorList[command.Target].EndEffectors.ContainsKey(Int32.Parse(command.Arguments[(int)CommandArgType.EndEffector])))
                         throw new NackResponse(NackCodes.EndEffectorMissing, $"Simulator caught Manipulator {command.Target} does not have End Effector.");
                     break;
 
@@ -327,9 +330,9 @@ namespace LayoutModels
                 case CommandType.Door:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
                     // todo:
                     throw new NotImplementedException();
@@ -340,9 +343,9 @@ namespace LayoutModels
                 case CommandType.DoorOpen:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
                     // todo:
                     throw new NotImplementedException();
@@ -354,9 +357,9 @@ namespace LayoutModels
                 case CommandType.DoorClose:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
                     // todo:
                     throw new NotImplementedException();
@@ -368,11 +371,11 @@ namespace LayoutModels
                 case CommandType.Map:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
-                    if (!Stations[command.Target].Mappable)
+                    if (!StationList[command.Target].Mappable)
                         throw new NackResponse(NackCodes.NotMappable, $"Simulator caught Station {command.Target} not mappable.");
                     break;
 
@@ -387,11 +390,11 @@ namespace LayoutModels
                     CheckStationExist(command.Target);
                     CheckPodExist(command.Arguments[(int)CommandArgType.PodId]);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
-                    if (!Stations[command.Target].PodDockable)
+                    if (!StationList[command.Target].PodDockable)
                         throw new NackResponse(NackCodes.NotDockable, $"Simulator caught Station {command.Target} not dockable.");
                     break;
 
@@ -399,11 +402,11 @@ namespace LayoutModels
                 case CommandType.Undock:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
-                    if (!Stations[command.Target].PodDockable)
+                    if (!StationList[command.Target].PodDockable)
                         throw new NackResponse(NackCodes.NotDockable, $"Simulator caught Station {command.Target} not dockable.");
                     break;
 
@@ -419,9 +422,9 @@ namespace LayoutModels
                 case CommandType.Process9:
                     CheckStationExist(command.Target);
 
-                    if (!Stations[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
+                    if (!StationList[command.Target].AcceptedCommands.Contains(command.RawAction) && commandLock)
                         throw new NackResponse(NackCodes.CommandError, $"Simulator could not find {command.RawAction} in accepted list of commands for this station.");
-                    if (Stations[command.Target].State != StationState.Idle)
+                    if (StationList[command.Target].State != StationState.Idle)
                         throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
                     break;
 
@@ -434,14 +437,14 @@ namespace LayoutModels
 
 
                 case CommandType.Home:
-                    if (Manipulators.TryGetValue(command.Target, out Manipulator? manipulator))
+                    if (ManipulatorList.TryGetValue(command.Target, out Manipulator? manipulator))
                     {
                         if (manipulator.State == StationState.Off)
                             throw new NackResponse(NackCodes.PowerOff, $"Simulator caught Manipulator {command.Target} power off.");
                         if (manipulator.State != StationState.Idle)
                             throw new NackResponse(NackCodes.Busy, $"Simulator caught Manipulator {command.Target} busy.");
                     }
-                    else if (Stations.TryGetValue(command.Target, out Station? station))
+                    else if (StationList.TryGetValue(command.Target, out Station? station))
                     {
                         if (station.State != StationState.Idle)
                             throw new NackResponse(NackCodes.Busy, $"Simulator caught Station {command.Target} busy.");
@@ -525,7 +528,7 @@ namespace LayoutModels
                     break;
 
                 case CommandType.Map:
-                    List<int> mapData = Stations[command.Target].OpenDoorAndMap(command.TransactionID).Cast<int>().ToList();
+                    List<int> mapData = StationList[command.Target].OpenDoorAndMap(command.TransactionID).Cast<int>().ToList();
                     response = string.Join("", mapData);
                     break;
 
@@ -554,27 +557,27 @@ namespace LayoutModels
                     if (ConvertStringtoBool(command.Arguments[(int)CommandArgType.PowerStatus]))
                     {
                         command.Action = CommandType.PowerOn;
-                        Manipulators[command.Target].PowerOn(command.TransactionID);
+                        ManipulatorList[command.Target].PowerOn(command.TransactionID);
                     }
                     else
                     {
                         command.Action = CommandType.PowerOff;
-                        Manipulators[command.Target].PowerOff(command.TransactionID);
+                        ManipulatorList[command.Target].PowerOff(command.TransactionID);
                     }
                     break;
 
                 case CommandType.PowerOn:
-                    Manipulators[command.Target].PowerOn(command.TransactionID);
+                    ManipulatorList[command.Target].PowerOn(command.TransactionID);
                     break;
 
                 case CommandType.PowerOff:
-                    Manipulators[command.Target].PowerOff(command.TransactionID);
+                    ManipulatorList[command.Target].PowerOff(command.TransactionID);
                     break;
 
                 case CommandType.Home:
-                    if (Manipulators.TryGetValue(command.Target, out Manipulator? manipulator))
+                    if (ManipulatorList.TryGetValue(command.Target, out Manipulator? manipulator))
                         manipulator.Home(command.TransactionID);
-                    else if (Stations.TryGetValue(command.Target, out Station? station))
+                    else if (StationList.TryGetValue(command.Target, out Station? station))
                         OperateStationDoor(command.TransactionID, station.StationID, true);
 
                     else

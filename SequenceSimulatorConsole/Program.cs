@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.WellKnownTypes;
 using LayoutModels;
-using SimulatorSequence;
+using SequenceSimulator;
+using SequenceSimulatorConsole;
 using SimulatorSequenceConsole;
 
 Simulator simulator;
@@ -8,8 +9,8 @@ SimulationDataManager simResults;
 
 Directory.CreateDirectory("logs\\");
 Directory.CreateDirectory("layouts\\");
-string pathLogs = $"logs\\Logs_{System.Environment.MachineName}_{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.txt";
-string pathResults = $"logs\\Results_{System.Environment.MachineName}_{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.txt";
+string pathLogs = $"logs\\Logs_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.txt";
+string pathResults = $"logs\\Results_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.txt";
 
 string filePath = @"layouts\";
 
@@ -48,7 +49,17 @@ if (File.Exists(filePath) && Path.GetExtension(filePath).Equals(".xml", StringCo
 else if (Directory.Exists(filePath))
 {
     var xmlFiles = Directory.GetFiles(filePath, "*.xml");
-    simulationsToRun = UIPrompts.PromptFileOptions("Which file do you want to run?", xmlFiles);
+    if (xmlFiles.Length > 0)
+    {
+        simulationsToRun = UIPrompts.PromptFileOptions("Which file do you want to run?", xmlFiles);
+    }
+    else
+    {
+        Console.WriteLine("No XML layout files found.");
+        Console.WriteLine("This program will now exit.");
+        Console.ReadLine();
+        Environment.Exit(0);
+    }
 }
 else
 {
@@ -107,13 +118,13 @@ void RunLayout(string layoutFile, int time, int stepTime = 1)
     simResults = new(simulator, time, startTPutMeasure, onScreenDetails);
 
     simulator.InitializeSimulator(layoutFile, ignoreLotIDMatching);
-    string fileName = layoutFile.Substring(layoutFile.LastIndexOf('\\') + 1).Replace(".xml", "");
-    string pathTput = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.txt";
-    string pathTputImg = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.png";
+    string fileName = layoutFile[(layoutFile.LastIndexOf('\\') + 1)..].Replace(".xml", "");
+    string pathTput = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.txt";
+    string pathTputImg = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.png";
 
     Console.Clear();
 
-    int TopSectionHeight = simulator.layout.Stations.Keys.Count + simulator.layout.Manipulators.Keys.Count + 4;
+    int TopSectionHeight = simulator.layout.StationList.Keys.Count + simulator.layout.ManipulatorList.Keys.Count + 4;
 
     simulator.OnLogEvent += simResults.Simulator_OnLogEvent;
     // simulator.OnLogEvent += Simulator_PrintLogs;
@@ -180,7 +191,7 @@ void RunLayout(string layoutFile, int time, int stepTime = 1)
 
     if (plot)
     {
-        Thread plotter = new(() => new ThroughputPlotter($"{fileName}-{DateTime.Now.ToString("yyyy MMM dd")}", tPutResults).PlotGraph(pathTputImg));
+        Thread plotter = new(() => new ThroughputPlotter($"{fileName}-{DateTime.Now:yyyy MMM dd}", tPutResults).PlotGraph(pathTputImg));
         plotter.Start();
     }
     UIPrompts.Transition();
@@ -194,11 +205,9 @@ void updateConsole(string layoutFile, int TopSectionHeight)
 void WriteToFile(string path, string msg)
 {
     // Ensure the file is created if it doesn't exist and allow shared read access
-    using (FileStream fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
-    using (StreamWriter sw = new StreamWriter(fs))
-    {
-        sw.WriteLine(msg);
-    }
+    using FileStream fs = new(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+    using StreamWriter sw = new(fs);
+    sw.WriteLine(msg);
 }
 
 void ListenToKey()
@@ -222,7 +231,7 @@ void ListenToKey()
         }
         if (key.Modifiers.HasFlag(ConsoleModifiers.Control) && key.Key == ConsoleKey.O)
         {
-            if (delayToUse < DelayValues.Count() - 1)
+            if (delayToUse < DelayValues.Count - 1)
             {
                 delayToUse++;
             }

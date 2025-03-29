@@ -8,17 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
-namespace LayoutModels
+namespace LayoutModels.Stations
 {
-    public enum MapCodes
-    {
-        Empty = 0,
-        Available = 1,
-        Double = 2,
-        Cross = 3,
-    }
-
-
+    
     public class Station : BaseStation, ITarget
     {
         // EVENTS
@@ -45,17 +37,19 @@ namespace LayoutModels
         public bool AutoDoorControl { get; private set; }
         public bool PartialProcessApproved { get; set; } = false;
         private long LastActionTime { get; set; }
-        public long TimeSinceLastAction { get
+        public long TimeSinceLastAction
+        {
+            get
             {
                 return internalClock - LastActionTime;
             }
         }
-        
+
         public string? PodID
         {
             get
             {
-                if (PodDockable && (podID != null))
+                if (PodDockable && podID != null)
                     return podID;
                 else
                     throw new ErrorResponse(ErrorCodes.PodNotAvailable, $"Station {StationID} did not have a pod docked.");
@@ -115,23 +109,27 @@ namespace LayoutModels
                 return CheckAllSlots(payloadState);
             }
         }
-        public bool IsReadytoProcess 
-        { 
+        public bool IsReadytoProcess
+        {
             get
             {
-                return (State == StationState.Idle && Processable) && AllPayloadsSingularInputState && ((AutoDoorControl) || (!AutoDoorControl && AllClosableDoorsClosed));
+                return State == StationState.Idle && Processable && AllPayloadsSingularInputState && (AutoDoorControl || !AutoDoorControl && AllClosableDoorsClosed);
             }
         }
         public bool IsFullandReadytoProcess
         {
             get
             {
-                return IsReadytoProcess && (Capacity == slots.Count);
+                return IsReadytoProcess && Capacity == slots.Count;
             }
         }
-        public bool IsReadytoUndock { get {
-                return (State == StationState.Idle) && PodDockable && AllPayloadsSingularOutputState && (slots.Keys.Count == podInputQuantity) && ((AutoDoorControl) || (!AutoDoorControl && AllClosableDoorsClosed));
-            } }
+        public bool IsReadytoUndock
+        {
+            get
+            {
+                return State == StationState.Idle && PodDockable && AllPayloadsSingularOutputState && slots.Keys.Count == podInputQuantity && (AutoDoorControl || !AutoDoorControl && AllClosableDoorsClosed);
+            }
+        }
         public bool LowPriority { get; set; } = false;
 
 
@@ -140,10 +138,10 @@ namespace LayoutModels
         // CONSTRUCTORS
         public Station(string stationID, string stationType, string payloadType, Dictionary<string, (string, string, string, float)> payloadStateMap, int capacity,
             List<string> accessibleLocationsWithDoor, List<string> accessibleLocationsWithoutDoor, List<float> doorTransitionTime, bool concurrentLocationAccess,
-            bool processable, 
+            bool processable,
             bool podDockable, bool autoLoadPod, bool autoDoorControl,
             bool lowPriority, bool partialProcess,
-            List<string> acceptedCommands): base(stationID, stationType, accessibleLocationsWithDoor, accessibleLocationsWithoutDoor, doorTransitionTime, concurrentLocationAccess)
+            List<string> acceptedCommands) : base(stationID, stationType, accessibleLocationsWithDoor, accessibleLocationsWithoutDoor, doorTransitionTime, concurrentLocationAccess)
         {
             State = StationState.Idle;
             PayloadType = payloadType;
@@ -175,7 +173,7 @@ namespace LayoutModels
         // INTERNAL PROCESSES
         private void Actioned()
         {
-            LastActionTime = internalClock; 
+            LastActionTime = internalClock;
         }
         public bool CheckInputWafer(string waferState)
         {
@@ -185,7 +183,7 @@ namespace LayoutModels
                 return true;
             if (slots.Count == Capacity)
                 return false;
-            
+
             foreach (Payload payload in slots.Values)
             {
                 if (IsAnInputState(payload.PayloadState) && payload.PayloadState != waferState)
@@ -273,7 +271,7 @@ namespace LayoutModels
         }
         private bool CheckAllSlots(string payloadState)
         {
-            foreach(Payload payload in slots.Values)
+            foreach (Payload payload in slots.Values)
             {
                 if (payload.PayloadState != payloadState)
                 {
@@ -395,7 +393,7 @@ namespace LayoutModels
         private void CloseAllDoors(string tID)
         {
             List<Thread> threads = [];
-            foreach (KeyValuePair< string, (bool accessLimited, AccessibilityState accessibility, float transitionTime)> kvp in Locations)
+            foreach (KeyValuePair<string, (bool accessLimited, AccessibilityState accessibility, float transitionTime)> kvp in Locations)
             {
                 if (kvp.Value.accessLimited && kvp.Value.accessibility == AccessibilityState.Accessible)
                 {
@@ -405,7 +403,7 @@ namespace LayoutModels
                     threads.Add(t);
                 }
             }
-            while (!AllClosableDoorsClosed || State != StationState.Idle);
+            while (!AllClosableDoorsClosed || State != StationState.Idle) ;
             Log(new LogMessage(tID, $"Station {StationID} All closable doors closed."));
             foreach (Thread thread in threads)
             {
@@ -531,7 +529,7 @@ namespace LayoutModels
 
             State = StationState.Mapping;
             Log(new LogMessage(tID, $"Station {StationID} door Mapping."));
-            
+
 
             if (!CheckIfDoorExists(mapLocation))
             {
@@ -609,7 +607,7 @@ namespace LayoutModels
 
         public bool IsSlotLocked(int slot)
         {
-            return (blockedSlots.Contains(slot));
+            return blockedSlots.Contains(slot);
         }
 
         // READER CONTROLS
