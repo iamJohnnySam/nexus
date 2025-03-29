@@ -58,7 +58,7 @@ namespace LayoutModels.Stations
             private set
             {
                 podID = value;
-                Log(new LogMessage($"Station {StationID} Pod ID updated to {value}"));
+                Log($"Station {StationID} Pod ID updated to {value}");
             }
         }
         private string? podID = null;
@@ -70,7 +70,7 @@ namespace LayoutModels.Stations
             private set
             {
                 statusMapped = value;
-                Log(new LogMessage($"Station {StationID} Map Status updated to {value}"));
+                Log($"Station {StationID} Map Status updated to {value}");
             }
         }
         private bool statusMapped = false;
@@ -109,21 +109,21 @@ namespace LayoutModels.Stations
                 return CheckAllSlots(payloadState);
             }
         }
-        public bool IsReadytoProcess
+        public bool IsReadyToProcess
         {
             get
             {
                 return State == StationState.Idle && Processable && AllPayloadsSingularInputState && (AutoDoorControl || !AutoDoorControl && AllClosableDoorsClosed);
             }
         }
-        public bool IsFullandReadytoProcess
+        public bool IsFullAndReadyToProcess
         {
             get
             {
-                return IsReadytoProcess && Capacity == slots.Count;
+                return IsReadyToProcess && Capacity == slots.Count;
             }
         }
-        public bool IsReadytoUndock
+        public bool IsReadyToUndock
         {
             get
             {
@@ -303,20 +303,20 @@ namespace LayoutModels.Stations
             podInputQuantity = pod.slots.Values.Count;
             statusMapped = false;
 
-            Log(new LogMessage(tID, $"Pod {pod.PodID} was docked to Station {StationID}."));
+            Log(tID, $"Pod {pod.PodID} was docked to Station {StationID}.");
 
             if (AutoLoadPod)
             {
                 if (Mappable)
                 {
-                    Log(new LogMessage(tID, $"Station {StationID} auto loading and mapping pod {PodID} at {SingleAccessLocation}."));
+                    Log(tID, $"Station {StationID} auto loading and mapping pod {PodID} at {SingleAccessLocation}.");
                     OpenDoorAndMap(tID);
                 }
                 else
                 {
                     if (SingleLocationHasDoor)
                     {
-                        Log(new LogMessage(tID, $"Station {StationID} auto loading pod {PodID} at {SingleAccessLocation}."));
+                        Log(tID, $"Station {StationID} auto loading pod {PodID} at {SingleAccessLocation}.");
                         Door(tID, SingleAccessLocation, false);
                     }
                 }
@@ -351,38 +351,38 @@ namespace LayoutModels.Stations
             State = StationState.UnDocked;
             Actioned();
 
-            Log(new LogMessage(tID, $"Pod {pod.PodID} was undocked from Station {StationID}."));
+            Log(tID, $"Pod {pod.PodID} was undocked from Station {StationID}.");
             return pod;
         }
         public void Door(string tID, string location, bool requestedStatus)
         {
             if (!CheckIfDoorExists(location))
             {
-                Log(new LogMessage(tID, $"Station {StationID} has no door in location {location}."));
+                Log(tID, $"Station {StationID} has no door in location {location}.");
                 return;
             }
 
             if (requestedStatus && Locations[location].accessibility == AccessibilityState.Accessible)
             {
-                Log(new LogMessage(tID, $"Station {StationID} door Closing."));
+                Log(tID, $"Station {StationID} door Closing.");
                 State = StationState.Closing;
                 ChangeAccessibility(location, AccessibilityState.NotAccessible);
                 ProcessWait(tID, Locations[location].transitionTime);
                 State = StationState.Idle;
-                Log(new LogMessage(tID, $"Station {StationID} door Closed."));
+                Log(tID, $"Station {StationID} door Closed.");
             }
             else if (!requestedStatus && Locations[location].accessibility == AccessibilityState.NotAccessible)
             {
-                Log(new LogMessage(tID, $"Station {StationID} door Opening."));
+                Log(tID, $"Station {StationID} door Opening.");
                 State = StationState.Opening;
                 ProcessWait(tID, Locations[location].transitionTime);
                 ChangeAccessibility(location, AccessibilityState.Accessible);
                 State = StationState.Idle;
-                Log(new LogMessage(tID, $"Station {StationID} door Open."));
+                Log(tID, $"Station {StationID} door Open.");
             }
             else
             {
-                Log(new LogMessage(tID, $"Station {StationID} was in state {State}."));
+                Log(tID, $"Station {StationID} was in state {State}.");
             }
             Actioned();
         }
@@ -404,7 +404,7 @@ namespace LayoutModels.Stations
                 }
             }
             while (!AllClosableDoorsClosed || State != StationState.Idle) ;
-            Log(new LogMessage(tID, $"Station {StationID} All closable doors closed."));
+            Log(tID, $"Station {StationID} All closable doors closed.");
             foreach (Thread thread in threads)
             {
                 if (thread.IsAlive)
@@ -482,7 +482,7 @@ namespace LayoutModels.Stations
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"Station {StationID} has doors open.");
 
             State = StationState.Processing;
-            Log(new LogMessage(tID, $"Station {StationID} Process Started."));
+            Log(tID, $"Station {StationID} Process Started.");
 
             ProcessWait(tID, selectedProcessTime);
 
@@ -499,7 +499,7 @@ namespace LayoutModels.Stations
 
             Actioned();
             State = StationState.Idle;
-            Log(new LogMessage(tID, $"Station {StationID} Process Complete."));
+            Log(tID, $"Station {StationID} Process Complete.");
 
             if (AutoDoorControl)
                 OpenRelaventDoors(tID);
@@ -528,12 +528,12 @@ namespace LayoutModels.Stations
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"Station {StationID} does not have a door");
 
             State = StationState.Mapping;
-            Log(new LogMessage(tID, $"Station {StationID} door Mapping."));
+            Log(tID, $"Station {StationID} door Mapping.");
 
 
             if (!CheckIfDoorExists(mapLocation))
             {
-                Log(new LogMessage(tID, $"Station {StationID} has no door in location {mapLocation}."));
+                Log(tID, $"Station {StationID} has no door in location {mapLocation}.");
             }
             else
             {
@@ -543,7 +543,7 @@ namespace LayoutModels.Stations
             List<MapCodes> slotMap = GetMap();
             ChangeAccessibility(mapLocation, AccessibilityState.Accessible);
             State = StationState.Idle;
-            Log(new LogMessage(tID, $"Station {StationID} was mapped."));
+            Log(tID, $"Station {StationID} was mapped.");
             return slotMap;
         }
 
@@ -567,7 +567,7 @@ namespace LayoutModels.Stations
         public string AcceptPayload(string tID, Payload payload, int slot)
         {
             slots.Add(slot, payload);
-            Log(new LogMessage(tID, $"Payload {payload.PayloadID} added to slot {slot} on Station {StationID}."));
+            Log(tID, $"Payload {payload.PayloadID} added to slot {slot} on Station {StationID}.");
             OnDropOff?.Invoke(this, (slot, payload));
             OnPayloadReceived?.Invoke(this, payload);
             UnlockSlot(slot);
@@ -578,7 +578,7 @@ namespace LayoutModels.Stations
         {
             Payload payload = slots[slot];
             slots.Remove(slot);
-            Log(new LogMessage(tID, $"Payload {payload.PayloadID} removed from slot {slot} on Station {StationID}."));
+            Log(tID, $"Payload {payload.PayloadID} removed from slot {slot} on Station {StationID}.");
             OnPickUp?.Invoke(this, slot);
             OnPayloadRelease?.Invoke(this, payload);
             UnlockSlot(slot);
@@ -614,12 +614,12 @@ namespace LayoutModels.Stations
         public void PairReader(string readerID, int slot)
         {
             OnPayloadReaderPairEvent?.Invoke(this, (readerID, slot));
-            Log(new LogMessage($"Station {StationID} was paired with payload reader {readerID} at slot {slot}."));
+            Log($"Station {StationID} was paired with payload reader {readerID} at slot {slot}.");
         }
         public void PairReader(string readerID)
         {
             OnPodReaderPairEvent?.Invoke(this, readerID);
-            Log(new LogMessage($"Station {StationID} was paired with pod reader {readerID}"));
+            Log($"Station {StationID} was paired with pod reader {readerID}");
         }
     }
 }

@@ -18,7 +18,7 @@ namespace SequenceSimulator
 
         public bool IgnoreLotIDMatching { get; set; }
 
-        public event EventHandler<LogMessage>? OnLogEvent;
+        public event EventHandler<(string? tID, string message)>? OnLogEvent;
         int transactionID = 0;
         public int completedPayloads = 0;
 
@@ -213,7 +213,7 @@ namespace SequenceSimulator
 
                 // Check if station is processable with partial wafers
                 bool runableAtPartial = false;
-                if (station.AllPayloadsSingularInputState && station.PartialProcessApproved && station.TimeSinceLastAction > (3 * maxManipulatorTime) && station.IsReadytoProcess)
+                if (station.AllPayloadsSingularInputState && station.PartialProcessApproved && station.TimeSinceLastAction > (3 * maxManipulatorTime) && station.IsReadyToProcess)
                 {
                     (string? process, float pTime) = station.GetProcessableProcess();
                     if (process != null && station.TimeSinceLastAction > pTime)
@@ -223,12 +223,12 @@ namespace SequenceSimulator
                 }
 
                 bool runNoMoreWafers = false;
-                if (TotalTime > 3 * maxManipulatorTime && waitingTransfer.Count == 0 && station.AllPayloadsSingularInputState && station.IsReadytoProcess)
+                if (TotalTime > 3 * maxManipulatorTime && waitingTransfer.Count == 0 && station.AllPayloadsSingularInputState && station.IsReadyToProcess)
                     runNoMoreWafers = true;
 
 
                 // Check Processable
-                if ((station.IsFullandReadytoProcess || runableAtPartial || runNoMoreWafers) && station.State == StationState.Idle && !IsAnyRobotEnRouteToStation(station.StationID))
+                if ((station.IsFullAndReadyToProcess || runableAtPartial || runNoMoreWafers) && station.State == StationState.Idle && !IsAnyRobotEnRouteToStation(station.StationID))
                 {
                     lock (lockObject)
                     {
@@ -256,7 +256,7 @@ namespace SequenceSimulator
                 }
 
                 // Check Undock-able
-                if (station.IsReadytoUndock && station.State == StationState.Idle && !IsAnyRobotEnRouteToStation(station.StationID))
+                if (station.IsReadyToUndock && station.State == StationState.Idle && !IsAnyRobotEnRouteToStation(station.StationID))
                 {
                     lock (lockObject)
                     {
@@ -281,12 +281,12 @@ namespace SequenceSimulator
                         if (!waitingTransfer.Any(item => item.PayloadID == payload.PayloadID) && !blockedPayloads.Contains(payload.PayloadID))
                         {
                             waitingTransfer.Add((payload.PayloadID, stationID, slot, !station.LowPriority));
-                            OnLogEvent?.Invoke(this, new LogMessage($"Payload {payload.PayloadID} added to waiting list"));
+                            OnLogEvent?.Invoke(this, (null, $"Payload {payload.PayloadID} added to waiting list"));
                         }
                     }
                 }
 
-                // sometimes the simulation doesnt unblock the systems. This is a fail safe
+                // sometimes the simulation doesn't unblock the systems. This is a fail safe
                 if (station.State == StationState.Idle && blockedStations.Contains(station) && !IsAnyRobotEnRouteToStation(stationID))
                 {
                     blockedStations.Remove(station);
@@ -411,8 +411,8 @@ namespace SequenceSimulator
             Station? lowPriorityStation = null;
             List<string> lowPriorityStationLocations = [];
 
-            Station? unprocessableStation = null;
-            List<string> unprocessableStationLocations = [];
+            Station? nonProcessableStation = null;
+            List<string> nonProcessableStationLocations = [];
 
             foreach (Station nextStation in layout.StationList.Values)
             {
@@ -422,7 +422,7 @@ namespace SequenceSimulator
                     continue;
                 }
 
-                // If the wafer is currently at a non-processable station. Dont move it to another non-processable / non-pod-dockable station which only has access to one location.
+                // If the wafer is currently at a non-processable station. Don't move it to another non-processable / non-pod-dockable station which only has access to one location.
                 if (!currentStation.Processable && (!nextStation.Processable && nextStation.SingleLocationAccess && !nextStation.PodDockable))
                 {
                     continue;
@@ -458,8 +458,8 @@ namespace SequenceSimulator
                             }
                             else
                             {
-                                unprocessableStation = nextStation;
-                                unprocessableStationLocations = commonLocations;
+                                nonProcessableStation = nextStation;
+                                nonProcessableStationLocations = commonLocations;
                             }     
                         }
                         else
@@ -478,8 +478,8 @@ namespace SequenceSimulator
                         }
                         else
                         {
-                            unprocessableStation = nextStation;
-                            unprocessableStationLocations = [nextStation.CurrentLocation];
+                            nonProcessableStation = nextStation;
+                            nonProcessableStationLocations = [nextStation.CurrentLocation];
                         }
                     }
                     else
@@ -489,9 +489,9 @@ namespace SequenceSimulator
                 }
             }
 
-            if (unprocessableStation != null)
+            if (nonProcessableStation != null)
             {
-                return (unprocessableStation, unprocessableStationLocations);
+                return (nonProcessableStation, nonProcessableStationLocations);
             }
             else
             {
@@ -567,7 +567,7 @@ namespace SequenceSimulator
 
         private void RunTransfer(string tID, Manipulator manipulator, Station fromStation, int fromSlot, Station toStation, int toSlot)
         {
-            OnLogEvent?.Invoke(this, new LogMessage(tID, $"Transfer Initiated for {manipulator.StationID} from {fromStation.StationID} ({fromSlot}) to {toStation.StationID} ({toSlot})."));
+            OnLogEvent?.Invoke(this, (tID, $"Transfer Initiated for {manipulator.StationID} from {fromStation.StationID} ({fromSlot}) to {toStation.StationID} ({toSlot})."));
             int endEffector = GetSuitableEE(manipulator, fromStation) + 1;
             layout.ManipulatorPick(tID, manipulator.StationID, endEffector, fromStation.StationID, fromSlot);
             layout.ManipulatorPlace(tID, manipulator.StationID, endEffector, toStation.StationID, toSlot);
@@ -582,7 +582,7 @@ namespace SequenceSimulator
 
         private void RunSwap(string tID, Manipulator manipulator, Station pickStation, int pickSlot, Station swapStation, int swapSlot, Station putStation, int putSlot)
         {
-            OnLogEvent?.Invoke(this, new LogMessage(tID, $"Swap Initiated for {manipulator.StationID} to swap {swapStation.StationID} ({swapSlot}) with {pickStation.StationID} ({pickSlot}) and put to {putStation.StationID} ({putSlot}).")); 
+            OnLogEvent?.Invoke(this, (tID, $"Swap Initiated for {manipulator.StationID} to swap {swapStation.StationID} ({swapSlot}) with {pickStation.StationID} ({pickSlot}) and put to {putStation.StationID} ({putSlot}).")); 
             layout.ManipulatorPick(tID, manipulator.StationID, 1, pickStation.StationID, pickSlot);
             layout.ManipulatorPick(tID, manipulator.StationID, 2, swapStation.StationID, swapSlot);
             layout.ManipulatorPlace(tID, manipulator.StationID, 1, swapStation.StationID, swapSlot);
@@ -765,7 +765,7 @@ namespace SequenceSimulator
             return false;
         }
 
-        private void LogEvent(object? sender, LogMessage e)
+        private void LogEvent(object? sender, (string? tID, string message) e)
         {
             OnLogEvent?.Invoke(sender, e);
         }

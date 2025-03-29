@@ -119,8 +119,8 @@ void RunLayout(string layoutFile, int time, int stepTime = 1)
 
     simulator.InitializeSimulator(layoutFile, ignoreLotIDMatching);
     string fileName = layoutFile[(layoutFile.LastIndexOf('\\') + 1)..].Replace(".xml", "");
-    string pathTput = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.txt";
-    string pathTputImg = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.png";
+    string pathTPut = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.txt";
+    string pathTPutImg = $"logs\\TPUT_{fileName}_{System.Environment.MachineName}_{DateTime.Now:yyyyMMdd_hhmmss}.png";
 
     Console.Clear();
 
@@ -166,7 +166,7 @@ void RunLayout(string layoutFile, int time, int stepTime = 1)
 
             if (plotVal)
             {
-                WriteToFile(pathTput, $"{simulator.TotalTime},{simulator.steadyStateTime},{simulator.completedPayloads},{simulator.Throughput:0.00},{simulator.CalculateThroughput:0.00},{simulator.SteadyStateThroughput:0.00},{simulator.CalculateSteadyStateThroughput:0.00}");
+                WriteToFile(pathTPut, $"{simulator.TotalTime},{simulator.steadyStateTime},{simulator.completedPayloads},{simulator.Throughput:0.00},{simulator.CalculateThroughput:0.00},{simulator.SteadyStateThroughput:0.00},{simulator.CalculateSteadyStateThroughput:0.00}");
             }
             if (plot)
             {
@@ -191,7 +191,7 @@ void RunLayout(string layoutFile, int time, int stepTime = 1)
 
     if (plot)
     {
-        Thread plotter = new(() => new ThroughputPlotter($"{fileName}-{DateTime.Now:yyyy MMM dd}", tPutResults).PlotGraph(pathTputImg));
+        Thread plotter = new(() => new ThroughputPlotter($"{fileName}-{DateTime.Now:yyyy MMM dd}", tPutResults).PlotGraph(pathTPutImg));
         plotter.Start();
     }
     UIPrompts.Transition();

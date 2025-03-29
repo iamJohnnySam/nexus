@@ -9,7 +9,7 @@ namespace LayoutModels
 {
     public class Payload
     {
-        public event EventHandler<LogMessage>? OnLogEvent;
+        public event EventHandler<(string? tID, string message)>? OnLogEvent;
         public event EventHandler<string>? OnPayloadStateChange;
 
         public Payload(string payloadID, string payloadType, string lotID, int startingSlot)
@@ -30,7 +30,7 @@ namespace LayoutModels
             get { return payloadErrorStaus; }
             set {
                 payloadErrorStaus = value;
-                OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} error state updated to {value}"));
+                OnLogEvent?.Invoke(this, (null, $"Payload {PayloadID} error state updated to {value}"));
             }
         }
 
@@ -40,7 +40,7 @@ namespace LayoutModels
             set {
                 payloadState = value;
                 OnPayloadStateChange?.Invoke(this, value);
-                OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} state updated to {value}"));
+                OnLogEvent?.Invoke(this, (null, $"Payload {PayloadID} state updated to {value}"));
             }
         }
 

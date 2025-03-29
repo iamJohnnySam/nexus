@@ -42,7 +42,7 @@ namespace SequenceSimulatorConsole
             // completed payloads
             output += $"{sim.completedPayloads,3} Completed | ";
 
-            // actual tput
+            // actual TPut
             output += $"Throughput = {sim.Throughput,5: 0.00} ({sim.CalculateThroughput,5: 0.00}) | ";
 
             if (sim.TotalTime > startTPutMeasure)
@@ -405,7 +405,7 @@ namespace SequenceSimulatorConsole
                 Console.Write(new string(' ', remainingSpace));
         }
 
-        public void Simulator_OnLogEvent(object? sender, Logger.LogMessage e)
+        public void Simulator_OnLogEvent(object? sender, (string? transactionID, string message) e)
         {
             try
             {

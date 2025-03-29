@@ -48,7 +48,7 @@ namespace LayoutModels.Readers
                 if (TargetStation.slots.TryGetValue(SlotID, out Payload? payload))
                 {
                     value = payload.PayloadID;
-                    Log(new LogMessage(transactionID, $"Reader {ReadID} returned slot ID {value} at {TargetStation.StationID}"));
+                    Log(transactionID, $"Reader {ReadID} returned slot ID {value} at {TargetStation.StationID}");
                 }
                 else
                     throw new ErrorResponse(ErrorCodes.PayloadNotAvailable, $"Reader {StationID} did not have any payload on {TargetStation.StationID} slot {SlotID} to read.");
@@ -56,7 +56,7 @@ namespace LayoutModels.Readers
             else
             {
                 value = TargetStation.PodID ?? string.Empty;
-                Log(new LogMessage(transactionID, $"Reader {ReadID} returned Pod ID {value} at {TargetStation.StationID}"));
+                Log(transactionID, $"Reader {ReadID} returned Pod ID {value} at {TargetStation.StationID}");
             }
             return value;
         }

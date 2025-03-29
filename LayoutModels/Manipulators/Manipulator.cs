@@ -171,21 +171,21 @@ namespace LayoutModels.Manipulators
         {
             State = StationState.Moving;
 
-            Log(new LogMessage(tID, $"Manipulator {StationID} Homing"));
+            Log(tID, $"Manipulator {StationID} Homing");
 
             if (ArmState != ManipulatorArmStates.retracted)
                 Retract(tID);
 
             GoToStation(tID, "home");
             State = StationState.Idle;
-            Log(new LogMessage(tID, $"Manipulator {StationID} at Home"));
+            Log(tID, $"Manipulator {StationID} at Home");
         }
         public void PowerOff(string tID)
         {
             if (State != StationState.Idle)
                 throw new ErrorResponse(ErrorCodes.PowerOffWhileBusy, $"Manipulator {StationID} was busy.");
             State = StationState.Off;
-            Log(new LogMessage(tID, $"Manipulator {StationID} Off."));
+            Log(tID, $"Manipulator {StationID} Off.");
             OnPowerEvent?.Invoke(this, false);
         }
         public void PowerOn(string tID)
@@ -194,7 +194,7 @@ namespace LayoutModels.Manipulators
                 throw new ErrorResponse(ErrorCodes.ProgramError, $"Manipulator {StationID} was busy.");
 
             State = StationState.Idle;
-            Log(new LogMessage(tID, $"Manipulator {StationID} On"));
+            Log(tID, $"Manipulator {StationID} On");
             OnPowerEvent?.Invoke(this, true);
         }
     }

@@ -17,7 +17,7 @@ namespace LayoutModels
     }
     public class BaseStation
     {
-        public event EventHandler<LogMessage>? OnLogEvent;
+        public event EventHandler<(string? tID, string message)>? OnLogEvent;
         public event EventHandler<StationState>? OnStateChangeEvent;
 
         public StationState State
@@ -28,7 +28,7 @@ namespace LayoutModels
                 if (state != value)
                 {
                     state = value;
-                    Log(new LogMessage($"Station {StationID} State was updated to {value}"));
+                    Log($"Station {StationID} State was updated to {value}");
                     OnStateChangeEvent?.Invoke(this, value);
                 }
             }
@@ -143,7 +143,7 @@ namespace LayoutModels
                 else
                     Locations.Add(location, (false, AccessibilityState.Accessible, 0));
             }
-            Log(new LogMessage($"{StationID} Created"));
+            Log($"{StationID} Created");
         }
         public BaseStation(string stationID, string stationType, List<string> locations)
         {
@@ -155,7 +155,7 @@ namespace LayoutModels
             {
                 Locations.Add(location, (false, AccessibilityState.Accessible, 0));
             }
-            Log(new LogMessage($"{StationID} Created"));
+            Log($"{StationID} Created");
         }
         public BaseStation(string stationID, string stationType)
         {
@@ -163,7 +163,7 @@ namespace LayoutModels
             StationType = stationType;
             StartLocation = string.Empty;
             CurrentLocation = string.Empty;
-            Log(new LogMessage($"{StationID} Created"));
+            Log($"{StationID} Created");
         }
 
         public bool CheckIfDoorExists(string location)
@@ -192,7 +192,7 @@ namespace LayoutModels
         {
             if (Tickable)
             {
-                OnLogEvent?.Invoke(this, new LogMessage(tID, $"{StationID} Processing"));
+                Log(tID, $"{StationID} Processing");
                 long startTime = internalClock;
                 while (SecsTime >= (internalClock - startTime))
                 {
@@ -216,9 +216,13 @@ namespace LayoutModels
             internalClock++;
         }
 
-        protected virtual void Log (LogMessage message)
+        protected virtual void Log (string message)
         {
-            OnLogEvent?.Invoke(this, message);
+            OnLogEvent?.Invoke(this, (null, message));
+        }
+        protected virtual void Log(string tID, string message)
+        {
+            OnLogEvent?.Invoke(this, (tID, message));
         }
 
     }

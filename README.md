@@ -33,6 +33,16 @@ git config --global --add safe.directory /home/pi/nexus
 sudo git config --global --add safe.directory /home/pi/nexus
 ```
 
+## Python
+```
+python -m venv nexus
+cd nexus
+source bin/activate
+```
+```
+pip install numpy
+```
+
 ## Samba
 ```
 sudo apt-get install samba samba-common-bin -y

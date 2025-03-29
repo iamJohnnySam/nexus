@@ -27,7 +27,7 @@ namespace Logger
         TimedOut,
         MissingArguments
     }
-    public enum NackCodes
+    public enum NAckCodes
     {
         SimulatorNotStarted,
         CommSpecError,
@@ -40,6 +40,6 @@ namespace Logger
         StationDoesNotHaveDoor,
         PowerOff,
         EndEffectorMissing,
-        ModuleNack
+        ModuleNAck
     }
 }
