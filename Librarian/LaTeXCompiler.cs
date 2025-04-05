@@ -2,7 +2,7 @@
 
 namespace Librarian
 {
-    public class Compiler(string filePath, string compilerPath = "/usr/bin/pdflatex")
+    public class LaTeXCompiler(string filePath, string compilerPath = "/usr/bin/pdflatex")
     {
         public string FilePath { get; set; } = filePath;
         private readonly string compilerPath = compilerPath;

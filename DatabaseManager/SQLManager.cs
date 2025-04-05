@@ -2,100 +2,16 @@
 using System.Text;
 using MySqlConnector;
 
-namespace DatabaseManager
+namespace DatabaseManagers
 {
-    public class SQLManager
+    public class SQLManager: SQLOps
     {
-        public string Database { get; private set; }
-
-        private string ConnectionString { get; set; }
-        private string ConnectionStringNoDB { get; set; }
-
-        public SQLManager(string database, string dbUser, string dbPassword)
+        public SQLManager(string database, string dbUser, string dbPassword): base(database, dbUser, dbPassword)
         {
-            Database = database;
-
-            ConnectionString = $"Server=localhost;Database={database};User ID={dbUser};Password={dbPassword};Port=3306;";
-            ConnectionStringNoDB = $"Server=localhost;User ID={dbUser};Password={dbPassword};Port=3306;";
-
             CreateDatabaseIfMissingAsync().Wait();
         }
 
-        
-        public void RunStructureCheck(string tableName, Dictionary<string, string> columns)
-        {
-            AddTableIfMissingAsync(tableName, columns).Wait();
-            EnsureTableStructureAsync(tableName, columns).Wait();
-        }
 
-
-        // CONNECTION CONTROLS
-        internal async Task<MySqlConnection> GetConnectionAsync()
-        {
-            var connection = new MySqlConnection(ConnectionString);
-            await connection.OpenAsync();
-            return connection;
-        }
-
-        // EXECUTION CONTROLS
-        internal async Task<int> ExecuteNonQueryAsync(string query, Dictionary<string, object>? parameters = null)
-        {
-            using var connection = await GetConnectionAsync();
-            using var command = new MySqlCommand(query, connection);
-
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    command.Parameters.AddWithValue(param.Key, param.Value);
-                }
-            }
-
-            return await command.ExecuteNonQueryAsync();
-        }
-        internal async Task<DataTable> ExecuteQueryAsync(string query, Dictionary<string, object>? parameters = null)
-        {
-            using var connection = await GetConnectionAsync();
-            using var command = new MySqlCommand(query, connection);
-
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    command.Parameters.AddWithValue(param.Key, param.Value);
-                }
-            }
-
-            using var adapter = new MySqlDataAdapter(command);
-            var dataTable = new DataTable();
-            adapter.Fill(dataTable);
-            return dataTable;
-        }
-        internal async Task<object?> ExecuteScalarAsync(string query, Dictionary<string, object>? parameters = null)
-        {
-            using var connection = await GetConnectionAsync();
-            using var command = new MySqlCommand(query, connection);
-
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    command.Parameters.AddWithValue(param.Key, param.Value);
-                }
-            }
-
-            return await command.ExecuteScalarAsync();
-        }
-
-        // DATABASE CONTROLS
-        public async Task<object?> CheckDatabaseExist(MySqlConnection connection)
-        {
-            string checkDbQuery = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = @DatabaseName;";
-            using var checkCommand = new MySqlCommand(checkDbQuery, connection);
-            checkCommand.Parameters.AddWithValue("@DatabaseName", Database);
-
-            return await checkCommand.ExecuteScalarAsync();
-        }
         internal async Task CreateDatabaseIfMissingAsync()
         {
             var connectionStringWithoutDb = new MySqlConnectionStringBuilder(ConnectionStringNoDB)
@@ -114,13 +30,48 @@ namespace DatabaseManager
                 string createDbQuery = $"CREATE DATABASE `{Database}`;";
                 using var createCommand = new MySqlCommand(createDbQuery, connection);
                 await createCommand.ExecuteNonQueryAsync();
-                Console.WriteLine($"Database '{Database}' created successfully.");
+                // Console.WriteLine($"Database '{Database}' created successfully.");
             }
             else
             {
-                Console.WriteLine($"Database '{Database}' already exists.");
+                // Console.WriteLine($"Database '{Database}' already exists.");
             }
         }
+        private async Task<object?> CheckDatabaseExist(MySqlConnection connection)
+        {
+            string checkDbQuery = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = @DatabaseName;";
+            using var checkCommand = new MySqlCommand(checkDbQuery, connection);
+            checkCommand.Parameters.AddWithValue("@DatabaseName", Database);
+
+            return await checkCommand.ExecuteScalarAsync();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public void RunStructureCheck(string tableName, Dictionary<string, string> columns)
+        {
+            AddTableIfMissingAsync(tableName, columns).Wait();
+            EnsureTableStructureAsync(tableName, columns).Wait();
+        }
+
+
+        // DATABASE CONTROLS
+        
+
+        
 
         // TABLE CONTROLS
         internal async Task<bool> CheckTableExistsAsync(string tableName)
@@ -135,16 +86,7 @@ namespace DatabaseManager
         {
             if (!await CheckTableExistsAsync(tableName))
             {
-                var createTableQuery = new StringBuilder($"CREATE TABLE {tableName} (");
-                foreach (var column in columns)
-                {
-                    createTableQuery.Append($"{column.Key} {column.Value}, ");
-                }
-
-                createTableQuery.Length -= 2; // Remove trailing comma and space
-                createTableQuery.Append(");");
-
-                await ExecuteNonQueryAsync(createTableQuery.ToString());
+                await ExecuteNonQueryAsync(CreateTableStatement(tableName, columns));
                 Console.WriteLine($"Table '{tableName}' created successfully.");
             }
             else
@@ -212,42 +154,86 @@ namespace DatabaseManager
 
 
 
+
+
+        // CONNECTION CONTROLS
+        internal async Task<MySqlConnection> GetConnectionAsync()
+        {
+            var connection = new MySqlConnection(ConnectionString);
+            await connection.OpenAsync();
+            return connection;
+        }
+
+
+
+        // EXECUTION CONTROLS
+        internal async Task<int> ExecuteNonQueryAsync(string query, Dictionary<string, object>? parameters = null)
+        {
+            using var connection = await GetConnectionAsync();
+            using var command = new MySqlCommand(query, connection);
+
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    command.Parameters.AddWithValue(param.Key, param.Value);
+                }
+            }
+
+            return await command.ExecuteNonQueryAsync();
+        }
+        internal async Task<DataTable> ExecuteQueryAsync(string query, Dictionary<string, object>? parameters = null)
+        {
+            using var connection = await GetConnectionAsync();
+            using var command = new MySqlCommand(query, connection);
+
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    command.Parameters.AddWithValue(param.Key, param.Value);
+                }
+            }
+
+            using var adapter = new MySqlDataAdapter(command);
+            var dataTable = new DataTable();
+            adapter.Fill(dataTable);
+            return dataTable;
+        }
+        internal async Task<object?> ExecuteScalarAsync(string query, Dictionary<string, object>? parameters = null)
+        {
+            using var connection = await GetConnectionAsync();
+            using var command = new MySqlCommand(query, connection);
+
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    command.Parameters.AddWithValue(param.Key, param.Value);
+                }
+            }
+
+            return await command.ExecuteScalarAsync();
+        }
+
+
+
         // CRUD
         public async Task<int> InsertAsync(string tableName, Dictionary<string, object> values)
         {
-            var columns = string.Join(", ", values.Keys);
-            var parameters = string.Join(", ", values.Keys.Select(key => $"@{key}"));
-            var query = $"INSERT INTO {tableName} ({columns}) VALUES ({parameters})";
-
-            return await ExecuteNonQueryAsync(query, values);
+            return await ExecuteNonQueryAsync(InsertStatement(tableName, values), values);
         }
         public async Task<int> UpdateAsync(string tableName, Dictionary<string, object> values, string condition)
         {
-            var updates = string.Join(", ", values.Keys.Select(key => $"{key} = @{key}"));
-            var query = $"UPDATE {tableName} SET {updates} WHERE {condition}";
-
-            return await ExecuteNonQueryAsync(query, values);
+            return await ExecuteNonQueryAsync(UpdateStatement(tableName, values, condition), values);
         }
         public async Task<int> DeleteAsync(string tableName, string condition)
         {
-            var query = $"DELETE FROM {tableName} WHERE {condition}";
-            return await ExecuteNonQueryAsync(query);
+            return await ExecuteNonQueryAsync(DeleteStatement(tableName, condition));
         }
         public async Task<DataTable> SelectAsync(string tableName, string condition = "1=1", string? orderBy = null, int? limit = null)
         {
-            var query = $"SELECT * FROM {tableName} WHERE {condition}";
-
-            if (!string.IsNullOrEmpty(orderBy))
-            {
-                query += $" ORDER BY {orderBy}";
-            }
-
-            if (limit.HasValue)
-            {
-                query += $" LIMIT {limit.Value}";
-            }
-
-            return await ExecuteQueryAsync(query);
+            return await ExecuteQueryAsync(SelectStatement(tableName, condition, orderBy, limit));
         }
 
         public async Task<bool> ValueExistsAsync(string tableName, string columnName, object valueToCheck)
@@ -297,5 +283,6 @@ namespace DatabaseManager
             // Execute the query and return the number of affected rows
             return await ExecuteNonQueryAsync(query, parameters);
         }
+
     }
 }

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DatabaseManager;
+using DatabaseManagers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 

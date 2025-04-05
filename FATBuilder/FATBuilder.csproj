@@ -6,9 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.3" />
-		<PackageReference Include="MySqlConnector" Version="2.4.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DatabaseManager\DatabaseManagers.csproj" />
+  </ItemGroup>
 
 </Project>

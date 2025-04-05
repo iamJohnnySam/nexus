@@ -133,7 +133,14 @@ namespace SequenceSimulatorConsole
                 Console.ResetColor();
                 WriteConsoleLine(0, $"Layout Name: '{layoutName}'");
                 WriteConsoleLine(1, TopLine);
-                DetailedStationUpdate();
+                try
+                {
+                    DetailedStationUpdate();
+                }
+                catch
+                {
+
+                }
 
                 if (onScreenLogs)
                     PrintLogs(TopSectionHeight);
