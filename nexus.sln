@@ -34,7 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWorkers", "DataWorkers\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FATBuilder", "FATBuilder\FATBuilder.csproj", "{FC3EBF9A-8B25-4493-91D0-A1598834D4F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FATBuilderWPF", "FATBuilderWPF\FATBuilderWPF.csproj", "{E5ABCA49-A22F-4341-A863-F23C3B1041C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusWPF", "NexusWPF\NexusWPF.csproj", "{DF901E6D-145D-4CDD-8144-FFF14C0055FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,10 +82,10 @@ Global
 		{FC3EBF9A-8B25-4493-91D0-A1598834D4F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC3EBF9A-8B25-4493-91D0-A1598834D4F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC3EBF9A-8B25-4493-91D0-A1598834D4F7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5ABCA49-A22F-4341-A863-F23C3B1041C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5ABCA49-A22F-4341-A863-F23C3B1041C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5ABCA49-A22F-4341-A863-F23C3B1041C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5ABCA49-A22F-4341-A863-F23C3B1041C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF901E6D-145D-4CDD-8144-FFF14C0055FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF901E6D-145D-4CDD-8144-FFF14C0055FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF901E6D-145D-4CDD-8144-FFF14C0055FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF901E6D-145D-4CDD-8144-FFF14C0055FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

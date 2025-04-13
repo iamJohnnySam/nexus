@@ -17,6 +17,7 @@ namespace FATBuilder
         {
             { "testID", "INT PRIMARY KEY AUTO_INCREMENT" },
             { "timestamp", "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+            { "index", "INT NOT NULL" },
             { "revision", "INT NOT NULL" },
             { "revisionDate", "DATETIME DEFAULT CURRENT_TIMESTAMP" },
             { "revisionBy", "TEXT NOT NULL" },

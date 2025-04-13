@@ -45,7 +45,7 @@ namespace DatabaseManagers
             {
                 while (await reader.ReadAsync())
                 {
-                    existingColumns.Add(reader.GetString(1)); // Column name
+                    existingColumns.Add(reader.GetString(1));
                 }
             }
 

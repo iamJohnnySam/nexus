@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace FATBuilderWPF
+namespace NexusWPF
 {
     /// <summary>
     /// Interaction logic for App.xaml

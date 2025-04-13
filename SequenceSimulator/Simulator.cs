@@ -272,7 +272,7 @@ namespace SequenceSimulator
                 // sort the list according to priority
                 waitingTransfer = waitingTransfer.OrderByDescending(item => item.Priority).ToList();
 
-                foreach (int slot in station.slots.Keys)
+                foreach (int slot in station.slots.Keys.ToList())
                 {
                     Payload payload = station.slots[slot];
 

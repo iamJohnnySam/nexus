@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FATBuilder\FATBuilder.csproj" />
+    <Folder Include="Fonts\" />
+    <Folder Include="Images\" />
+    <Folder Include="Model\" />
+    <Folder Include="Styles\" />
+    <Folder Include="ViewModel\" />
+    <Folder Include="View\" />
   </ItemGroup>
 
 </Project>
