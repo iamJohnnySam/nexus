@@ -1,0 +1,20 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="Menu_Text_Style"
+           TargetType="TextBlock">
+
+        <Setter Property="FontFamily"
+                Value="/Fonts/#Rubik" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+        <Setter Property="HorizontalAlignment"
+                Value="Left" />
+        <Setter Property="Foreground"
+                Value="#DBDBDB" />
+        <Setter Property="FontSize"
+                Value="12" />
+
+    </Style>
+
+</ResourceDictionary>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NexusWPF.Utilities
 {
-    class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

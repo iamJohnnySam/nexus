@@ -4,6 +4,16 @@
              xmlns:local="clr-namespace:NexusWPF"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Page.xaml" />
+                <ResourceDictionary Source="Styles/MenuImage.xaml" />
+                <ResourceDictionary Source="Styles/MenuText.xaml" />
+                <ResourceDictionary Source="Styles/MenuButton.xaml" />
+                <ResourceDictionary Source="Utilities/DataTemplate.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
          
     </Application.Resources>
 </Application>

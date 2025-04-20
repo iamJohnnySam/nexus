@@ -9,12 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\home_page.png" />
+    <None Remove="Images\img_customer.png" />
+    <None Remove="Images\img_home.png" />
+  </ItemGroup>
+	
+  <ItemGroup>
     <Folder Include="Fonts\" />
-    <Folder Include="Images\" />
-    <Folder Include="Model\" />
-    <Folder Include="Styles\" />
-    <Folder Include="ViewModel\" />
-    <Folder Include="View\" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Resource Include="Images\home_page.png" />
+    <Resource Include="Images\img_customer.png" />
+    <Resource Include="Images\img_home.png" />
   </ItemGroup>
 
 </Project>

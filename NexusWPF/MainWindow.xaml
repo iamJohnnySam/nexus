@@ -3,26 +3,96 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NexusWPF"
+        xmlns:Menu="clr-namespace:NexusWPF.Utilities" 
+        xmlns:vm="clr-namespace:NexusWPF.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
-        AllowsTransparency="True"
-        WindowStyle="None"
-        Background="Transparent"
+        
+        
+        Title="Nexus"
+       
+        Background="#212529"
+        Height="900"
+        Width="1600"
         WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:NavigationVM />
+    </Window.DataContext>
+
     <Grid>
 
-        <Border Background="#212529"
-                CornerRadius="15" />
-
         <Grid>
-
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="228" />
+                <ColumnDefinition Width="75" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            
+
+            <!--// Navigation Panel //-->
+
+            <Grid Grid.Column="1">
+
+                <ContentControl x:Name="Pages"
+                                Content="{Binding CurrentView}" MinWidth="1500" />
+
+            </Grid>
+
         </Grid>
+        
+        
+        <!-- Menu -->
+        <Border x:Name="Sidebar"
+                Background="#272B2F"
+                Width="75"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                MouseEnter="Sidebar_MouseEnter"
+                MouseLeave="Sidebar_MouseLeave"
+                Panel.ZIndex="10">
+
+            <StackPanel>
+                <TextBlock Text="Nexus" Height="50" HorizontalAlignment="Center" FontFamily="Rubik Medium" Foreground="#DBDBDB" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="0,10,0,0" Padding="0,10,0,0"/>
+
+                <Menu:MenuBtn Style="{StaticResource BtnStyle}"
+                          Command="{Binding HomeCommand}"
+                          IsChecked="True">
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="75" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="0">
+                            <Image Source="Images/img_home.png"
+                                   Style="{StaticResource Image_Style}" />
+                        </Grid>
+                        <Grid Grid.Column="1">
+                            <TextBlock Text="Home"  
+                                       Style="{StaticResource Menu_Text_Style}" />
+                        </Grid>
+                    </Grid>
+                </Menu:MenuBtn>
+
+                <Menu:MenuBtn Style="{StaticResource BtnStyle}"
+                          Command="{Binding ProjectsCommand}">
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="75" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="0">
+                            <Image Source="Images/img_customer.png"
+                                   Style="{StaticResource Image_Style}" />
+                        </Grid>
+                        <Grid Grid.Column="1">
+                            <TextBlock Text="Projects" 
+                                       Style="{StaticResource Menu_Text_Style}" />
+                        </Grid>
+                    </Grid>
+                </Menu:MenuBtn>
+
+            </StackPanel>
+        </Border>
 
     </Grid>
 </Window>
