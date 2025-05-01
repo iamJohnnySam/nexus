@@ -10,8 +10,6 @@
 
   <ItemGroup>
     <None Remove="Images\home_page.png" />
-    <None Remove="Images\img_customer.png" />
-    <None Remove="Images\img_home.png" />
   </ItemGroup>
 	
   <ItemGroup>
@@ -19,9 +17,18 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <PackageReference Include="Material.Icons.WPF" Version="2.3.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\FATBuilder\FATBuilder.csproj" />
+  </ItemGroup>
+	
+  <ItemGroup>
     <Resource Include="Images\home_page.png" />
-    <Resource Include="Images\img_customer.png" />
-    <Resource Include="Images\img_home.png" />
   </ItemGroup>
 
 </Project>

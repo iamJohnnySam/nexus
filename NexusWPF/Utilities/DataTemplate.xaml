@@ -11,4 +11,21 @@
         <view:Projects />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:DocumentationVM}">
+        <view:Documentation />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:FATVM}">
+        <view:FAT />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:TasksVM}">
+        <view:Tasks />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SimulationVM}">
+        <view:Simulation />
+    </DataTemplate>
+
+
 </ResourceDictionary>

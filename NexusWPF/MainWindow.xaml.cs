@@ -17,7 +17,7 @@ namespace NexusWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly double _collapsedWidth = 75;
+        private readonly double _collapsedWidth = 50;
         private readonly double _expandedWidth = 200;
 
         public MainWindow()
@@ -45,6 +45,15 @@ namespace NexusWPF
                 DecelerationRatio = 0.2
             };
             Sidebar.BeginAnimation(WidthProperty, animation);
+
+            var menuTitleAnimation = new DoubleAnimation
+            {
+                To = toWidth == _expandedWidth ? 24 : 12,
+                Duration = TimeSpan.FromMilliseconds(200),
+                AccelerationRatio = 0.2,
+                DecelerationRatio = 0.2
+            };
+            menuTitle.BeginAnimation(FontSizeProperty, menuTitleAnimation);
         }
     }
 }

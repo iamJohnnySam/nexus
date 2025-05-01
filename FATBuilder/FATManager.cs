@@ -9,21 +9,21 @@ using System.Threading.Tasks;
 
 namespace FATBuilder
 {
-    internal class FATManager
+    public class FATManager
     {
         SQLiteManager db;
 
         Dictionary<string, string> fatTestCaseColumns = new()
         {
-            { "testID", "INT PRIMARY KEY AUTO_INCREMENT" },
+            { "testID", "INTEGER PRIMARY KEY AUTOINCREMENT" },
             { "timestamp", "DATETIME DEFAULT CURRENT_TIMESTAMP" },
-            { "index", "INT NOT NULL" },
-            { "revision", "INT NOT NULL" },
+            { "testIndex", "INTEGER NOT NULL" },
+            { "revision", "INTEGER NOT NULL" },
             { "revisionDate", "DATETIME DEFAULT CURRENT_TIMESTAMP" },
             { "revisionBy", "TEXT NOT NULL" },
-            { "category", "TEXT NOT NULL" },
-            { "module", "TEXT NOT NULL" },
-            { "case", "TEXT NOT NULL" },
+            { "testCategory", "TEXT NOT NULL" },
+            { "testModule", "TEXT NOT NULL" },
+            { "testCase", "TEXT NOT NULL" },
             { "procedure", "LONGTEXT" },
             { "check", "TEXT" },
             { "image", "BOOLEAN" },
@@ -31,13 +31,13 @@ namespace FATBuilder
         };
         Dictionary<string, string> fatDocumentColumns = new()
         {
-            { "id", "INT PRIMARY KEY AUTO_INCREMENT" },
+            { "id", "INTEGER PRIMARY KEY AUTOINCREMENT" },
             { "project", "TEXT NOT NULL" },
-            { "revision", "INT NOT NULL" },
+            { "revision", "INTEGER NOT NULL" },
             { "revisionDate", "DATETIME DEFAULT CURRENT_TIMESTAMP" },
             { "revisionBy", "TEXT NOT NULL" },
-            { "testIndex", "INT NOT NULL" },
-            { "testID", "INT NOT NULL" }
+            { "testIndex", "INTEGER NOT NULL" },
+            { "testID", "INTEGER NOT NULL" }
         };
 
 
@@ -45,6 +45,8 @@ namespace FATBuilder
         {
             db = new(databaseName, "TestCases", fatTestCaseColumns);
         }
+
+
 
     }
 }
