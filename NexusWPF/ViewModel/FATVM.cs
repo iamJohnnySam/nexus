@@ -9,11 +9,9 @@ namespace NexusWPF.ViewModel
 {
     class FATVM
     {
-        private readonly FATManager _fATManager;
 
         public FATVM()
         {
-            _fATManager = new("FAT");
         }
     }
 }

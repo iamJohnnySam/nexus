@@ -25,6 +25,7 @@
 	
   <ItemGroup>
     <ProjectReference Include="..\FATBuilder\FATBuilder.csproj" />
+    <ProjectReference Include="..\SequenceSimulator\SequenceSimulator.csproj" />
   </ItemGroup>
 	
   <ItemGroup>

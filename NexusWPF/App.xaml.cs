@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FATBuilder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SequenceSimulator;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -19,6 +21,8 @@ namespace NexusWPF
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<MainWindow>();
+                    services.AddTransient<IFATManager, FATManager>();
+                    services.AddTransient<ISimulator, Simulator>();
                 })
                 .Build();
         }

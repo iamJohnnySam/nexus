@@ -11,11 +11,11 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace SequenceSimulatorConsole
 {
-    public class SimulationDataManager(Simulator Simulator, int runTime, int startTPutMeasure, bool showStationDetails)
+    public class SimulationDataManager(SequenceSimulator.Simulator Simulator, int runTime, int startTPutMeasure, bool showStationDetails)
     {
         Queue<string> LogMessages = new();
 
-        private readonly Simulator sim = Simulator;
+        private readonly SequenceSimulator.Simulator sim = Simulator;
         private readonly int runTime = runTime;
         private readonly int startTPutMeasure = startTPutMeasure;
         private readonly bool showStationDetails = showStationDetails;

@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace FATBuilder
 {
-    public class FATManager
+    public class FATManager : IFATManager
     {
-        SQLiteManager db;
+        public SQLiteManager db { get; private set; }
 
         Dictionary<string, string> fatTestCaseColumns = new()
         {
@@ -24,8 +24,8 @@ namespace FATBuilder
             { "testCategory", "TEXT NOT NULL" },
             { "testModule", "TEXT NOT NULL" },
             { "testCase", "TEXT NOT NULL" },
-            { "procedure", "LONGTEXT" },
-            { "check", "TEXT" },
+            { "testProcedure", "TEXT" },
+            { "testCheck", "TEXT" },
             { "image", "BOOLEAN" },
             { "unit", "TEXT" }
         };
@@ -41,9 +41,9 @@ namespace FATBuilder
         };
 
 
-        public FATManager(string databaseName)
+        public FATManager()
         {
-            db = new(databaseName, "TestCases", fatTestCaseColumns);
+            db = new("FAT", "TestCases", fatTestCaseColumns);
         }
 
 

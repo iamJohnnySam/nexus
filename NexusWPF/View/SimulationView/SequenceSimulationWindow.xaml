@@ -1,0 +1,16 @@
+﻿<Window x:Class="NexusWPF.View.SimulationView.SequenceSimulationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NexusWPF.View.SimulationView"
+        mc:Ignorable="d"
+        
+        Title="SequenceSimulator" 
+        Height="500" 
+        Width="800"
+        Background="#212529">
+    <Grid>
+        
+    </Grid>
+</Window>

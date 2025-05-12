@@ -12,7 +12,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SequenceSimulator
 {
-    public class Simulator
+    public class Simulator : ISimulator
     {
         private readonly object lockObject = new();
 
@@ -38,12 +38,12 @@ namespace SequenceSimulator
 
         long maxManipulatorTime = 0;
 
-        public float CalculateSteadyStateThroughput 
-        { 
+        public float CalculateSteadyStateThroughput
+        {
             get
             {
                 return completedPayloads * 3600 / ((float)TotalTime - steadyStateTime);
-            } 
+            }
         }
         public float CalculateThroughput
         {
@@ -73,7 +73,7 @@ namespace SequenceSimulator
                     maxManipulatorTime = manipulatorTotalTime;
                 }
             }
-            foreach(Station station in layout.StationList.Values)
+            foreach (Station station in layout.StationList.Values)
             {
                 station.OnProcessCompleteEvent += Station_OnProcessCompleteEvent;
                 station.OnPayloadReceived += Station_OnPayloadAction;
@@ -145,7 +145,7 @@ namespace SequenceSimulator
                 {
                     blockedStations.Remove(station);
                 }
-            }  
+            }
         }
 
         private void Manipulator_OnPickUp(object? sender, (int, string, Payload) e)
@@ -316,7 +316,7 @@ namespace SequenceSimulator
 
         private void CheckTransfers(bool swap = false)
         {
-            foreach((string thisPayloadID, string thisStationID, int swapSlot, bool _) in waitingTransfer.ToList())
+            foreach ((string thisPayloadID, string thisStationID, int swapSlot, bool _) in waitingTransfer.ToList())
             {
                 // Attempt Swap: Check needed wafer
                 Station thisStation = layout.StationList[thisStationID];
@@ -350,9 +350,9 @@ namespace SequenceSimulator
 
                 // Check if there is a swap in station
                 string? swapInPayloadID = CheckIfSwappablePayloadExists(thisStation, swapOutLocations);
-                
+
                 // Initiate motion
-                if (swapInPayloadID !=null && swapOutStation!=null && !thisStation.PodDockable)
+                if (swapInPayloadID != null && swapOutStation != null && !thisStation.PodDockable)
                 {
                     Station swapInStation = layout.StationList[waitingTransfer.FirstOrDefault(item => item.PayloadID == swapInPayloadID).StationID];
                     int swapInSlot = waitingTransfer.FirstOrDefault(item => item.PayloadID == swapInPayloadID).Slot;
@@ -364,13 +364,14 @@ namespace SequenceSimulator
                 }
             }
         }
-        private string? CheckIfSwappablePayloadExists(Station station, List<string>accessibleLocations)
+        private string? CheckIfSwappablePayloadExists(Station station, List<string> accessibleLocations)
         {
             string? returnPayloadID = null;
             foreach ((string swapInPayloadID, string swapInStationID, int swapInSlot, bool _) in waitingTransfer)
             {
 
-                if (station.StationID == swapInStationID){
+                if (station.StationID == swapInStationID)
+                {
                     continue;
                 }
 
@@ -460,7 +461,7 @@ namespace SequenceSimulator
                             {
                                 nonProcessableStation = nextStation;
                                 nonProcessableStationLocations = commonLocations;
-                            }     
+                            }
                         }
                         else
                             throw new ErrorResponse(ErrorCodes.ProgramError, "Unknown situation.");
@@ -499,7 +500,7 @@ namespace SequenceSimulator
             }
         }
 
-        private void InitiateTransfer( string payloadID, Station fromStation, int fromSlot, Station toStation, int toSlot)
+        private void InitiateTransfer(string payloadID, Station fromStation, int fromSlot, Station toStation, int toSlot)
         {
             Manipulator? manipulator = CheckAvailableAccessibleManipulators(fromStation, toStation);
             if (manipulator != null)
@@ -582,7 +583,7 @@ namespace SequenceSimulator
 
         private void RunSwap(string tID, Manipulator manipulator, Station pickStation, int pickSlot, Station swapStation, int swapSlot, Station putStation, int putSlot)
         {
-            OnLogEvent?.Invoke(this, (tID, $"Swap Initiated for {manipulator.StationID} to swap {swapStation.StationID} ({swapSlot}) with {pickStation.StationID} ({pickSlot}) and put to {putStation.StationID} ({putSlot}).")); 
+            OnLogEvent?.Invoke(this, (tID, $"Swap Initiated for {manipulator.StationID} to swap {swapStation.StationID} ({swapSlot}) with {pickStation.StationID} ({pickSlot}) and put to {putStation.StationID} ({putSlot})."));
             layout.ManipulatorPick(tID, manipulator.StationID, 1, pickStation.StationID, pickSlot);
             layout.ManipulatorPick(tID, manipulator.StationID, 2, swapStation.StationID, swapSlot);
             layout.ManipulatorPlace(tID, manipulator.StationID, 1, swapStation.StationID, swapSlot);
@@ -611,7 +612,7 @@ namespace SequenceSimulator
             {
                 foreach (Station checkStation in layout.StationList.Values)
                 {
-                    if(checkStation.PodDockable && (checkStation.AllPayloadsSingularOutputState))
+                    if (checkStation.PodDockable && (checkStation.AllPayloadsSingularOutputState))
                     {
                         return (checkStation, checkStation.GetNextAvailableSlot());
                     }
@@ -646,7 +647,7 @@ namespace SequenceSimulator
         }
         private Manipulator? CheckAvailableAccessibleManipulators(Station station1, Station station2, Station? station3 = null)
         {
-            foreach(Manipulator manipulator in layout.ManipulatorList.Values)
+            foreach (Manipulator manipulator in layout.ManipulatorList.Values)
             {
                 if (manipulator.State == StationState.Off)
                 {
@@ -739,7 +740,7 @@ namespace SequenceSimulator
 
             for (int slot = 0; slot < payloadQuantity; slot++)
             {
-                layout.CreatePayload(tID, Layout.GetID(6), podID, slot+1);
+                layout.CreatePayload(tID, Layout.GetID(6), podID, slot + 1);
             }
             return podID;
         }
@@ -760,7 +761,7 @@ namespace SequenceSimulator
             foreach (Manipulator manipulator in layout.ManipulatorList.Values)
             {
                 if (manipulator.EnRouteStation == stationID || (manipulator.CurrentLocation == stationID && manipulator.ArmState != ManipulatorArmStates.retracted && (manipulator.State != StationState.Idle || manipulator.State != StationState.Off)))
-                    { return true; }
+                { return true; }
             }
             return false;
         }
@@ -772,7 +773,7 @@ namespace SequenceSimulator
 
         private void removeThreads()
         {
-            foreach(Thread t in Global.RunningThreads.ToList())
+            foreach (Thread t in Global.RunningThreads.ToList())
             {
                 if (!t.IsAlive)
                 {

@@ -4,7 +4,7 @@ using SequenceSimulator;
 using SequenceSimulatorConsole;
 using SimulatorSequenceConsole;
 
-Simulator simulator;
+SequenceSimulator.Simulator simulator;
 SimulationDataManager simResults;
 
 Directory.CreateDirectory("logs\\");
