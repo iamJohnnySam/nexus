@@ -6,9 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LayoutModels\LayoutModels.csproj" />
-    <ProjectReference Include="..\UIUtilities\UIUtilities.csproj" />
-  </ItemGroup>
-
 </Project>

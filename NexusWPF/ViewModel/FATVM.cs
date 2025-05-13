@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UIUtilities;
 
 namespace NexusWPF.ViewModel
 {
-    class FATVM
+    class FATVM : ViewModelBase
     {
 
         public FATVM()

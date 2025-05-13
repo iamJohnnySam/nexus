@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows.Input;
+using UIUtilities;
 
 namespace NexusWPF.ViewModel
 {

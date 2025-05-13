@@ -4,13 +4,74 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NexusWPF.View.SimulationView"
+        xmlns:vm="clr-namespace:NexusWPF.ViewModel.Simulation" 
         mc:Ignorable="d"
         
         Title="SequenceSimulator" 
         Height="500" 
         Width="800"
         Background="#212529">
+
+    <!-- Border Grid -->
     <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />            
+        </Grid.ColumnDefinitions>
+
+        <!-- Main Grid -->
+        <Grid Grid.Column="1">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="10" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="1" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center">Layout Simulation</TextBlock>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2">
+                <TextBlock Text="Time: " VerticalAlignment="Center" Foreground="White" Margin="5,0,0,0"></TextBlock>
+                <TextBlock Text="{Binding TotalTime}" VerticalAlignment="Center" Foreground="White" Margin="0,0,5,0"></TextBlock>
+            </StackPanel>
+
+            <!-- Simulation Grid -->
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Center">
+
+                    <Button Command="{Binding StepSimulation}" Margin="0,5,0,5">Step Simulation</Button>
+                    <Button Command="{Binding StartSimulation}" Margin="0,5,0,5">Start Simulation</Button>
+
+                </StackPanel>
+
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="10 10 0 0">
+                    <ItemsControl ItemsSource="{Binding StationList}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:StationComponent />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+
+                </ScrollViewer>
+
+            </Grid>
+
+        </Grid> 
         
     </Grid>
 </Window>

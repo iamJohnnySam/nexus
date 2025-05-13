@@ -8,7 +8,7 @@ namespace SequenceSimulator
         bool IgnoreLotIDMatching { get; set; }
         float SteadyStateThroughput { get; }
         float Throughput { get; }
-        int TotalTime { get; set; }
+        int TotalTime { get; }
 
         event EventHandler<(string? tID, string message)>? OnLogEvent;
 

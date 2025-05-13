@@ -4,25 +4,40 @@ using LayoutModels.Stations;
 using Logger;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UIUtilities;
 using static System.Collections.Specialized.BitVector32;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SequenceSimulator
 {
-    public class Simulator : ISimulator
+    public class Simulator : ViewModelBase, ISimulator
     {
         private readonly object lockObject = new();
 
         public bool IgnoreLotIDMatching { get; set; }
 
         public event EventHandler<(string? tID, string message)>? OnLogEvent;
+
         int transactionID = 0;
         public int completedPayloads = 0;
 
-        public int TotalTime { get; set; }
+        private int _totalTime;
+        public int TotalTime
+        {
+            get
+            {
+                return _totalTime;
+            }
+            private set
+            {
+                _totalTime = value;
+                OnPropertyChanged();
+            }
+        }
         public float Throughput { get; private set; }
         public float SteadyStateThroughput { get; private set; }
 

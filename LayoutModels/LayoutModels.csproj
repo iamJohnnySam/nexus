@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Logger\Logger.csproj" />
+    <ProjectReference Include="..\UIUtilities\UIUtilities.csproj" />
   </ItemGroup>
 
 	<ItemGroup>

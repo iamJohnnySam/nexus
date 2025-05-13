@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using UIUtilities;
 
 namespace LayoutModels
 {
@@ -15,7 +16,7 @@ namespace LayoutModels
         Accessible,
         NotAccessible
     }
-    public class BaseStation
+    public class BaseStation : ViewModelBase
     {
         public event EventHandler<(string? tID, string message)>? OnLogEvent;
         public event EventHandler<StationState>? OnStateChangeEvent;

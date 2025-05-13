@@ -8,7 +8,7 @@ namespace NexusWPF.Services
 {
     public interface IWindowService
     {
-        void OpenWindow();
+        void OpenWindow(object dataContext);
         void CloseWindow();
     }
 }

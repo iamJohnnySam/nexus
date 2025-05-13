@@ -11,9 +11,10 @@ namespace NexusWPF.Services
     public class SimulatorWindowService : IWindowService
     {
 
-        public void OpenWindow()
+        public void OpenWindow(object dataContext)
         {
-            var window = new SequenceSimulationWindow();
+            SequenceSimulationWindow window = new();
+            window.DataContext = dataContext;
             window.Show();
         }
 

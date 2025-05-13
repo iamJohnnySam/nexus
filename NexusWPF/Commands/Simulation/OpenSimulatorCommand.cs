@@ -1,5 +1,6 @@
 ﻿using NexusWPF.Services;
 using NexusWPF.Utilities;
+using NexusWPF.ViewModel.Simulation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace NexusWPF.Commands.Simulation
 
         public override void Execute(object? parameter)
         {
-            _windowService.OpenWindow();
+            _windowService.OpenWindow(new SequenceSimulationWindowVM("C:\\Users\\MT-0051\\source\\repos\\iamJohnnySam\\nexus\\SequenceSimulatorConsole\\layouts\\BeneqS3_3.xml", false));
         }
 
         public OpenSimulatorCommand(IWindowService windowService)
