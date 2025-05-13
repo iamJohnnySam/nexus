@@ -160,7 +160,7 @@ namespace SequenceSimulatorConsole
                     StationDetails(station);
                 }
                 else
-                    WriteConsoleLine(i, $"{station.StationID,4} ({station.slots.Count,2}/{station.Capacity,-2}): {station.State,-14}");
+                    WriteConsoleLine(i, $"{station.StationID,4} ({station.Slots.Count,2}/{station.Capacity,-2}): {station.State,-14}");
                 i++;
             }
             i++;
@@ -187,7 +187,7 @@ namespace SequenceSimulatorConsole
                 color = ConsoleColor.Red;
             }
             stringLen += WriteConsole($"{station.StationID,4} ", color);
-            stringLen += WriteConsole($"({station.slots.Count,2}/{station.Capacity,-2}): ");
+            stringLen += WriteConsole($"({station.Slots.Count,2}/{station.Capacity,-2}): ");
 
             // Station State
             switch (station.State)
@@ -198,7 +198,7 @@ namespace SequenceSimulatorConsole
                     color = ConsoleColor.DarkGray;
                     break;
                 case StationState.Processing:
-                    if (station.slots.Count == station.Capacity)
+                    if (station.Slots.Count == station.Capacity)
                         color = ConsoleColor.Blue;
                     else
                         color = ConsoleColor.Cyan;
@@ -228,9 +228,9 @@ namespace SequenceSimulatorConsole
                     case MapCodes.Available:
                         if (station.blockedSlots.Contains(i))
                         {
-                            if (station.IsAnOutputState(station.slots[i].PayloadState))
+                            if (station.IsAnOutputState(station.Slots[i].PayloadState))
                             {
-                                if (!station.PodDockable && !sim.waitingTransfer.Contains((station.slots[i].PayloadID, station.StationID, i, !station.LowPriority)))
+                                if (!station.PodDockable && !sim.waitingTransfer.Contains((station.Slots[i].PayloadID, station.StationID, i, !station.LowPriority)))
                                 {
                                     stringLen += WriteConsole("# ", ConsoleColor.Red);
                                 }
@@ -244,9 +244,9 @@ namespace SequenceSimulatorConsole
                         }
                         else
                         {
-                            if (station.slots.ContainsKey(i) && station.IsAnOutputState(station.slots[i].PayloadState))
+                            if (station.Slots.ContainsKey(i) && station.IsAnOutputState(station.Slots[i].PayloadState))
                             {
-                                if (!station.PodDockable && !sim.waitingTransfer.Contains((station.slots[i].PayloadID, station.StationID, i, !station.LowPriority)))
+                                if (!station.PodDockable && !sim.waitingTransfer.Contains((station.Slots[i].PayloadID, station.StationID, i, !station.LowPriority)))
                                 {
                                     stringLen += WriteConsole("# ", ConsoleColor.Red);
                                 }
@@ -322,18 +322,18 @@ namespace SequenceSimulatorConsole
             }
 
             List<string> mismatchPayloads = [];
-            if (station.AllPayloadsSingularState && station.slots.Count != 0)
+            if (station.AllPayloadsSingularState && station.Slots.Count != 0)
             {
-                foreach (Payload payload in station.slots.Values)
+                foreach (Payload payload in station.Slots.Values)
                 {
                     if (!mismatchPayloads.Contains(payload.PayloadState))
                         mismatchPayloads.Add(payload.PayloadState);
                 }
                 stringLen += WriteConsole($"[{string.Join(' ', mismatchPayloads)}]", ConsoleColor.DarkGray);
             }
-            else if (!station.AllPayloadsSingularState && station.slots.Count != 0)
+            else if (!station.AllPayloadsSingularState && station.Slots.Count != 0)
             {
-                foreach (Payload payload in station.slots.Values)
+                foreach (Payload payload in station.Slots.Values)
                 {
                     mismatchPayloads.Add(payload.PayloadState);
                 }

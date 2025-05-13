@@ -5,10 +5,49 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:NexusWPF.View.SimulationView"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             Foreground="White">
     <Border Width="200" BorderThickness="1" BorderBrush="LightGray" Padding="5">
-        <StackPanel Orientation="Vertical" Margin="5">
-            <TextBlock Text="{Binding Value.StationID}" Foreground="White"/>
-        </StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0">
+                <TextBlock Text="{Binding Value.StationID}" Width="100"/>
+                <TextBlock Text="{Binding Value.State}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1">
+                <TextBlock Text="Capacity:" Width="75"/>
+                <TextBlock Text="{Binding Value.SlotCount}"/>
+                <TextBlock Text=" / "/>
+                <TextBlock Text="{Binding Value.Capacity}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2">
+                <TextBlock Text="Locations:" Width="75"/>
+                
+            </StackPanel>
+
+            <Separator Grid.Row="3" />
+            <ItemsControl ItemsSource="{Binding Value.SlotList}" Grid.Row="3">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding SlotIndex}" Width="50" />
+                            <TextBlock Text="{Binding Payload.PayloadID}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+
+
+        </Grid>
     </Border>
 </UserControl>

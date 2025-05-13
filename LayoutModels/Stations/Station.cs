@@ -26,7 +26,37 @@ namespace LayoutModels.Stations
         private readonly object lockObject = new();
 
         // VARIABLES
-        public Dictionary<int, Payload> slots = [];
+        private Dictionary<int, Payload> _slots = [];
+
+        public Dictionary<int, Payload>  Slots
+        {
+            get { return _slots; }
+            private set 
+            { 
+                _slots = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SlotCount));
+                OnPropertyChanged(nameof(SlotList));
+
+            }
+        }
+        public int SlotCount => Slots?.Count ?? 0;
+        public IEnumerable<SlotWrapper> SlotList
+        {
+            get
+            {
+                for (int i = 1; i <= Capacity; i++)
+                {
+                    yield return new SlotWrapper
+                    {
+                        SlotIndex = i,
+                        Payload = Slots.ContainsKey(i) ? Slots[i] : new Payload("--", string.Empty, string.Empty, 0)
+                    };
+                }
+            }
+        }
+
+
         public HashSet<int> blockedSlots = [];
         public string PayloadType { get; private set; }
         public Dictionary<string, (string InputState, string OutputState, string NextLocation, float ProcessTime)> PayloadStateMapping { get; private set; }
@@ -79,9 +109,9 @@ namespace LayoutModels.Stations
         {
             get
             {
-                if (slots.Keys.Count == 0)
+                if (Slots.Keys.Count == 0)
                     return false;
-                string payloadState = slots.Values.First().PayloadState;
+                string payloadState = Slots.Values.First().PayloadState;
                 if (!IsAnInputState(payloadState))
                     return false;
                 return CheckAllSlots(payloadState);
@@ -91,9 +121,9 @@ namespace LayoutModels.Stations
         {
             get
             {
-                if (slots.Keys.Count == 0)
+                if (Slots.Keys.Count == 0)
                     return false;
-                string payloadState = slots.Values.First().PayloadState;
+                string payloadState = Slots.Values.First().PayloadState;
                 if (!IsAnOutputState(payloadState))
                     return false;
                 return CheckAllSlots(payloadState);
@@ -103,9 +133,9 @@ namespace LayoutModels.Stations
         {
             get
             {
-                if (slots.Keys.Count == 0)
+                if (Slots.Keys.Count == 0)
                     return false;
-                string payloadState = slots.Values.First().PayloadState;
+                string payloadState = Slots.Values.First().PayloadState;
                 return CheckAllSlots(payloadState);
             }
         }
@@ -120,14 +150,14 @@ namespace LayoutModels.Stations
         {
             get
             {
-                return IsReadyToProcess && Capacity == slots.Count;
+                return IsReadyToProcess && Capacity == Slots.Count;
             }
         }
         public bool IsReadyToUndock
         {
             get
             {
-                return State == StationState.Idle && PodDockable && AllPayloadsSingularOutputState && slots.Keys.Count == podInputQuantity && (AutoDoorControl || !AutoDoorControl && AllClosableDoorsClosed);
+                return State == StationState.Idle && PodDockable && AllPayloadsSingularOutputState && Slots.Keys.Count == podInputQuantity && (AutoDoorControl || !AutoDoorControl && AllClosableDoorsClosed);
             }
         }
         public bool LowPriority { get; set; } = false;
@@ -179,12 +209,12 @@ namespace LayoutModels.Stations
         {
             if (!IsAnInputState(waferState))
                 return false;
-            if (slots.Count == 0)
+            if (Slots.Count == 0)
                 return true;
-            if (slots.Count == Capacity)
+            if (Slots.Count == Capacity)
                 return false;
 
-            foreach (Payload payload in slots.Values)
+            foreach (Payload payload in Slots.Values)
             {
                 if (IsAnInputState(payload.PayloadState) && payload.PayloadState != waferState)
                     return false;
@@ -200,13 +230,13 @@ namespace LayoutModels.Stations
         }
         public bool CheckSlotEmpty(int slot)
         {
-            if (slots.ContainsKey(slot))
+            if (Slots.ContainsKey(slot))
                 return false;
             return true;
         }
         private bool CheckAllSlotsEmpty()
         {
-            if (slots.Count == 0) return true;
+            if (Slots.Count == 0) return true;
             return false;
         }
         public int GetNextEmptySlot()
@@ -214,7 +244,7 @@ namespace LayoutModels.Stations
             for (int i = 0; i < Capacity; i++)
             {
                 int slot = i + 1;
-                if (slots.ContainsKey(slot) && !blockedSlots.Contains(slot))
+                if (Slots.ContainsKey(slot) && !blockedSlots.Contains(slot))
                 {
                     // Log(new LogMessage($"Station {StationID} Next empty slot ({slot}) was updated."));
                     return slot;
@@ -227,7 +257,7 @@ namespace LayoutModels.Stations
             for (int i = 0; i < Capacity; i++)
             {
                 int slot = i + 1;
-                if (!slots.ContainsKey(slot) && !blockedSlots.Contains(slot))
+                if (!Slots.ContainsKey(slot) && !blockedSlots.Contains(slot))
                 {
                     // Log(new LogMessage($"Station {StationID} Next available slot ({slot}) was updated."));
                     return slot;
@@ -242,9 +272,9 @@ namespace LayoutModels.Stations
             for (int i = 0; i < Capacity; i++)
             {
                 int slot = i + 1;
-                if (!slots.ContainsKey(slot))
+                if (!Slots.ContainsKey(slot))
                     slotMap.Add(MapCodes.Empty);
-                else if (slots[slot].PayloadErrorStaus)
+                else if (Slots[slot].PayloadErrorStaus)
                     if (slot > 1)
                     {
                         if (slotMap[slot - 1] == MapCodes.Double)
@@ -271,7 +301,7 @@ namespace LayoutModels.Stations
         }
         private bool CheckAllSlots(string payloadState)
         {
-            foreach (Payload payload in slots.Values)
+            foreach (Payload payload in Slots.Values)
             {
                 if (payload.PayloadState != payloadState)
                 {
@@ -299,7 +329,7 @@ namespace LayoutModels.Stations
                 throw new ErrorResponse(ErrorCodes.SlotsNotEmpty, $"Station {StationID} slots are not empty.");
 
             PodID = pod.PodID;
-            slots = pod.slots;
+            Slots = pod.slots;
             podInputQuantity = pod.slots.Values.Count;
             statusMapped = false;
 
@@ -343,9 +373,9 @@ namespace LayoutModels.Stations
             Pod pod;
             pod = new(PodID, Capacity, PayloadType)
             {
-                slots = slots
+                slots = Slots
             };
-            slots = [];
+            Slots = [];
             podInputQuantity = 0;
             statusMapped = false;
             State = StationState.UnDocked;
@@ -439,7 +469,7 @@ namespace LayoutModels.Stations
 
             foreach (KeyValuePair<string, (string InputState, string OutputState, string _, float ProcessTime)> kvp in PayloadStateMapping)
             {
-                if (kvp.Value.InputState == slots.Values.First().PayloadState)
+                if (kvp.Value.InputState == Slots.Values.First().PayloadState)
                 {
                     process = kvp.Key;
                     selectedProcessTime = kvp.Value.ProcessTime;
@@ -461,7 +491,7 @@ namespace LayoutModels.Stations
                 }
             }
 
-            if (slots.Count > 0 && PayloadStateMapping[process].InputState == string.Empty)
+            if (Slots.Count > 0 && PayloadStateMapping[process].InputState == string.Empty)
             {
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"Station {StationID} cannot perform process {process} with payloads");
             }
@@ -470,9 +500,9 @@ namespace LayoutModels.Stations
             //    throw new ErrorResponse(ErrorCodes.SlotsEmpty, $"Station {StationID} does not have any payloads to process.");
             if (State != StationState.Idle)
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"Station {StationID} is in state {State}");
-            if (slots.Count != 0 && !AllPayloadsSingularInputState)
+            if (Slots.Count != 0 && !AllPayloadsSingularInputState)
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"All Payloads in Station {StationID} are not in a singular Input State.");
-            if (slots.Count != 0 && !CheckAllSlots(PayloadStateMapping[process].InputState))
+            if (Slots.Count != 0 && !CheckAllSlots(PayloadStateMapping[process].InputState))
                 throw new ErrorResponse(ErrorCodes.IncorrectState, $"All Payloads in Station {StationID} are not in the required input state for process {process} ({PayloadStateMapping[process].InputState}).");
 
             if (AutoDoorControl && HasDoors)
@@ -488,7 +518,7 @@ namespace LayoutModels.Stations
 
             string mappedState = PayloadStateMapping[process].OutputState;
             CurrentLocation = PayloadStateMapping[process].NextLocation;
-            foreach (KeyValuePair<int, Payload> slot in slots)
+            foreach (KeyValuePair<int, Payload> slot in Slots)
             {
                 if (mappedState == string.Empty)
                 {
@@ -566,7 +596,9 @@ namespace LayoutModels.Stations
         }
         public string AcceptPayload(string tID, Payload payload, int slot)
         {
-            slots.Add(slot, payload);
+            Slots.Add(slot, payload);
+            OnPropertyChanged(nameof(SlotCount));
+            OnPropertyChanged(nameof(SlotList));
             Log(tID, $"Payload {payload.PayloadID} added to slot {slot} on Station {StationID}.");
             OnDropOff?.Invoke(this, (slot, payload));
             OnPayloadReceived?.Invoke(this, payload);
@@ -576,8 +608,10 @@ namespace LayoutModels.Stations
         }
         public Payload ReleasePayload(string tID, int slot)
         {
-            Payload payload = slots[slot];
-            slots.Remove(slot);
+            Payload payload = Slots[slot];
+            Slots.Remove(slot);
+            OnPropertyChanged(nameof(SlotCount));
+            OnPropertyChanged(nameof(SlotList));
             Log(tID, $"Payload {payload.PayloadID} removed from slot {slot} on Station {StationID}.");
             OnPickUp?.Invoke(this, slot);
             OnPayloadRelease?.Invoke(this, payload);

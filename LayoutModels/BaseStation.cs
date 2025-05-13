@@ -31,6 +31,7 @@ namespace LayoutModels
                     state = value;
                     Log($"Station {StationID} State was updated to {value}");
                     OnStateChangeEvent?.Invoke(this, value);
+                    OnPropertyChanged();
                 }
             }
         }

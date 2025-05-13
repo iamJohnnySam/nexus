@@ -19,6 +19,21 @@ namespace NexusWPF.ViewModel.Simulation
 
         public string TotalTime => _simulator.TotalTime.ToString();
 
+        private string _runTime = "3600";
+        public string RunTime
+        {
+            get
+            {
+                return _runTime;
+            }
+            set
+            {
+                _runTime = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         public IEnumerable<KeyValuePair<string, Station>> StationList => _simulator.layout.StationList;
 
         public ICommand StepSimulation { get; }
@@ -33,6 +48,7 @@ namespace NexusWPF.ViewModel.Simulation
 
 
             StepSimulation = new StepSimulationCommand(_simulator);
+            StartSimulation = new RunSimulationCommand(this, _simulator);
 
 
             _simulator.PropertyChanged += (s, e) =>

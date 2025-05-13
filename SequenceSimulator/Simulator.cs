@@ -5,6 +5,7 @@ using Logger;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,20 @@ namespace SequenceSimulator
         public bool IgnoreLotIDMatching { get; set; }
 
         public event EventHandler<(string? tID, string message)>? OnLogEvent;
+
+        private bool _simulationRunning;
+        public bool SimulationRunning
+        {
+            get
+            {
+                return _simulationRunning;
+            }
+            set
+            {
+                _simulationRunning = value;
+                OnPropertyChanged();
+            }
+        }   
 
         int transactionID = 0;
         public int completedPayloads = 0;
@@ -129,7 +144,7 @@ namespace SequenceSimulator
             if (sender != null)
             {
                 Station station = (Station)sender;
-                if ((stationsNotFilled.Contains(station.StationID)) && station.slots.Count == station.Capacity)
+                if ((stationsNotFilled.Contains(station.StationID)) && station.Slots.Count == station.Capacity)
                 {
                     stationsNotFilled.Remove(station.StationID);
                     if (stationsNotFilled.Count == 0)
@@ -177,12 +192,24 @@ namespace SequenceSimulator
         // Simulator Execution
         public void RunSimulator(int timeInUnits)
         {
+            SimulationRunning = true;
             for (int time = 0; time < timeInUnits; time++)
             {
                 RunSimulatorForSingleUnit();
                 Thread.Sleep(10);
             }
+            SimulationRunning = false;
         }
+        public void RunSimulatorThreaded(int timeInUnits)
+        {
+            if (SimulationRunning)
+            {
+                return;
+            }
+            Thread t = new(() => RunSimulator(timeInUnits));
+            t.Start();
+        }
+
         private void RunSimulatorForSingleUnit()
         {
             removeThreads();
@@ -257,7 +284,7 @@ namespace SequenceSimulator
                 }
 
                 // 2025.03.08 Send Station back to Home if no wafers
-                if ((station.State == StationState.Idle) && station.Processable && (station.slots.Values.Count == 0) && (station.CurrentLocation != station.StartLocation) && !IsAnyRobotEnRouteToStation(station.StationID))
+                if ((station.State == StationState.Idle) && station.Processable && (station.Slots.Values.Count == 0) && (station.CurrentLocation != station.StartLocation) && !IsAnyRobotEnRouteToStation(station.StationID))
                 {
                     lock (lockObject)
                     {
@@ -287,9 +314,9 @@ namespace SequenceSimulator
                 // sort the list according to priority
                 waitingTransfer = waitingTransfer.OrderByDescending(item => item.Priority).ToList();
 
-                foreach (int slot in station.slots.Keys.ToList())
+                foreach (int slot in station.Slots.Keys.ToList())
                 {
-                    Payload payload = station.slots[slot];
+                    Payload payload = station.Slots[slot];
 
                     if (((station.Processable && station.IsAnOutputState(payload.PayloadState)) || (station.Processable && station.LowPriority && station.SingleLocationAccess) || (!station.Processable && station.IsAnInputState(payload.PayloadState)) || (station.Processable && !station.AllPayloadsSingularState)) && station.State == StationState.Idle && !blockedStations.Contains(station))
                     {
@@ -336,7 +363,7 @@ namespace SequenceSimulator
                 // Attempt Swap: Check needed wafer
                 Station thisStation = layout.StationList[thisStationID];
 
-                if (!thisStation.slots.ContainsKey(swapSlot))
+                if (!thisStation.Slots.ContainsKey(swapSlot))
                 {
                     continue;
                 }
@@ -344,7 +371,7 @@ namespace SequenceSimulator
                 {
                     continue;
                 }
-                Payload thisPayload = thisStation.slots[swapSlot];
+                Payload thisPayload = thisStation.Slots[swapSlot];
 
                 // Check if there is an output location
                 List<string> thisStationAccessibleLocations;
@@ -392,12 +419,12 @@ namespace SequenceSimulator
 
                 Station swapInStation = layout.StationList[swapInStationID];
 
-                if (!swapInStation.slots.ContainsKey(swapInSlot) || swapInStation.IsSlotLocked(swapInSlot) || blockedStations.Contains(swapInStation))
+                if (!swapInStation.Slots.ContainsKey(swapInSlot) || swapInStation.IsSlotLocked(swapInSlot) || blockedStations.Contains(swapInStation))
                 {
                     continue;
                 }
 
-                if (station.IsAnInputState(swapInStation.slots[swapInSlot].PayloadState))
+                if (station.IsAnInputState(swapInStation.Slots[swapInSlot].PayloadState))
                 {
                     if (!swapInStation.ConcurrentLocationAccess && accessibleLocations.Contains(swapInStation.CurrentLocation))
                         return swapInPayloadID;
@@ -451,7 +478,7 @@ namespace SequenceSimulator
                 }
 
                 // station is full
-                if (nextStation.slots.Count == nextStation.Capacity)
+                if (nextStation.Slots.Count == nextStation.Capacity)
                 {
                     continue;
                 }
@@ -634,7 +661,7 @@ namespace SequenceSimulator
                 }
                 foreach (Station checkStation in layout.StationList.Values)
                 {
-                    if (checkStation.PodDockable && (checkStation.slots.Count == 0))
+                    if (checkStation.PodDockable && (checkStation.Slots.Count == 0))
                     {
                         return (checkStation, checkStation.GetNextAvailableSlot());
                     }

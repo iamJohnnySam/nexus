@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NexusWPF.View.SimulationView"
-        xmlns:vm="clr-namespace:NexusWPF.ViewModel.Simulation" 
+        xmlns:vm="clr-namespace:NexusWPF.ViewModel.Simulation" xmlns:utilities="clr-namespace:NexusWPF.Utilities"
         mc:Ignorable="d"
         
         Title="SequenceSimulator" 
@@ -49,6 +49,15 @@
                 <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Center">
 
                     <Button Command="{Binding StepSimulation}" Margin="0,5,0,5">Step Simulation</Button>
+                    <TextBox FontSize="10" TextAlignment="Center">
+                        <TextBox.Text>
+                            <Binding Path="RunTime" UpdateSourceTrigger="PropertyChanged" >
+                                <Binding.ValidationRules>
+                                    <utilities:IsNumberRule Min="0" Max="90000"/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
                     <Button Command="{Binding StartSimulation}" Margin="0,5,0,5">Start Simulation</Button>
 
                 </StackPanel>

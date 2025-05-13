@@ -45,7 +45,7 @@ namespace LayoutModels.Readers
             string value;
             if (ReadSlot)
             {
-                if (TargetStation.slots.TryGetValue(SlotID, out Payload? payload))
+                if (TargetStation.Slots.TryGetValue(SlotID, out Payload? payload))
                 {
                     value = payload.PayloadID;
                     Log(transactionID, $"Reader {ReadID} returned slot ID {value} at {TargetStation.StationID}");
