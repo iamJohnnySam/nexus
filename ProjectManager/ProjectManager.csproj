@@ -19,4 +19,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NexusModels\NexusModels.csproj" />
+    <ProjectReference Include="..\UIUtilities\UIUtilities.csproj" />
+  </ItemGroup>
+
 </Project>

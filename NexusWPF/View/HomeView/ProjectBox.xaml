@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="NexusWPF.View.HomeView.ProjectBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NexusWPF.View.HomeView"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             Foreground="White">
+
+    <Border Width="400" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="250" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0">Image</TextBlock>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="40" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="{Binding ProjectName}" Margin="5,5,0,0"/>
+                    <TextBlock Text="{Binding DesignCode}" Margin="5,5,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Row="1" Content="Select Project" Margin="0,5,0,0" Command="{Binding DataContext.SetCurrentProjectCommand, ElementName=ProjectGrid}" CommandParameter="{Binding}" />
+
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

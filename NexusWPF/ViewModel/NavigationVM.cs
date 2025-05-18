@@ -1,6 +1,6 @@
-﻿using NexusWPF.Utilities;
+﻿using NexusModels.Enums;
+using NexusWPF.Utilities;
 using ProjectManager;
-using ProjectManager.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,6 +89,13 @@ namespace NexusWPF.ViewModel
             FATCommand = new RelayCommand(FAT);
             TasksCommand = new RelayCommand(Tasks);
             SimulationCommand = new RelayCommand(Simulation);
+
+
+            projectManager.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(projectManager.CurrentProject))
+                    OnPropertyChanged(nameof(CurrentProject));
+            };
 
             // Startup Page
             CurrentView = new HomeVM(projectManager);

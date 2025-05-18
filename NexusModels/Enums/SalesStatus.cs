@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectManager.Models
+namespace NexusModels.Enums
 {
     public enum SalesStatus
     {

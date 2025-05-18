@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:NexusWPF.View"
+             xmlns:local="clr-namespace:NexusWPF.View" xmlns:homeview="clr-namespace:NexusWPF.View.HomeView"
              mc:Ignorable="d" 
              Foreground="White"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -18,17 +18,11 @@
 
                 <Image Source="/Images/home_page_banner.png" Grid.Row="0" Stretch="Fill" />
 
-                <ItemsControl ItemsSource="{Binding Projects}" Grid.Row="1">
+                <ItemsControl ItemsSource="{Binding Projects}" Grid.Row="1" x:Name="ProjectGrid">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
 
-                            <Border Width="200" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding ProjectName}"/>
-                                    <TextBlock Text="{Binding DesignCode}"/>
-                                </StackPanel>
-                            </Border>
-
+                            <homeview:ProjectBox/>
 
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

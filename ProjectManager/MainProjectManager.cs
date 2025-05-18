@@ -7,13 +7,27 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UIUtilities;
 
 namespace ProjectManager
 {
-    public class MainProjectManager : IMainProjectManager
+    public class MainProjectManager : ViewModelBase, IMainProjectManager
     {
-        public Project? CurrentProject { get; set; }
-        public ObservableCollection<Project> Projects { get; set; }
+        private Project? _currentProject;
+        public Project? CurrentProject
+        {
+            get
+            {
+                return _currentProject;
+            }
+            set
+            {
+                _currentProject = value;
+                OnPropertyChanged();
+            }
+        }
+        public ObservableCollection<Project> Projects { get; set; } = [];
+
 
         public MainProjectManager()
         {
