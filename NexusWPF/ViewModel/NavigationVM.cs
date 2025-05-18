@@ -1,4 +1,6 @@
 ﻿using NexusWPF.Utilities;
+using ProjectManager;
+using ProjectManager.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,10 +22,22 @@ namespace NexusWPF.ViewModel
         }
 
         private string _pageTitle;
+        private readonly IMainProjectManager projectManager;
+
         public string PageTitle
         {
             get { return _pageTitle; }
             set { _pageTitle = value.ToUpper(); OnPropertyChanged(); }
+        }
+
+        public string CurrentProject
+        {
+            get 
+            {
+                if (projectManager.CurrentProject == null)
+                    return "Not Selected";
+                return projectManager.CurrentProject.POStatus == SalesStatus.Concept ? projectManager.CurrentProject.SalesCode : projectManager.CurrentProject.DesignCode;
+            }
         }
 
         public ICommand HomeCommand { get; set; }
@@ -36,7 +50,7 @@ namespace NexusWPF.ViewModel
 
         private void Home(object obj)
         {
-            CurrentView = new HomeVM();
+            CurrentView = new HomeVM(projectManager);
             PageTitle = string.Empty;
         }
         private void Projects(object obj)
@@ -65,8 +79,10 @@ namespace NexusWPF.ViewModel
             PageTitle = "Sequence Simulation";
         }
 
-        public NavigationVM()
+        public NavigationVM(IMainProjectManager projectManager)
         {
+            this.projectManager = projectManager;
+
             HomeCommand = new RelayCommand(Home);
             ProjectsCommand = new RelayCommand(Projects);
             DocumentationCommand = new RelayCommand(Documentation);
@@ -75,9 +91,8 @@ namespace NexusWPF.ViewModel
             SimulationCommand = new RelayCommand(Simulation);
 
             // Startup Page
-            CurrentView = new HomeVM();
+            CurrentView = new HomeVM(projectManager);
             PageTitle = string.Empty;
-
         }
     }
 }

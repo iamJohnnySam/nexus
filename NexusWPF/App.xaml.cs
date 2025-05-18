@@ -1,6 +1,8 @@
 ﻿using FATBuilder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NexusWPF.ViewModel;
+using ProjectManager;
 using SequenceSimulator;
 using System.Configuration;
 using System.Data;
@@ -21,6 +23,9 @@ namespace NexusWPF
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<MainWindow>();
+                    services.AddSingleton<NavigationVM>();
+
+                    services.AddSingleton<IMainProjectManager, MainProjectManager>();
                     services.AddTransient<IFATManager, FATManager>();
                     services.AddTransient<ISimulator, Simulator>();
                 })
@@ -32,6 +37,8 @@ namespace NexusWPF
             await AppHost!.StartAsync();
 
             var startupForm = AppHost.Services.GetRequiredService<MainWindow>();
+            var navigationViewModel = AppHost.Services.GetRequiredService<NavigationVM>();
+            startupForm.DataContext = navigationViewModel;
             startupForm.Show();
 
             base.OnStartup(e);

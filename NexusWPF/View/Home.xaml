@@ -5,14 +5,43 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:NexusWPF.View"
              mc:Ignorable="d" 
+             Foreground="White"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <Border CornerRadius="0,20,20,0" Margin="0,5,5,0">
 
-            <Image Source="/Images/home_page.png"
-                   Stretch="Fill" />
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="10 10 0 0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
 
-        </Border>
+                <Image Source="/Images/home_page_banner.png" Grid.Row="0" Stretch="Fill" />
+
+                <ItemsControl ItemsSource="{Binding Projects}" Grid.Row="1">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+
+                            <Border Width="200" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding ProjectName}"/>
+                                    <TextBlock Text="{Binding DesignCode}"/>
+                                </StackPanel>
+                            </Border>
+
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+
+            </Grid>
+        </ScrollViewer>
 
 
     </Grid>

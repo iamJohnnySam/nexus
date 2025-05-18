@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              Foreground="White">
-    <Border Width="200" BorderThickness="1" BorderBrush="LightGray" Padding="5">
+    <Border Width="200" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
@@ -18,7 +18,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Grid.Row="0">
-                <TextBlock Text="{Binding Value.StationID}" Width="100"/>
+                <TextBlock Text="{Binding Value.StationID}" Width="75"/>
                 <TextBlock Text="{Binding Value.State}"/>
             </StackPanel>
 
@@ -35,7 +35,7 @@
             </StackPanel>
 
             <Separator Grid.Row="3" />
-            <ItemsControl ItemsSource="{Binding Value.SlotList}" Grid.Row="3">
+            <ItemsControl ItemsSource="{Binding Value.SlotList}" Grid.Row="4">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
