@@ -17,13 +17,13 @@ namespace NexusWPF.ViewModel
         private readonly IMainProjectManager projectManager;
         public ObservableCollection<Project> Projects => projectManager.Projects;
 
-        public ICommand SetCurrentProjectCommand { get; }
+        public ICommand SetCurrentProject { get; }
 
         public HomeVM(IMainProjectManager projectManager)
         {
             this.projectManager = projectManager;
 
-            SetCurrentProjectCommand = new SetCurrentProjectCommand(projectManager);
+            SetCurrentProject = new SetCurrentProjectCommand(projectManager);
 
             projectManager.UpdateProjects();
         }

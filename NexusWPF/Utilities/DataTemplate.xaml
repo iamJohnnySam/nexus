@@ -27,5 +27,9 @@
         <view:Simulation />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:ReviewVM}">
+        <view:Review />
+    </DataTemplate>
+
 
 </ResourceDictionary>

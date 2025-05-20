@@ -14,7 +14,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Project Name" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
-            <TextBox Text="{Binding CurrentProjectName}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+            <TextBox Text="{Binding CurrentProjectName}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" IsEnabled="{Binding SelectedProject}" />
         </Grid>
 
         <Grid>
@@ -23,7 +23,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Customer Name" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
-            <TextBox Text="{Binding CurrentProjectCustomer}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+            <TextBox Text="{Binding CurrentProjectCustomer}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" IsEnabled="{Binding SelectedProject}" />
         </Grid>
 
         <Grid>
@@ -32,7 +32,16 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Project Design Code" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
-            <TextBox Text="{Binding CurrentProjectDesignCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+            <TextBox Text="{Binding CurrentProjectDesignCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" IsEnabled="{Binding SelectedProject}" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Sales Code" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <TextBox Text="{Binding CurrentProjectSalesCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" IsEnabled="{Binding SelectedProject}" />
         </Grid>
 
         <Grid>
@@ -41,7 +50,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Project PO Code" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
-            <TextBox Text="{Binding CurrentProjectPOCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+            <TextBox Text="{Binding CurrentProjectPOCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" IsEnabled="{Binding SelectedProject}" />
         </Grid>
 
         <Grid>
@@ -52,7 +61,7 @@
             <Label Content="Project Concept Category" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
             <ComboBox ItemsSource="{Binding Path=CurrentProjectSalesStatus, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
               SelectedValuePath="Value"
-              DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+              DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3" IsEnabled="{Binding SelectedProject}"
               SelectedValue="{Binding Path=CurrentProjectSalesStatus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
@@ -64,7 +73,7 @@
             <Label Content="Project Priority" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
             <ComboBox ItemsSource="{Binding Path=CurrentProjectPriority, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
       SelectedValuePath="Value"
-      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3" IsEnabled="{Binding SelectedProject}"
       SelectedValue="{Binding Path=CurrentProjectPriority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
@@ -76,7 +85,7 @@
             <Label Content="Project Category" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
             <ComboBox ItemsSource="{Binding Path=CurrentProjectCategory, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
                       SelectedValuePath="Value"
-                      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+                      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3" IsEnabled="{Binding SelectedProject}"
                       SelectedValue="{Binding Path=CurrentProjectCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 

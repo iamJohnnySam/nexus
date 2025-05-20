@@ -178,6 +178,21 @@
                         </Grid>
                     </Menu:MenuBtn>
 
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding ReviewCommand}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" HorizontalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="FileDocumentCheckOutline" Style="{StaticResource Image_Style}" />
+                            </Grid>
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="Review" Style="{StaticResource Menu_Text_Style}" />
+                            </Grid>
+                        </Grid>
+                    </Menu:MenuBtn>
+
                 </StackPanel>
 
                 <TextBlock Grid.Row="1" Text="{Binding CurrentProject}" Height="50" HorizontalAlignment="Center" FontFamily="Rubik Medium" Foreground="#DBDBDB" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,10,0,0" Padding="0,10,0,0"/>

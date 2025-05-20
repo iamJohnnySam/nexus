@@ -9,6 +9,7 @@ namespace NexusModels.Enums
 {
     public enum ProductCategory
     {
+        None,
         [Description("Load Port")]
         LoadPort,
         [Description("EFEM")]

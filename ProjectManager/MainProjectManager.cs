@@ -24,8 +24,35 @@ namespace ProjectManager
             {
                 _currentProject = value;
                 OnPropertyChanged();
+                if (value != null)
+                {
+                    SelectedProject = true;
+                }
+                else
+                {
+                    SelectedProject = false;
+                }
+                currentProjectIsNew = false;
             }
         }
+
+
+        private bool _selectedProject;
+        public bool SelectedProject
+        {
+            get
+            {
+                return _selectedProject;
+            }
+            private set
+            {
+                _selectedProject = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool currentProjectIsNew = false;
+
         public ObservableCollection<Project> Projects { get; set; } = [];
 
 
@@ -56,11 +83,52 @@ namespace ProjectManager
                 context.SaveChanges();
             }
         }
+        public void CreateNewProject()
+        {
+            CurrentProject = new Project
+            {
+                ProjectName = "NEW PROJECT"
+            };
+            currentProjectIsNew = true;
+        }
 
         public void UpdateProjects()
         {
             using var context = new AppDbContext();
             Projects = new ObservableCollection<Project>(context.Projects.ToList());
+        }
+
+        public void SaveCurrentProject()
+        {
+            if (CurrentProject == null)
+            {
+                return;
+            }
+
+            using var context = new AppDbContext();
+
+            if (currentProjectIsNew)
+            {
+                context.Projects.Add(CurrentProject);
+            }
+            else
+            {
+                context.Projects.Update(CurrentProject); // Optional, EF tracks changes
+            }
+
+            context.SaveChanges();
+            UpdateProjects();
+        }
+        public void DeleteCurrentProject()
+        {
+            using var context = new AppDbContext();
+
+            if (CurrentProject != null)
+            {
+                context.Projects.Remove(CurrentProject);
+                context.SaveChanges();
+                SelectedProject = false;
+            }
         }
     }
 }

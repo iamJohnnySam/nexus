@@ -46,6 +46,7 @@ namespace NexusWPF.ViewModel
         public ICommand FATCommand { get; set; }
         public ICommand TasksCommand { get; set; }
         public ICommand SimulationCommand { get; set; }
+        public ICommand ReviewCommand { get; set; }
 
 
         private void Home(object obj)
@@ -79,6 +80,12 @@ namespace NexusWPF.ViewModel
             PageTitle = "Sequence Simulation";
         }
 
+        private void Review(object obj)
+        {
+            CurrentView = new ReviewVM();
+            PageTitle = "Design Review";
+        }
+
         public NavigationVM(IMainProjectManager projectManager)
         {
             this.projectManager = projectManager;
@@ -89,6 +96,7 @@ namespace NexusWPF.ViewModel
             FATCommand = new RelayCommand(FAT);
             TasksCommand = new RelayCommand(Tasks);
             SimulationCommand = new RelayCommand(Simulation);
+            ReviewCommand = new RelayCommand(Review);
 
 
             projectManager.PropertyChanged += (s, e) =>
