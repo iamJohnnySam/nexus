@@ -55,7 +55,7 @@ namespace NexusWPF.ViewModel
         }
         private void Projects(object obj)
         {
-            CurrentView = new ProjectsVM();
+            CurrentView = new ProjectsVM(projectManager);
             PageTitle = "Projects";
         }
         private void Documentation(object obj)

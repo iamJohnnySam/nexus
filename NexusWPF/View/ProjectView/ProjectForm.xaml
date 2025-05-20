@@ -1,0 +1,85 @@
+﻿<UserControl x:Class="NexusWPF.View.ProjectView.ProjectForm"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NexusWPF.View.ProjectView" xmlns:utilities="clr-namespace:NexusWPF.Utilities"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Name" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <TextBox Text="{Binding CurrentProjectName}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Customer Name" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <TextBox Text="{Binding CurrentProjectCustomer}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Design Code" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <TextBox Text="{Binding CurrentProjectDesignCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project PO Code" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <TextBox Text="{Binding CurrentProjectPOCode}" Grid.Row="1" Padding="10,3,3,3" BorderThickness="0" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Concept Category" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <ComboBox ItemsSource="{Binding Path=CurrentProjectSalesStatus, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
+              SelectedValuePath="Value"
+              DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+              SelectedValue="{Binding Path=CurrentProjectSalesStatus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Priority" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <ComboBox ItemsSource="{Binding Path=CurrentProjectPriority, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
+      SelectedValuePath="Value"
+      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+      SelectedValue="{Binding Path=CurrentProjectPriority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" SharedSizeGroup="Label"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Project Category" Grid.Row="0" Foreground="White" Margin="0,5,0,0" />
+            <ComboBox ItemsSource="{Binding Path=CurrentProjectCategory, Converter={utilities:EnumToCollectionConverter}, Mode=OneTime}"
+                      SelectedValuePath="Value"
+                      DisplayMemberPath="Description" Grid.Row="1" Padding="10,3,3,3"
+                      SelectedValue="{Binding Path=CurrentProjectCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+    </StackPanel>
+    
+</UserControl>

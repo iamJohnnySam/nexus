@@ -8,11 +8,11 @@
              d:DesignHeight="450" d:DesignWidth="800"
              Foreground="White">
 
-    <Border Width="400" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
+    <Border Width="300" BorderThickness="1" BorderBrush="LightGray" Padding="5" Margin="5">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="200" />
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0">Image</TextBlock>
