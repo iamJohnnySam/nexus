@@ -118,7 +118,7 @@
                         </Grid>
                     </Menu:MenuBtn>
 
-                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding TasksCommand}">
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding TasksCommand}" IsEnabled="{Binding IsProjectSelected}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50" />
@@ -133,7 +133,7 @@
                         </Grid>
                     </Menu:MenuBtn>
 
-                    <Menu:MenuBtn Style="{StaticResource BtnStyle}"  Command="{Binding DocumentationCommand}">
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}"  Command="{Binding DocumentationCommand}" IsEnabled="{Binding IsProjectSelected}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50" />
@@ -148,7 +148,7 @@
                         </Grid>
                     </Menu:MenuBtn>
 
-                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding FATCommand}">
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding FATCommand}" IsEnabled="{Binding IsProjectSelected}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50" />
@@ -163,7 +163,7 @@
                         </Grid>
                     </Menu:MenuBtn>
 
-                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding SimulationCommand}">
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding SimulationCommand}" IsEnabled="{Binding IsProjectSelected}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50" />
@@ -178,7 +178,7 @@
                         </Grid>
                     </Menu:MenuBtn>
 
-                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding ReviewCommand}">
+                    <Menu:MenuBtn Style="{StaticResource BtnStyle}" Command="{Binding ReviewCommand}" IsEnabled="{Binding IsProjectSelected}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50" />

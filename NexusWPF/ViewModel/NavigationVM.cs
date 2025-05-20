@@ -21,6 +21,14 @@ namespace NexusWPF.ViewModel
             set { _currentView = value; OnPropertyChanged(); }
         }
 
+        public bool IsProjectSelected
+        {
+            get
+            {
+                return projectManager.CurrentProject == null ? false : true;
+            }
+        }
+
         private string _pageTitle;
         private readonly IMainProjectManager projectManager;
 
@@ -82,7 +90,7 @@ namespace NexusWPF.ViewModel
 
         private void Review(object obj)
         {
-            CurrentView = new ReviewVM();
+            CurrentView = new ReviewVM(projectManager);
             PageTitle = "Design Review";
         }
 
@@ -102,7 +110,10 @@ namespace NexusWPF.ViewModel
             projectManager.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(projectManager.CurrentProject))
+                {
                     OnPropertyChanged(nameof(CurrentProject));
+                    OnPropertyChanged(nameof(IsProjectSelected));
+                }
             };
 
             // Startup Page

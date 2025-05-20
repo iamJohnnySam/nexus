@@ -7,6 +7,50 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DataGrid Grid.Row="1" />
+
+
+        <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch" />
+
+        
+  
+        
+        
+        
+        <!-- Description View -->
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="20" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="300" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0">Title</TextBlock>
+                <TextBlock Grid.Column="1">Approval</TextBlock>
+                
+            </Grid>
+
+            <TextBox Grid.Row="1" />
+
+
+            <Button Grid.Row="2">Update</Button>
             
+            
+        </Grid>
+        
+        
     </Grid>
 </UserControl>
