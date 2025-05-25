@@ -20,6 +20,7 @@ namespace ProjectManager.Models
         public ProjectPriority Priority { get; set; } = ProjectPriority.Normal;
         public SalesStatus POStatus { get; set; }
         public ProductCategory ProductCategory { get; set; }
+        public List<Module> Modules { get; set; } = [];
 
     }
 }

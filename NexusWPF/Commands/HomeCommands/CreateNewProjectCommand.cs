@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusWPF.Commands.Home
+namespace NexusWPF.Commands.HomeCommands
 {
     class CreateNewProjectCommand : CommandBase
     {

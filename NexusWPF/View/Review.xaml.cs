@@ -25,4 +25,4 @@ namespace NexusWPF.View
             InitializeComponent();
         }
     }
-}
+} 

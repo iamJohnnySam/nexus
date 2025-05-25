@@ -1,4 +1,5 @@
 ﻿using NexusModels;
+using NexusModels.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,18 @@ namespace ProjectManager
     {
         public required ReviewPoint ReviewPoint { get; set; }
         public ProjectReviewItem? ProjectFeedback { get; set; }
+        public Module ModuleUnderReview => ReviewPoint.ModuleUnderTest;
+        public bool Completed
+        {
+            get
+            {
+                if (ProjectFeedback == null)
+                    return false;
+                return ProjectFeedback.Approved;
+            }
+            set
+            {
+            }
+        }
     }
 }

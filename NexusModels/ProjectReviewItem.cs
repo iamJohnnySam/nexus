@@ -13,8 +13,8 @@ namespace NexusModels
         [Key]
         public int Id { get; set; }
         public int ProjectId { get; set; }
-        public Project Project { get; set; }
-        public ReviewPoint ReviewPoint { get; set; }
+        public required Project Project { get; set; }
+        public required ReviewPoint ReviewPoint { get; set; }
         public bool Approved { get; set; } = false;
         public DateTime? LastReviewDate { get; set; }
         public string ReviewComments { get; set; } = string.Empty;

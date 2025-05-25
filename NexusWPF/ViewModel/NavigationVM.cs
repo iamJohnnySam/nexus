@@ -79,7 +79,7 @@ namespace NexusWPF.ViewModel
         }
         private void Tasks(object obj)
         {
-            CurrentView = new TasksVM();
+            CurrentView = new TasksVM(projectManager);
             PageTitle = "Tasks";
         }
         private void Simulation(object obj)

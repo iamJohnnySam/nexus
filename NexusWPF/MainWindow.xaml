@@ -34,12 +34,12 @@
 
             <Grid Grid.Column="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="20"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="20"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="20"/>
                     <RowDefinition Height="30"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="10"/>
@@ -195,7 +195,10 @@
 
                 </StackPanel>
 
-                <TextBlock Grid.Row="1" Text="{Binding CurrentProject}" Height="50" HorizontalAlignment="Center" FontFamily="Rubik Medium" Foreground="#DBDBDB" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,10,0,0" Padding="0,10,0,0"/>
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="Selected Project" FontSize="9" HorizontalAlignment="Center" Foreground="White"/>
+                    <TextBlock Text="{Binding CurrentProject}" Height="25" HorizontalAlignment="Center" Foreground="#DBDBDB" FontWeight="Bold"/>
+                </StackPanel>
 
             </Grid>
         </Border>

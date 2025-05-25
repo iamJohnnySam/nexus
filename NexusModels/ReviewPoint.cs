@@ -12,7 +12,7 @@ namespace NexusModels
     {
         [Key]
         public int ReviewId { get; set; }
-        public Module module { get; set; }
-        public string ReviewItem { get; set; }
+        public Module ModuleUnderTest { get; set; }
+        public required string ReviewItem { get; set; }
     }
 }

@@ -7,17 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusWPF.Commands.Home
+namespace NexusWPF.Commands.HomeCommands
 {
-    class DeleteProjectCommand : CommandBase
+    class SaveProjectCommand : CommandBase
     {
         private IMainProjectManager _projectManager;
         public override void Execute(object? parameter)
         {
-            _projectManager.DeleteCurrentProject();
+            _projectManager.SaveCurrentProject();
         }
 
-        public DeleteProjectCommand(IMainProjectManager projectManager)
+        public SaveProjectCommand(IMainProjectManager projectManager)
         {
             _projectManager = projectManager;
         }

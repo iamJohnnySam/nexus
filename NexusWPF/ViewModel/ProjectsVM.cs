@@ -1,5 +1,5 @@
 ﻿using NexusModels.Enums;
-using NexusWPF.Commands.Home;
+using NexusWPF.Commands.HomeCommands;
 using ProjectManager;
 using ProjectManager.Models;
 using System;
@@ -13,11 +13,13 @@ using UIUtilities;
 
 namespace NexusWPF.ViewModel
 {
-    class ProjectsVM : ViewModelBase
+    public class ProjectsVM : ViewModelBase
     {
         private readonly IMainProjectManager projectManager;
 
         public ObservableCollection<Project> Projects => projectManager.Projects;
+
+        public Module IntegrationProduct { get; set; }
 
         public string CurrentProjectName
         {
@@ -147,6 +149,22 @@ namespace NexusWPF.ViewModel
                 OnPropertyChanged();
             }
         }
+        public List<Module> CurrentProjectModules
+        {
+            get
+            {
+                if (projectManager.CurrentProject == null)
+                    return [];
+                return projectManager.CurrentProject.Modules;
+            }
+
+            set
+            {
+                if (projectManager.CurrentProject != null)
+                    projectManager.CurrentProject.Modules = value;
+                OnPropertyChanged();
+            }
+        }
 
 
         public bool SelectedProject => projectManager.SelectedProject;
@@ -156,7 +174,9 @@ namespace NexusWPF.ViewModel
         public ICommand CreateNewProject { get; }
         public ICommand SaveProject { get; }
         public ICommand DeleteProject { get; }
-        
+        public ICommand AddModuleToProject { get; }
+
+
 
         public ProjectsVM(IMainProjectManager projectManager)
         {
@@ -166,6 +186,7 @@ namespace NexusWPF.ViewModel
             CreateNewProject = new CreateNewProjectCommand(projectManager);
             SaveProject = new SaveProjectCommand(projectManager);
             DeleteProject = new DeleteProjectCommand(projectManager);
+            AddModuleToProject = new AddModuleToProjectCommand(this, projectManager);
 
             projectManager.PropertyChanged += (s, e) =>
             {
@@ -182,6 +203,7 @@ namespace NexusWPF.ViewModel
                     OnPropertyChanged(nameof(CurrentProjectCategory));
                     OnPropertyChanged(nameof(CurrentProjectPriority));
                     OnPropertyChanged(nameof(CurrentProjectSalesStatus));
+                    OnPropertyChanged(nameof(CurrentProjectModules));
                 }
             };
 

@@ -54,16 +54,54 @@ namespace ProjectManager.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ModuleUnderTest")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ReviewItem")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("module")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("ReviewId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("NexusModels.TaskItem", b =>
+                {
+                    b.Property<int>("TaskId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Deadline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ParentTaskItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Responsible")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("TaskId");
+
+                    b.HasIndex("ParentTaskItemId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("TaskItems");
                 });
 
             modelBuilder.Entity("ProjectManager.Models.Project", b =>
@@ -77,6 +115,10 @@ namespace ProjectManager.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DesignCode")
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("Modules")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("POCode")
@@ -120,6 +162,29 @@ namespace ProjectManager.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("ReviewPoint");
+                });
+
+            modelBuilder.Entity("NexusModels.TaskItem", b =>
+                {
+                    b.HasOne("NexusModels.TaskItem", "ParentTaskItem")
+                        .WithMany("SubTasks")
+                        .HasForeignKey("ParentTaskItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ProjectManager.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentTaskItem");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("NexusModels.TaskItem", b =>
+                {
+                    b.Navigation("SubTasks");
                 });
 #pragma warning restore 612, 618
         }

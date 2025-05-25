@@ -3,10 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:NexusWPF.View"
+             xmlns:local="clr-namespace:NexusWPF.View" xmlns:viewmodel="clr-namespace:NexusWPF.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:TasksVM}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
-    </Grid>
+    <DockPanel x:Name="TasksDockPanel">
+        <Button Content="Add Root Task" DockPanel.Dock="Bottom" Command="{Binding AddRootCommand}"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <TreeView ItemsSource="{Binding Tasks}">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding SubTasks}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding IsCompleted, Mode=TwoWay}"/>
+                            <TextBox Text="{Binding Title, Mode=TwoWay}" Width="120" Margin="5,0"/>
+                            <TextBox Text="{Binding Responsible, Mode=TwoWay}" Width="100" Margin="5,0"/>
+                            <DatePicker SelectedDate="{Binding Deadline, Mode=TwoWay}" Width="120" Margin="5,0"/>
+                            <Button Content="+" Width="25" Margin="5,0"
+                                    Command="{Binding DataContext.AddSubTaskCommand, ElementName=TasksDockPanel}"
+                                    CommandParameter="{Binding}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>
