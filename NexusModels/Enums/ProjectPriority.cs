@@ -5,16 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectManager.Models
+namespace ProjectManager.Models;
+
+public enum ProjectPriority
 {
-    public enum ProjectPriority
-    {
-        [Description("Not Started")]
-        NotStarted,
-        Low,
-        Normal,
-        High,
-        Completed,
-        Discarded
-    }
+    [Description("Not Started")]
+    NotStarted,
+    Low,
+    Normal,
+    High,
+    Completed,
+    Discarded
 }

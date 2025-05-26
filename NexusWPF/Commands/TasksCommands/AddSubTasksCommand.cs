@@ -1,4 +1,4 @@
-﻿using NexusModels;
+﻿using NexusModels.ProjectTasks;
 using NexusWPF.Utilities;
 using NexusWPF.ViewModel;
 using System;

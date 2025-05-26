@@ -1,5 +1,6 @@
 ﻿using NexusModels;
 using NexusModels.Enums;
+using NexusModels.ProjectReview;
 using ProjectManager.DB;
 using ProjectManager.Models;
 using System;
@@ -89,7 +90,7 @@ namespace ProjectManager
             ReviewPoint reviewPoint = new ReviewPoint()
             {
                 ModuleUnderTest = moduleUnderTest,
-                ReviewItem = reviewItem
+                ReviewDescription = reviewItem
             };
 
             using var context = new AppDbContext();

@@ -5,15 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusModels.Enums
+namespace NexusModels.Enums;
+
+public enum SalesStatus
 {
-    public enum SalesStatus
-    {
-        [Description("Concept Stage")]
-        Concept,
-        [Description("PO Project")]
-        POProject,
-        [Description("After Sales")]
-        AfterSales
-    }
+    [Description("Concept Stage")]
+    Concept,
+    [Description("PO Project")]
+    POProject,
+    [Description("After Sales")]
+    AfterSales
 }

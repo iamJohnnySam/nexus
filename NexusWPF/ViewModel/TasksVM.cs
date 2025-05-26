@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NexusModels;
+using NexusModels.ProjectTasks;
 using NexusWPF.Commands.TasksCommands;
 using NexusWPF.View;
 using ProjectManager;

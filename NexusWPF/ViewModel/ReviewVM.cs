@@ -1,4 +1,5 @@
 ﻿using NexusModels.Enums;
+using NexusModels.ProjectReview;
 using NexusWPF.Commands.ReviewCommands;
 using ProjectManager;
 using System;
@@ -76,7 +77,7 @@ namespace NexusWPF.ViewModel
             get 
             {
                 if (CurrentReview != null)
-                    return CurrentReview.ReviewPoint.ReviewItem;
+                    return CurrentReview.ReviewPoint.ReviewDescription;
                 return "No Review Selected";
             }
         }
