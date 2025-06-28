@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IManager manager
 
 <PageTitle>Home</PageTitle>
 
@@ -7,17 +8,37 @@
 </section>
 
 <section class="projects" id="projects">
-    <div class="project-card">
-        <div class="project-title">Project Alpha</div>
-        <div class="project-desc">Redesign of the UI framework and performance improvements.</div>
-    </div>
-    <div class="project-card">
-        <div class="project-title">Project Beta</div>
-        <div class="project-desc">Automation system development for high throughput process.</div>
-    </div>
-    <div class="project-card">
-        <div class="project-title">Project Gamma</div>
-        <div class="project-desc">Deployment of new monitoring and analytics tools.</div>
-    </div>
-    <!-- Add more projects dynamically in Blazor -->
+    @if (projects == null)
+    {
+        <div class="project-card">
+            <div class="project-title">Loading Projects...</div>
+            <div class="project-desc">...</div>
+        </div>
+    }
+    else if (projects.Count == 0)
+    {
+        <div class="project-card">
+            <div class="project-title">NO PROJECTS AVAILABLE</div>
+            <div class="project-desc">...</div>
+        </div>
+    }
+    else
+    {
+        @foreach (var project in projects)
+        {
+            <div class="project-card">
+                <div class="project-title">@project.ProjectName</div>
+                <div class="project-desc">Design Code: @project.DesignCode | Priority: @project.Priority</div>
+            </div>
+        }
+    }
 </section>
+
+@code {
+    private List<Project> projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        projects = manager.Projects;
+    }
+}

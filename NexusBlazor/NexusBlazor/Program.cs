@@ -1,6 +1,5 @@
 using NexusBlazor.Client.Pages;
 using NexusBlazor.Components;
-using NexusBlazor.Services;
 using ProjectManager;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +9,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddSingleton<IMainProjectManager, MainProjectManager>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddSingleton<IManager, Manager>();
 
 var app = builder.Build();
 
