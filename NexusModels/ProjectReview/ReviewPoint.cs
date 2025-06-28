@@ -11,8 +11,9 @@ namespace NexusModels.ProjectReview;
 public class ReviewPoint
 {
     [Key]
-    public int ReviewId { get; set; }
+    public int ReviewPointId { get; set; }
     public int ModuleUnderTestId { get; set; }
     public required Module ModuleUnderTest { get; set; }
     public required string ReviewDescription { get; set; }
+    public List<Review> Reviews { get; set; } = [];
 }

@@ -26,7 +26,7 @@ public class TaskItem
     public int? ParentTaskItemId { get; set; }
     public TaskItem? ParentTaskItem { get; set; }
 
-    public ObservableCollection<TaskItem> SubTasks { get; set; } = [];
+    public List<TaskItem> SubTasks { get; set; } = [];
 
     public bool IsFullyCompleted => IsCompleted && SubTasks.All(s => s.IsFullyCompleted);
 

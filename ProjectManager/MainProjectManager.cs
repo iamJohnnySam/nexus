@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NexusModels;
 using ProjectManager.DB;
 using ProjectManager.Models;
 using System;
@@ -11,10 +12,10 @@ using UIUtilities;
 
 namespace ProjectManager
 {
-    public class MainProjectManager : ViewModelBase, IMainProjectManager
+    public class MainProjectManager : IMainProjectManager
     {
-        private Project? _currentProject;
-        public Project? CurrentProject
+        private Project _currentProject;
+        public Project CurrentProject
         {
             get
             {
@@ -23,33 +24,10 @@ namespace ProjectManager
             set
             {
                 _currentProject = value;
-                OnPropertyChanged();
-                if (value != null)
-                {
-                    SelectedProject = true;
-                }
-                else
-                {
-                    SelectedProject = false;
-                }
-                currentProjectIsNew = false;
             }
         }
 
 
-        private bool _selectedProject;
-        public bool SelectedProject
-        {
-            get
-            {
-                return _selectedProject;
-            }
-            private set
-            {
-                _selectedProject = value;
-                OnPropertyChanged();
-            }
-        }
 
         private bool currentProjectIsNew = false;
 
@@ -71,23 +49,31 @@ namespace ProjectManager
 
             if (!exists)
             {
+                var generalProduct = new Product
+                {
+                    ProductName = "Miscellaneous"
+                };
+                context.Products.Add(generalProduct);
+
                 var generalProject = new Project
                 {
                     ProjectName = "General",
                     DesignCode = "GENERAL",
                     SalesCode = "GENERAL",
-                    POCode = "GENERAL"
+                    POCode = "GENERAL",
+                    ProductCategory = generalProduct
                 };
 
                 context.Projects.Add(generalProject);
                 context.SaveChanges();
             }
         }
-        public void CreateNewProject()
+        public void CreateNewProject(Product product)
         {
             CurrentProject = new Project
             {
-                ProjectName = "NEW PROJECT"
+                ProjectName = "NEW PROJECT",
+                ProductCategory = product
             };
             currentProjectIsNew = true;
         }

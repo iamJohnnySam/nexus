@@ -13,8 +13,8 @@ public class Employee
     [Key]
     public int EmployeeId { get; set; }
     public required string EmployeeName { get; set; }
-    public int? EmployeeGradeId { get; set; }
-    public Grade? EmployeeGrade { get; set; }
+    public int EmployeeGradeId { get; set; }
+    public required Grade EmployeeGrade { get; set; }
     public int? EmployeeDesignationId { get; set; }
     public Designation? EmployeeDesignation { get; set; }
     public DateTime EmployeeJoinDate { get; set; }

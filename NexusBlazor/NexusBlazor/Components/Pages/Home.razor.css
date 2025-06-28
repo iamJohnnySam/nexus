@@ -1,0 +1,40 @@
+﻿.hero {
+    height: 100vh;
+    background: url('https://images.unsplash.com/photo-1603791440384-56cd371ee9a7') no-repeat center center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Project Section */
+.projects {
+    padding: 4rem 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.project-card {
+    background-color: #2c2c2c;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .project-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+    }
+
+.project-title {
+    font-size: 1.2rem;
+    color: #00adb5;
+    margin-bottom: 0.5rem;
+}
+
+.project-desc {
+    font-size: 0.95rem;
+    color: #d0d0d0;
+}

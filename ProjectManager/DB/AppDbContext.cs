@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
         modelBuilder.Entity<TaskItem>()
             .HasMany(t => t.SubTasks)
             .WithOne(t => t.ParentTaskItem)
@@ -68,7 +69,33 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Review>()
             .HasOne(r => r.ReviewItem)
-            .WithOne()
-            .HasForeignKey<Review>(r => r.ReviewId); // 1:1 between ProjectReview and ProjectReviewItem
+            .WithMany()
+            .HasForeignKey(r => r.ReviewItemId);
+
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.ReviewItem)
+            .WithMany(ri => ri.Reviews)
+            .HasForeignKey(r => r.ReviewItemId);
+
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.ReviewPoint)
+            .WithMany(rp => rp.Reviews)
+            .HasForeignKey(r => r.ReviewPointId);
+
+        modelBuilder
+            .Entity<Project>()
+            .Property(p => p.Priority)
+            .HasConversion<string>();
+
+        modelBuilder
+            .Entity<Project>()
+            .Property(p => p.POStatus)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<TaskItem>()
+            .HasIndex(t => t.IsCompleted);
+
+        modelBuilder.Entity<TaskItem>()
+            .HasIndex(t => t.ProjectId);
     }
 }

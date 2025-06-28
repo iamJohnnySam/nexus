@@ -28,5 +28,4 @@ public class Project
     public List<Module> Modules { get; set; } = [];
     public List<TaskItem> TaskItems { get; set; } = [];
     public List<Review> Reviews { get; set; } = [];
-
 }
