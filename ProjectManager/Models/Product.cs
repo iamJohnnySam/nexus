@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NexusModels;
+namespace ProjectManager.Models;
 
 public class Product
 {

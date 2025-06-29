@@ -1,0 +1,43 @@
+﻿@page "/admin"
+@attribute [StreamRendering(true)]
+@inject IManager manager
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="container">
+  <div class="row">
+    <div class="col-3">
+
+        <h2 class="text-xl font-bold mb-4">Tables</h2>
+        @foreach (var table in TableNames)
+        {
+            <button class="w-full text-left p-2 rounded hover:bg-gray-600 @(SelectedTable == table ? "bg-gray-700" : "")"
+                        @onclick="() => SelectTable(table)">
+                    @table
+                </button>
+        }
+
+    </div>
+    <div class="col">
+
+            @if (SelectedTable == "Project")
+            {
+                <ProjectTable />
+            }
+
+    </div>
+  </div>
+</div>
+
+
+@code {
+    private List<string> TableNames = new() { "Project", "Customer", "Product" };
+    private string SelectedTable = "Project";
+
+    private void SelectTable(string table)
+    {
+        SelectedTable = table;
+        Console.WriteLine(table);
+        StateHasChanged();
+    }
+}

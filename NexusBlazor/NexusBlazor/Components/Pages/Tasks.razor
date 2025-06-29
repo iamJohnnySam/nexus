@@ -1,0 +1,31 @@
+﻿@page "/tasks"
+@inject IManager manager
+<PageTitle>Project Tasks</PageTitle>
+
+<h3>Tasks</h3>
+
+<div class="border" style="padding: 20px; margin-top: 20px;">
+    <div style="display: flex; flex-direction: column">
+        @foreach (var taskItem in TaskItems)
+        {
+            <div class="flex-center" style="margin-bottom: 10px;">
+                <div class="@ItemClass(taskItem)" style="width: 200px;">@taskItem.Title</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private IList<TaskItem> TaskItems { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        TaskItems = manager.GetAllTasks_L1().Result;
+        base.OnInitialized();
+    }
+
+    public string ItemClass(TaskItem item)
+    {
+        return item.IsCompleted ? "item-completed": "";
+    }
+}

@@ -12,11 +12,14 @@ public class Project
     [Key]
     public int ProjectId { get; set; }
     public required string ProjectName { get; set; }
-    public int CustomerID { get; set; }
+    public int CustomerId { get; set; }
     public string? DesignCode { get; set; }
     public List<string> PreviousCodes { get; set; } = [];
     public List<string> POCodes { get; set; } = [];
     public ProjectPriority Priority { get; set; } = ProjectPriority.Normal;
     public SalesStatus POStatus { get; set; }
     public int ProductId { get; set; }
+
+    public Customer? Customer { get; set; }
+    public Product? Product { get; set; }
 }

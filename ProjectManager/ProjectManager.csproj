@@ -7,16 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DB\schema.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="DB\schema.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
   </ItemGroup>
