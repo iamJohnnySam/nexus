@@ -1,0 +1,34 @@
+﻿@inject IManager manager
+
+<EditForm Model="@NewItem" OnSubmit="@ItemAdded">
+    <div style="display: flex; align-items: center; width: 400px;">
+        <div style="margin-right: 10px">Text:</div>
+        <InputText @bind-Value="NewItem.Title" class="form-control" style="margin-right: 10px" id="Item" />
+        <input type="submit" class="btn btn-primary" style="margin-right: 10px" value="Add" />
+        <input type="reset" class="btn btn-secondary" value="Clear" />
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public required Action OnItemAdded { get; set; }
+
+    private TaskItem NewItem;
+
+    public NewTask(TaskItem newItem)
+    {
+        NewItem = newItem;
+    }
+
+    public void ItemAdded()
+    {
+        var newItem = new TaskItem { Title = NewItem.Title, Deadline = DateTime.Now };
+        NewItem.Title = "";
+        manager.InsertTask(newItem);
+
+        if (OnItemAdded != null)
+        {
+            OnItemAdded();
+        }
+    }
+}

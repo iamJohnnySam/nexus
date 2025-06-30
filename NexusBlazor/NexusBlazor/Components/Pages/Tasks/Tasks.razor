@@ -1,0 +1,77 @@
+﻿@page "/tasks"
+@inject IManager manager
+<PageTitle>Project Tasks</PageTitle>
+
+<h3>Tasks</h3>
+
+<div class="border" style="padding: 20px;">
+    <h4>New Item</h4>
+    <TodoItemForm OnItemAdded="@ItemsChanged" />
+</div>
+
+<div class="border" style="padding: 20px; margin-top: 20px;">
+    <div style="display: flex; flex-direction: column">
+        @foreach (var taskItem in TaskItems)
+        {
+            <div style="display: flex; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center;margin-bottom: 10px;">
+                    <div class="@ItemClass(taskItem)" style="width: 280px;">@taskItem.Title</div>
+                </div>
+                @if (taskItem.IsCompleted)
+                {
+                    <div style="width: 120px">
+                        <button class="btn btn-primary" onclick="@(() => UncompleteItem(taskItem))">Uncomplete</button>
+                    </div>
+                }
+                @if (!taskItem.IsCompleted)
+                {
+                    <div style="width: 120px">
+                        <button class="btn btn-primary" onclick="@(() => CompleteItem(taskItem))">Complete</button>
+                    </div>
+                }
+                <div>
+                    <button class="btn btn-danger" onclick="@(() => DeleteItem(taskItem))">Delete</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private IList<TaskItem> TaskItems { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        TaskItems = manager.GetAllTasks_L1().Result;
+        base.OnInitialized();
+    }
+
+    public string ItemClass(TaskItem item)
+    {
+        return item.IsCompleted ? "item-completed": "";
+    }
+
+    public void ItemsChanged()
+    {
+        TaskItems = manager.GetAllTasks_L1().Result;
+        StateHasChanged();
+    }
+
+    public void DeleteItem(TaskItem item)
+    {
+        // _todoService.Delete(item);
+        ItemsChanged();
+    }
+
+    public void CompleteItem(TaskItem item)
+    {
+        manager.MarkTaskComplete(item);
+        ItemsChanged();
+    }
+
+    public void UncompleteItem(TaskItem item)
+    {
+        manager.MarkTaskIncomplete(item);
+        ItemsChanged();
+    }
+}
