@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProjectManager.Models;
 
-public class Module
+public class ProductModule
 {
     [Key]
     public int ModuleId { get; set; }

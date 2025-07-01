@@ -1,34 +1,76 @@
-﻿@inject IManager manager
+﻿@using System.ComponentModel.DataAnnotations
 
-<EditForm Model="@NewItem" OnSubmit="@ItemAdded">
-    <div style="display: flex; align-items: center; width: 400px;">
-        <div style="margin-right: 10px">Text:</div>
-        <InputText @bind-Value="NewItem.Title" class="form-control" style="margin-right: 10px" id="Item" />
-        <input type="submit" class="btn btn-primary" style="margin-right: 10px" value="Add" />
-        <input type="reset" class="btn btn-secondary" value="Clear" />
+<EditForm Model="@NewTaskItem" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row align-items-start" style="font-size: 10px;">
+        <div class="col">
+            <label class="form-label">Task</label>
+        </div>
+        <div class="col-1">
+            <label class="form-label">Deadline</label>
+        </div>
+        <div class="col-2">
+            <label class="form-label">Responsible</label>
+        </div>
+        <div class="col-1">
+            <label class="invisible">Submit</label>
+        </div>
+    </div>
+
+    <div class="row align-items-end">
+        <div class="col">
+            <InputText class="form-control" @bind-Value="NewTaskItem.Title" />
+        </div>
+        
+        <div class="col-1">
+            <InputDate class="form-control" @bind-Value="NewTaskItem.Deadline" />
+        </div>
+        <div class="col-2">
+            <InputText class="form-control" @bind-Value="ResponsibleInput" />
+        </div>
+        <div class="col-1">
+            <button class="btn btn-primary w-100" type="submit">Add Task</button>
+        </div>
     </div>
 </EditForm>
 
 @code {
     [Parameter]
-    public required Action OnItemAdded { get; set; }
+    public int ProjectId { get; set; }
 
-    private TaskItem NewItem;
+    [Parameter]
+    public int ParentTaskId { get; set; }
 
-    public NewTask(TaskItem newItem)
+    [Parameter]
+    public EventCallback<TaskItem> OnTaskAdded { get; set; }
+
+    private TaskItem NewTaskItem = new()
     {
-        NewItem = newItem;
+        Title = "",
+        Deadline = DateTime.Today.AddDays(1)
+    };
+
+    private string ResponsibleInput = "";
+
+    private async Task HandleValidSubmit()
+    {
+        NewTaskItem.ProjectId = ProjectId;
+        NewTaskItem.ParentTaskId = ParentTaskId;
+        await OnTaskAdded.InvokeAsync(NewTaskItem);
+        ResetForm();
     }
 
-    public void ItemAdded()
+    private void ResetForm()
     {
-        var newItem = new TaskItem { Title = NewItem.Title, Deadline = DateTime.Now };
-        NewItem.Title = "";
-        manager.InsertTask(newItem);
-
-        if (OnItemAdded != null)
+        NewTaskItem = new TaskItem
         {
-            OnItemAdded();
-        }
+            ProjectId = ProjectId,
+            Title = "",
+            Description = "",
+            Deadline = DateTime.Today.AddDays(1)
+        };
+        ResponsibleInput = "";
     }
 }

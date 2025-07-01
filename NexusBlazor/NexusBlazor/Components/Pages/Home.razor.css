@@ -1,6 +1,9 @@
 ﻿.hero {
     height: 100vh;
-    background: url('https://images.unsplash.com/photo-1603791440384-56cd371ee9a7') no-repeat center center/cover;
+    background-image: url("home_page.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -1,0 +1,35 @@
+﻿@inject IManager manager
+
+<select @onchange="OnSelectionChanged" class="form-select">
+    <option disabled selected value>-- Select an option --</option>
+    @foreach (var option in Options)
+    {
+        <option value="@option" selected="@(_selected == option)">
+            @option
+        </option>
+    }
+</select>
+
+@code {
+    private string _selected;
+
+    private List<string> Options = new();
+
+    protected override void OnInitialized()
+    {
+        Options = manager.GetAllProjectNames().Result;
+        _selected = manager.CurrentProject.ProjectName;
+    }
+
+    private void OnSelectionChanged(ChangeEventArgs e)
+    {
+        _selected = e.Value?.ToString();
+        manager.SelectProjectFromName(_selected).Wait();
+
+        // Refresh the page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+}

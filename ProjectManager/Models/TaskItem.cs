@@ -16,8 +16,9 @@ public class TaskItem
     public int TaskId { get; set; }
     public int ProjectId { get; set; }
     public required string Title { get; set; }
-    public List<int> Responsible { get; set; } = [];
+    public string Description { get; set; } = string.Empty;
     public DateTime CreatedOn { get; set; } = DateTime.Now;
+    public DateTime StartedOn {  get; set; } = DateTime.Now;
     public required DateTime Deadline { get; set; }
     public bool IsCompleted { get; set; }
     public int? ParentTaskId { get; set; }
