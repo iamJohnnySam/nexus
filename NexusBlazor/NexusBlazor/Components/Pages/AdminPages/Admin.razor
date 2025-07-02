@@ -1,0 +1,64 @@
+﻿@page "/admin"
+@rendermode InteractiveServer
+@inject IManager manager
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="container" style="padding: 30px;">
+  <div class="row">
+    <div class="col-3">
+
+        <h2 class="text-xl font-bold mb-4">Tables</h2>
+        @foreach (var table in TableNames)
+        {
+           <AdminTableComponent Table="@table" OnTableSelected="SelectTable" />
+        }
+
+    </div>
+    <div class="col">
+
+            @if (SelectedTable == "Customer")
+            {
+                
+            }
+            else if (SelectedTable == "Product")
+            {
+                
+            }
+            else if (SelectedTable == "Module")
+            {
+                
+            }
+            else if (SelectedTable == "Grade")
+            {
+                
+            }
+            else if (SelectedTable == "Designation")
+            {
+                
+            }
+            else if (SelectedTable == "Employee")
+            {
+                
+            }
+            else
+            {
+                <p class="text-gray-500">Please select a table to view.</p>
+            }
+
+    </div>
+  </div>
+</div>
+
+
+@code {
+    private List<string> TableNames = new() { "Customer", "Product", "Module", "Grade", "Designation", "Employee" };
+    private string SelectedTable = "Project";
+
+    private void SelectTable(string table)
+    {
+        SelectedTable = table;
+        Console.WriteLine(table);
+        StateHasChanged();
+    }
+}

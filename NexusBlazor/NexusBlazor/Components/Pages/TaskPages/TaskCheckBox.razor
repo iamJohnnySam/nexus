@@ -1,0 +1,44 @@
+﻿<div class="p-3 text-white">
+    <div class="form-check mb-2">
+        <InputCheckbox class="form-check-input"
+                       @bind-Value="ShowAll" />
+        <label class="form-check-label">Show All</label>
+    </div>
+
+    <div class="form-check">
+        <InputCheckbox class="form-check-input"
+                       @bind-Value="ShowIncomplete" />
+        <label class="form-check-label">Show Incomplete</label>
+    </div>
+</div>
+
+@code {
+        [Parameter]
+        public EventCallback<bool> OnShowAllChanged { get; set; }
+
+        [Parameter]
+        public EventCallback<bool> OnShowIncompleteChanged { get; set; }
+
+    private bool showAll;
+
+    public bool ShowAll
+    {
+        get { return showAll; }
+        set
+            {
+                showAll = value;
+                OnShowAllChanged.InvokeAsync(value);
+            }
+    }
+
+    private bool showIncomplete;
+
+    public bool ShowIncomplete
+    {
+        get { return showIncomplete; }
+        set
+        {
+            showIncomplete = value;
+            OnShowIncompleteChanged.InvokeAsync(value); }
+    } 
+}

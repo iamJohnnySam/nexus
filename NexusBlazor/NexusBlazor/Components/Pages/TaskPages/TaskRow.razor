@@ -24,11 +24,11 @@
 </div>
 <div class="row">
     <div class="col">
-        <InputTextArea class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" 
+        <InputTextArea class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none; font-size: 12px;" 
         oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="thisDescription" />
     </div>
     <div class="col-1">
-        <button class="btn btn-primary w-100" @onclick="ToggleComplete">@(ThisTask.IsCompleted ? "⏳ Not Done" : "✅ Done")</button>
+        <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="ToggleComplete">@(ThisTask.IsCompleted ? "Not Done" : "✅ Done")</button>
     </div>
 </div>
 

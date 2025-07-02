@@ -1,0 +1,141 @@
+﻿@page "/tasks"
+@inject IManager manager
+@rendermode InteractiveServer
+
+<PageTitle>Tasks</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Project Task Manager (@CurrentProject.ProjectName)</h2>
+    </div>
+    <div class="col-2" style="padding-top: 20px;">
+        <SelectProject />
+    </div>
+    <div class="col-2">
+        <TaskCheckBox OnShowAllChanged="HandleToggleShowAll" OnShowIncompleteChanged="HandleToggleShowComplete" />
+    </div>
+</div>
+
+<div style="padding: 10px 30px 10px 30px;">
+
+    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" />
+
+    @foreach(KeyValuePair<string, List<TaskItem>> parentTask in ParentTaskItems)
+    {
+        <div>
+            <h3 style="padding-top: 30px">@parentTask.Key</h3>
+            @foreach (TaskItem taskItem in parentTask.Value)
+            {
+                <div>
+                    <TaskRow ThisTask=taskItem OnTaskUpdated="HandleTaskUpdate" />
+                    <div style="padding: 10px 0px 10px 30px;">
+
+                        @if (SubTaskItems.ContainsKey(taskItem.TaskId))
+                        {
+                            <div>
+                                @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId])
+                                {
+                                    <div>
+                                        <TaskRow ThisTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" />
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    private Project CurrentProject;
+
+    private Dictionary<string, List<TaskItem>> ParentTaskItems;
+    private Dictionary<int, List<TaskItem>> SubTaskItems;
+
+    public bool ShowAllProjects { get; set; } = false;
+    public bool ShowIncompleteOnly { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        CurrentProject = manager.CurrentProject;
+        RefreshTasks();
+        base.OnInitialized();
+    }
+
+    private void RefreshTasks()
+    {
+        ParentTaskItems = [];
+        SubTaskItems = [];
+
+        if (ShowAllProjects)
+        {
+            foreach (Project project in manager.Projects)
+            {
+                GetTasks(project.ProjectName, project.ProjectId);
+            }
+        }
+        else
+        {
+            GetTasks(CurrentProject.ProjectName, CurrentProject.ProjectId);
+        }
+    }
+
+    private void GetTasks(string projectName, int projectID = 0)
+    {
+        List<TaskItem> IncompleteParentTaskItems;
+        List<TaskItem> CompleteParentTaskItems;
+
+        IncompleteParentTaskItems = manager.GetAllIncompleteParentTasks(projectID).Result;
+
+        if (!ShowIncompleteOnly)
+        {
+            CompleteParentTaskItems = manager.GetAllCompleteParentTasks(projectID).Result;
+            ParentTaskItems[projectName] = IncompleteParentTaskItems.Concat(CompleteParentTaskItems).ToList();
+        }
+        else
+        {
+            ParentTaskItems[projectName] = IncompleteParentTaskItems;
+        }
+
+        Dictionary<int, List<TaskItem>> subTaskTemp = manager.GetAllSubTasks(projectID).Result;
+        foreach (KeyValuePair<int, List<TaskItem>> subTask in subTaskTemp)
+        {
+            if (!SubTaskItems.ContainsKey(subTask.Key))
+            {
+                SubTaskItems[subTask.Key] = new List<TaskItem>();
+            }
+            SubTaskItems[subTask.Key].AddRange(subTask.Value);
+        }
+    }
+
+    private void HandleTaskAdded(TaskItem task)
+    {
+        task.ProjectId = CurrentProject.ProjectId;
+        manager.InsertTask(task);
+        RefreshTasks();
+    }
+
+    private void HandleTaskUpdate(TaskItem task)
+    {
+        manager.UpdateTask(task);
+        RefreshTasks();
+    }
+
+    private void HandleToggleShowAll(bool showAll)
+    {
+        ShowAllProjects = showAll;
+        RefreshTasks();
+    }
+
+    private void HandleToggleShowComplete(bool showIncomplete)
+    {
+        ShowIncompleteOnly = showIncomplete;
+        RefreshTasks();
+    }
+}

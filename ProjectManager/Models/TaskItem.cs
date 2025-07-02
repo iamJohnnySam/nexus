@@ -21,6 +21,7 @@ public class TaskItem
     public DateTime StartedOn {  get; set; } = DateTime.Now;
     public required DateTime Deadline { get; set; }
     public bool IsCompleted { get; set; }
+    public bool IsBlocking { get; set; } = true;
     public int? ParentTaskId { get; set; }
 
 }

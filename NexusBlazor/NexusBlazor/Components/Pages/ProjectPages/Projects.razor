@@ -1,0 +1,70 @@
+﻿@page "/projects"
+@inject IManager manager
+@rendermode InteractiveServer
+
+<PageTitle>Projects</PageTitle>
+
+<div class="row" style="padding: 0px 30px 0px 30px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Project Manager</h2>
+    </div>
+    <div class="col-2" style="padding-top: 20px;">
+        
+    </div>
+    <div class="col-1">
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-4">
+        <div class="d-flex justify-content-center align-items-center p-4">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2"
+                    style="background-color: transparent;"
+                    @onclick="HandleNewProject">
+                Add Project
+            </button>
+        </div>
+        @foreach (Project project in AllProjects)
+        {
+            <ProjectComponent project=project OnProjectSelected="HandleProjectSelection" />
+        }
+    </div>
+    <div class="col">
+        <ProjectEdit Project="@currentProject" OnProjectUpdated="HandleProjectUpdate" />
+    </div>
+</div>
+
+@code {
+    private List<Project> AllProjects;
+    private Project currentProject;
+
+    protected override void OnInitialized()
+    {
+        AllProjects = manager.Projects;
+        currentProject = manager.CurrentProject;
+        base.OnInitialized();
+    }
+
+    private void HandleProjectSelection(Project p)
+    {
+        manager.CurrentProject = p;
+        currentProject = p;
+    }
+
+    private void HandleNewProject()
+    {
+        Project NewProject = manager.GetNewProject();
+        manager.InsertProject(NewProject);
+        AllProjects = manager.Projects;
+        manager.CurrentProject = NewProject;
+        currentProject = NewProject;
+    }
+
+    private void HandleProjectUpdate(Project p)
+    {
+        manager.UpdateProject(p);
+        AllProjects = manager.Projects;
+        currentProject = manager.CurrentProject;
+    }
+}

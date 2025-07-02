@@ -1,0 +1,108 @@
+﻿@using System.ComponentModel
+@using System.Reflection
+
+<EditForm Model="@EditableProject" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3 text-white">
+        <div class="col-md-6 mb-2">
+            <label>Project Name</label>
+            <InputText class="form-control border-white text-white"
+                       style="background-color: transparent;"
+                       @bind-Value="EditableProject.ProjectName" />
+        </div>
+
+        <div class="col-md-6 mb-2">
+            <label>Design Code</label>
+            <InputText class="form-control border-white text-white"
+                       style="background-color: transparent;"
+                       @bind-Value="EditableProject.DesignCode" />
+        </div>
+
+        <div class="col-md-6 mb-2">
+            <label>Priority</label>
+            <InputSelect class="form-select border-white text-white"
+                         style="background-color: transparent;"
+                         @bind-Value="EditableProject.Priority">
+                @foreach (var value in Enum.GetValues<ProjectPriority>())
+                {
+                    <option value="@value">@GetDescription(value)</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6 mb-2">
+            <label>PO Status</label>
+            <InputSelect class="form-select border-white text-white"
+                         style="background-color: transparent;"
+                         @bind-Value="EditableProject.POStatus">
+                @foreach (var value in Enum.GetValues<SalesStatus>())
+                {
+                    <option value="@value">@GetDescription(value)</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6 mb-2">
+            <label>Customer ID</label>
+            <InputNumber class="form-control border-white text-white"
+                         style="background-color: transparent;"
+                         @bind-Value="EditableProject.CustomerId" />
+        </div>
+
+        <div class="col-md-6 mb-2">
+            <label>Product ID</label>
+            <InputNumber class="form-control border-white text-white"
+                         style="background-color: transparent;"
+                         @bind-Value="EditableProject.ProductId" />
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn rounded-pill border border-white text-white px-4 py-2"
+                style="background-color: transparent;" type="submit">
+            Save
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public required Project Project { get; set; }
+
+    [Parameter]
+    public EventCallback<Project> OnProjectUpdated { get; set; }
+
+    private Project EditableProject;
+
+    protected override void OnParametersSet()
+    {
+        // Create a shallow copy for editing
+        EditableProject = new Project
+        {
+            ProjectId = Project.ProjectId,
+            ProjectName = Project.ProjectName,
+            CustomerId = Project.CustomerId,
+            DesignCode = Project.DesignCode,
+            Priority = Project.Priority,
+            POStatus = Project.POStatus,
+            ProductId = Project.ProductId,
+            Customer = Project.Customer,
+            Product = Project.Product
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnProjectUpdated.InvokeAsync(EditableProject);
+    }
+
+    private string GetDescription<T>(T value) where T : Enum
+    {
+        return value.GetType()
+                    .GetField(value.ToString())?
+                    .GetCustomAttribute<DescriptionAttribute>()?
+                    .Description ?? value.ToString();
+    }
+}

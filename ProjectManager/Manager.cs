@@ -285,7 +285,7 @@ namespace ProjectManager
 
             string sql = @"UPDATE Project
                        SET ProjectName = @ProjectName,
-                           CustomerID = @CustomerID,
+                           CustomerId = @CustomerId,
                            DesignCode = @DesignCode,
                            Priority = @Priority,
                            POStatus = @POStatus,
@@ -336,26 +336,44 @@ namespace ProjectManager
             await conn.ExecuteAsync(sql, p);
             p.TaskId = (int)conn.LastInsertRowId;
         }
-        private async Task<List<TaskItem>> QueryTaskList(string query, Project project)
+        private async Task<List<TaskItem>> QueryTaskList(string query, object project)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
             return (await conn.QueryAsync<TaskItem>(query, project)).ToList();
         }
-        public async Task<List<TaskItem>> GetAllParentTasks()
+        public async Task<List<TaskItem>> GetAllParentTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0)";
-            return await QueryTaskList(query, currentProject);
+            return await QueryTaskList(query, reference);
         }
-        public async Task<List<TaskItem>> GetAllIncompleteParentTasks()
+        public async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 0";
-            return await QueryTaskList(query, currentProject);
+            return await QueryTaskList(query, reference);
         }
-        public async Task<List<TaskItem>> GetAllCompleteParentTasks()
+        public async Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 1";
-            return await QueryTaskList(query, currentProject);
+            return await QueryTaskList(query, reference);
         }
         private Dictionary<int, List<TaskItem>> BundleSubTasks(List<TaskItem> AllTasks)
         {
@@ -374,22 +392,40 @@ namespace ProjectManager
             }
             return SubTasks;
         }
-        public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks()
+        public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0";
-            List<TaskItem> AllTasks = await QueryTaskList(query, currentProject);
+            List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
-        public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks()
+        public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0 AND IsCompleted = 1";
-            List<TaskItem> AllTasks = await QueryTaskList(query, currentProject);
+            List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
-        public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks()
+        public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks(int projectID = 0)
         {
+            object reference = currentProject;
+            if (projectID != 0)
+            {
+                reference = new { ProjectId = projectID };
+            }
+
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0 AND IsCompleted = 0";
-            List<TaskItem> AllTasks = await QueryTaskList(query, currentProject);
+            List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
         public async Task MarkTaskComplete(TaskItem p)
@@ -818,6 +854,7 @@ namespace ProjectManager
                 StartedOn TEXT,
                 Deadline TEXT NOT NULL,
                 IsCompleted INTEGER,
+                IsBlocking INTEGER DEFAULT 1,
                 ParentTaskId INTEGER
             );
 

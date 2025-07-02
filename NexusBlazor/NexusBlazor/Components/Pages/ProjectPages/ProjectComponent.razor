@@ -1,0 +1,20 @@
+﻿<div class="project-card border border-white rounded-4 p-3 mb-3 text-white"
+     style="background-color: rgba(255, 255, 255, 0.05); cursor: pointer;"
+     @onclick="HandleClick">
+    <h5 class="mb-2">@project.ProjectName</h5>
+    <p class="mb-1"><strong>Design Code:</strong> @project.DesignCode</p>
+    <p class="mb-0"><strong>Status:</strong> @project.POStatus</p>
+</div>
+
+@code {
+    [Parameter]
+    public required Project project { get; set; }
+
+    [Parameter]
+    public EventCallback<Project> OnProjectSelected { get; set; }
+
+    private async Task HandleClick()
+    {
+        await OnProjectSelected.InvokeAsync(project);
+    }
+}
