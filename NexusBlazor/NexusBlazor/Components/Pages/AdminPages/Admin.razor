@@ -6,7 +6,7 @@
 
 <div class="container" style="padding: 30px;">
   <div class="row">
-    <div class="col-3">
+    <div class="col-2">
 
         <h2 class="text-xl font-bold mb-4">Tables</h2>
         @foreach (var table in TableNames)
@@ -19,27 +19,27 @@
 
             @if (SelectedTable == "Customer")
             {
-                
+                <AdminCustomer />
             }
             else if (SelectedTable == "Product")
             {
-                
+                <AdminProduct />
             }
             else if (SelectedTable == "Module")
             {
-                
+                <AdminProductModule />
             }
             else if (SelectedTable == "Grade")
             {
-                
+                <AdminGrade />
             }
             else if (SelectedTable == "Designation")
             {
-                
+                <AdminDesignation />
             }
             else if (SelectedTable == "Employee")
             {
-                
+                <AdminEmployee />
             }
             else
             {

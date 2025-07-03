@@ -1,7 +1,7 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using System.Globalization
 
-<div class="row align-items-end">
+<div class="row align-items-end" @onclick="ToggleDescription">
     <div class="col">
         <InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisTitle" />
     </div>
@@ -18,19 +18,22 @@
         }
         else
         {
-
+            <div class="col-1">
+                <button class="btn rounded-pill border border-white text-white px-4 py-2" style="font-size: 12px;"
+                @onclick="ToggleComplete"><nobr>@(ThisTask.IsCompleted ? "Not Done" : "✅ Done")</nobr></button>
+            </div>
         }
     </div>
 </div>
-<div class="row">
-    <div class="col">
-        <InputTextArea class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none; font-size: 12px;" 
-        oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="thisDescription" />
+@if (ThisTask.Description != string.Empty || ShowDescription)
+{
+    <div class="row">
+        <div class="col" style="padding-left:30px">
+            <InputTextArea class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none; font-size: 12px;"
+                           oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="thisDescription" />
+        </div>
     </div>
-    <div class="col-1">
-        <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="ToggleComplete">@(ThisTask.IsCompleted ? "Not Done" : "✅ Done")</button>
-    </div>
-</div>
+}
 
 @code {
     [Parameter]
@@ -92,6 +95,7 @@
 
 
     private bool IsTaskEdited { get; set; } = false;
+    private bool ShowDescription { get; set; } = false;
 
     protected override void OnParametersSet()
     {
@@ -129,10 +133,15 @@
         EditableTask.IsCompleted = !EditableTask.IsCompleted;
         await OnTaskUpdated.InvokeAsync(EditableTask);
         IsTaskEdited = false;
+        ShowDescription = false;
     }
 
     private string ItemClass()
     {
         return ThisTask.IsCompleted ? "form-control item-completed" : "form-control";
+    }
+    private void ToggleDescription()
+    {
+        ShowDescription = !ShowDescription;
     }
 }

@@ -6,9 +6,6 @@ using System.Collections.ObjectModel;
 using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ProjectManager
 {
