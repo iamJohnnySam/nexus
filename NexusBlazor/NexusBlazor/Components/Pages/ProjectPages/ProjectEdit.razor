@@ -1,108 +1,145 @@
-﻿@using System.ComponentModel
-@using System.Reflection
+﻿@inject IManager manager
+@inject IJSRuntime JS
 
-<EditForm Model="@EditableProject" OnValidSubmit="HandleSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<h3>Project Manager</h3>
 
-    <div class="row mb-3 text-white">
-        <div class="col-md-6 mb-2">
-            <label>Project Name</label>
-            <InputText class="form-control border-white text-white"
-                       style="background-color: transparent;"
-                       @bind-Value="EditableProject.ProjectName" />
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedProject?.ProjectId == 0 ? "Add New Project" : "Edit Project")</h5>
+
+    <EditForm Model="@SelectedProject" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Project Name</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.ProjectName" />
         </div>
 
-        <div class="col-md-6 mb-2">
-            <label>Design Code</label>
-            <InputText class="form-control border-white text-white"
-                       style="background-color: transparent;"
-                       @bind-Value="EditableProject.DesignCode" />
-        </div>
-
-        <div class="col-md-6 mb-2">
-            <label>Priority</label>
-            <InputSelect class="form-select border-white text-white"
-                         style="background-color: transparent;"
-                         @bind-Value="EditableProject.Priority">
-                @foreach (var value in Enum.GetValues<ProjectPriority>())
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.CustomerId">
+                <option value="">-- Select Customer --</option>
+                @foreach (var customer in Customers)
                 {
-                    <option value="@value">@GetDescription(value)</option>
+                    <option value="@customer.CustomerId">@customer.CustomerName</option>
                 }
             </InputSelect>
         </div>
 
-        <div class="col-md-6 mb-2">
-            <label>PO Status</label>
-            <InputSelect class="form-select border-white text-white"
-                         style="background-color: transparent;"
-                         @bind-Value="EditableProject.POStatus">
-                @foreach (var value in Enum.GetValues<SalesStatus>())
+        <div class="mb-3">
+            <label class="form-label">Product</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.ProductId">
+                <option value="">-- Select Product --</option>
+                @foreach (var product in Products)
                 {
-                    <option value="@value">@GetDescription(value)</option>
+                    <option value="@product.ProductId">@product.ProductName</option>
                 }
             </InputSelect>
         </div>
 
-        <div class="col-md-6 mb-2">
-            <label>Customer ID</label>
-            <InputNumber class="form-control border-white text-white"
-                         style="background-color: transparent;"
-                         @bind-Value="EditableProject.CustomerId" />
+        <div class="mb-3">
+            <label class="form-label">Design Code</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.DesignCode" />
         </div>
 
-        <div class="col-md-6 mb-2">
-            <label>Product ID</label>
-            <InputNumber class="form-control border-white text-white"
-                         style="background-color: transparent;"
-                         @bind-Value="EditableProject.ProductId" />
+        <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
+                @foreach (var priority in Enum.GetValues(typeof(ProjectPriority)))
+                {
+                    <option value="@priority">@priority</option>
+                }
+            </InputSelect>
         </div>
-    </div>
 
-    <div class="d-flex justify-content-end">
-        <button class="btn rounded-pill border border-white text-white px-4 py-2"
-                style="background-color: transparent;" type="submit">
-            Save
-        </button>
-    </div>
-</EditForm>
+        <div class="mb-3">
+            <label class="form-label">PO Status</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
+                @foreach (var status in Enum.GetValues(typeof(SalesStatus)))
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
-    [Parameter]
-    public required Project Project { get; set; }
+    private List<Customer> Customers = [];
+    private List<Product> Products = [];
 
     [Parameter]
     public EventCallback<Project> OnProjectUpdated { get; set; }
 
-    private Project EditableProject;
-
-    protected override void OnParametersSet()
+    [Parameter]
+    public Project SelectedProject { get; set;  } = new()
     {
-        // Create a shallow copy for editing
-        EditableProject = new Project
+        ProjectName = string.Empty,
+        Priority = ProjectPriority.Normal
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Customers = await manager.GetAllCustomers();
+        Products = await manager.GetAllProducts();
+    }
+
+    private void Edit(Project p)
+    {
+        SelectedProject = new Project
         {
-            ProjectId = Project.ProjectId,
-            ProjectName = Project.ProjectName,
-            CustomerId = Project.CustomerId,
-            DesignCode = Project.DesignCode,
-            Priority = Project.Priority,
-            POStatus = Project.POStatus,
-            ProductId = Project.ProductId,
-            Customer = Project.Customer,
-            Product = Project.Product
+            ProjectId = p.ProjectId,
+            ProjectName = p.ProjectName,
+            CustomerId = p.CustomerId,
+            ProductId = p.ProductId,
+            DesignCode = p.DesignCode,
+            Priority = p.Priority,
+            POStatus = p.POStatus
         };
+    }
+
+    private async Task Delete(Project p)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete project '{p.ProjectName}'?");
+        if (!confirmed) return;
+
+        await manager.DeleteProject(p);
+        await LoadData();
+        ResetForm();
     }
 
     private async Task HandleSubmit()
     {
-        await OnProjectUpdated.InvokeAsync(EditableProject);
+        if (SelectedProject.ProjectId == 0)
+        {
+            await manager.InsertProject(SelectedProject);
+        }
+        else
+        {
+            await manager.UpdateProject(SelectedProject);
+        }
+
+        await OnProjectUpdated.InvokeAsync();
+        await LoadData();
+        ResetForm();
     }
 
-    private string GetDescription<T>(T value) where T : Enum
+    private void ResetForm()
     {
-        return value.GetType()
-                    .GetField(value.ToString())?
-                    .GetCustomAttribute<DescriptionAttribute>()?
-                    .Description ?? value.ToString();
+        SelectedProject = new Project
+        {
+            ProjectName = string.Empty,
+            Priority = ProjectPriority.Normal
+        };
     }
 }

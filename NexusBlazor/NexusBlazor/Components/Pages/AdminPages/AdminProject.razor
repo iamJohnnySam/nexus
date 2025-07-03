@@ -65,6 +65,11 @@
             </InputSelect>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Active</label>
+            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
+        </div>
+
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
@@ -83,6 +88,7 @@
                 <th>Design Code</th>
                 <th>Priority</th>
                 <th>PO Status</th>
+                <th>Active</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -97,6 +103,7 @@
                     <td style="color: white">@p.DesignCode</td>
                     <td style="color: white">@p.Priority</td>
                     <td style="color: white">@p.POStatus</td>
+                    <td style="color: white">@p.IsActive</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(p)">Edit</button>
                         <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(p)">Delete</button>
@@ -140,7 +147,8 @@
             ProductId = p.ProductId,
             DesignCode = p.DesignCode,
             Priority = p.Priority,
-            POStatus = p.POStatus
+            POStatus = p.POStatus,
+            IsActive = p.IsActive
         };
     }
 

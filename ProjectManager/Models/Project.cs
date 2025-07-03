@@ -17,6 +17,7 @@ public class Project
     public ProjectPriority Priority { get; set; } = ProjectPriority.Normal;
     public SalesStatus POStatus { get; set; }
     public int ProductId { get; set; }
+    public bool IsActive { get; set; } = true;
 
     public Customer? Customer { get; set; }
     public Product? Product { get; set; }

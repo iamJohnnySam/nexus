@@ -185,8 +185,8 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
-            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, Priority, POStatus, ProductId)
-                       VALUES (@ProjectName, @CustomerId, @DesignCode, @Priority, @POStatus, @ProductId);";
+            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, Priority, POStatus, ProductId, IsActive)
+                       VALUES (@ProjectName, @CustomerId, @DesignCode, @Priority, @POStatus, @ProductId, @IsActive);";
             await conn.ExecuteAsync(sql, p);
             p.ProjectId = (int)conn.LastInsertRowId;
         }
@@ -790,7 +790,8 @@ namespace ProjectManager
                 DesignCode TEXT,
                 Priority INTEGER,
                 POStatus INTEGER,
-                ProductId INTEGER
+                ProductId INTEGER,
+                IsActive INTEGER
             );
             
             CREATE TABLE IF NOT EXISTS ProductModule(
