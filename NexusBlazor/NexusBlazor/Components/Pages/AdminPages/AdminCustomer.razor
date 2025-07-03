@@ -4,6 +4,26 @@
 <h3>Customer Manager</h3>
 
 <!-- Top Section: Table -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedCustomer?.CustomerId == 0 ? "Add New Customer" : "Edit Customer")</h5>
+
+    <EditForm Model="@SelectedCustomer" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Customer Name</label>
+            <InputText class="form-control" @bind-Value="SelectedCustomer.CustomerName" />
+            <ValidationMessage For="@(() => SelectedCustomer.CustomerName)" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
 <div class="mb-4">
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
@@ -30,25 +50,6 @@
 </div>
 
 <!-- Bottom Section: Form -->
-<div class="card p-3" style="background-color: transparent;">
-    <h5>@(SelectedCustomer?.CustomerId == 0 ? "Add New Customer" : "Edit Customer")</h5>
-
-    <EditForm Model="@SelectedCustomer" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label class="form-label">Customer Name</label>
-            <InputText class="form-control" @bind-Value="SelectedCustomer.CustomerName" />
-            <ValidationMessage For="@(() => SelectedCustomer.CustomerName)" />
-        </div>
-
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
-        </div>
-    </EditForm>
-</div>
 
 @code {
     private List<Customer> Customers = [];

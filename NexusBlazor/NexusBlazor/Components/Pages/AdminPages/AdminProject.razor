@@ -1,0 +1,180 @@
+﻿@inject IManager manager
+@inject IJSRuntime JS
+
+<h3>Project Manager</h3>
+
+<!-- Top Section: Table -->
+
+<!-- Bottom Section: Form -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedProject?.ProjectId == 0 ? "Add New Project" : "Edit Project")</h5>
+
+    <EditForm Model="@SelectedProject" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Project Name</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.ProjectName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.CustomerId">
+                <option value="">-- Select Customer --</option>
+                @foreach (var customer in Customers)
+                {
+                    <option value="@customer.CustomerId">@customer.CustomerName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Product</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.ProductId">
+                <option value="">-- Select Product --</option>
+                @foreach (var product in Products)
+                {
+                    <option value="@product.ProductId">@product.ProductName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Design Code</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.DesignCode" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
+                @foreach (var priority in Enum.GetValues(typeof(ProjectPriority)))
+                {
+                    <option value="@priority">@priority</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">PO Status</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
+                @foreach (var status in Enum.GetValues(typeof(SalesStatus)))
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Design Code</th>
+                <th>Priority</th>
+                <th>PO Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Projects)
+            {
+                <tr class="@((SelectedProject?.ProjectId == p.ProjectId) ? "table-primary" : "")">
+                    <td style="color: white">@p.ProjectId</td>
+                    <td style="color: white">@p.ProjectName</td>
+                    <td style="color: white">@Customers.FirstOrDefault(c => c.CustomerId == p.CustomerId)?.CustomerName</td>
+                    <td style="color: white">@Products.FirstOrDefault(pr => pr.ProductId == p.ProductId)?.ProductName</td>
+                    <td style="color: white">@p.DesignCode</td>
+                    <td style="color: white">@p.Priority</td>
+                    <td style="color: white">@p.POStatus</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(p)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(p)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Project> Projects = [];
+    private List<Customer> Customers = [];
+    private List<Product> Products = [];
+
+    private Project SelectedProject = new()
+    {
+        ProjectName = string.Empty,
+        Priority = ProjectPriority.Normal
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Customers = await manager.GetAllCustomers();
+        Products = await manager.GetAllProducts();
+        Projects = await manager.GetAllProjects();
+    }
+
+    private void Edit(Project p)
+    {
+        SelectedProject = new Project
+        {
+            ProjectId = p.ProjectId,
+            ProjectName = p.ProjectName,
+            CustomerId = p.CustomerId,
+            ProductId = p.ProductId,
+            DesignCode = p.DesignCode,
+            Priority = p.Priority,
+            POStatus = p.POStatus
+        };
+    }
+
+    private async Task Delete(Project p)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete project '{p.ProjectName}'?");
+        if (!confirmed) return;
+
+        await manager.DeleteProject(p);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedProject.ProjectId == 0)
+        {
+            await manager.InsertProject(SelectedProject);
+        }
+        else
+        {
+            await manager.UpdateProject(SelectedProject);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedProject = new Project
+        {
+            ProjectName = string.Empty,
+            Priority = ProjectPriority.Normal
+        };
+    }
+}

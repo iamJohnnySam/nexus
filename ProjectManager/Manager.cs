@@ -290,13 +290,13 @@ namespace ProjectManager
                        WHERE ProjectId = @ProjectId;";
             await conn.ExecuteAsync(sql, p);
         }
-        public async Task DeleteProject(int projectId)
+        public async Task DeleteProject(Project p)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
             string sql = "DELETE FROM Project WHERE ProjectId = @ProjectId;";
-            await conn.ExecuteAsync(sql, new { ProjectId = projectId });
+            await conn.ExecuteAsync(sql, new { ProjectId = p.ProjectId });
         }
 
 
@@ -617,7 +617,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = @"INSERT INTO Module (ModuleName)
+            var sql = @"INSERT INTO ProductModule (ModuleName)
                 VALUES (@ModuleName);
                 SELECT last_insert_rowid();";
 
@@ -629,7 +629,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM Module";
+            var sql = "SELECT * FROM ProductModule";
             var result = await conn.QueryAsync<ProductModule>(sql);
             return result.ToList();
         }
@@ -638,7 +638,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM Module WHERE ModuleId = @id";
+            var sql = "SELECT * FROM ProductModule WHERE ModuleId = @id";
             return await conn.QueryFirstOrDefaultAsync<ProductModule>(sql, new { id });
         }
         public async Task UpdateProductModule(ProductModule module)
@@ -646,7 +646,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = @"UPDATE Module
+            var sql = @"UPDATE ProductModule
                 SET ModuleName = @ModuleName
                 WHERE ModuleId = @ModuleId";
 
@@ -657,7 +657,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "DELETE FROM Module WHERE ModuleId = @ModuleId";
+            var sql = "DELETE FROM ProductModule WHERE ModuleId = @ModuleId";
             await conn.ExecuteAsync(sql, module);
         }
 

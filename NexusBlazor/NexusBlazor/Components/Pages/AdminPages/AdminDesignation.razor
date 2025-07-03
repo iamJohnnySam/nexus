@@ -1,6 +1,29 @@
 ﻿@inject IManager manager
 
 <!-- Top Section: Table -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedDesignation?.DesignationId == 0 ? "Add New Designation" : "Edit Designation")</h5>
+
+    <EditForm Model="@SelectedDesignation" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Designation Name</label>
+            <InputText class="form-control" @bind-Value="SelectedDesignation.DesignationName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Department</label>
+            <InputText class="form-control" @bind-Value="SelectedDesignation.Department" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
 <div class="mb-4">
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
@@ -29,28 +52,6 @@
 </div>
 
 <!-- Bottom Section: Form -->
-<div class="card p-3" style="background-color: transparent;">
-    <h5>@(SelectedDesignation?.DesignationId == 0 ? "Add New Designation" : "Edit Designation")</h5>
-
-    <EditForm Model="@SelectedDesignation" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label class="form-label">Designation Name</label>
-            <InputText class="form-control" @bind-Value="SelectedDesignation.DesignationName" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Department</label>
-            <InputText class="form-control" @bind-Value="SelectedDesignation.Department" />
-        </div>
-
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
-        </div>
-    </EditForm>
-</div>
 
 @code {
     private List<Designation> Designations = [];

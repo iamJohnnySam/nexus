@@ -15,7 +15,7 @@ namespace ProjectManager
         Task DeleteGrade(Grade g);
         Task DeleteProduct(Product p);
         Task DeleteProductModule(ProductModule module);
-        Task DeleteProject(int projectId);
+        Task DeleteProject(Project p);
         Task DeleteReviewItem(ReviewItem item);
         Task DeleteReviewPoint(ReviewPoint point);
         Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0);

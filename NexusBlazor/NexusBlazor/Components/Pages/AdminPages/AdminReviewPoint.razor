@@ -1,0 +1,127 @@
+﻿@inject IManager manager
+@inject IJSRuntime JS
+
+<h3>Review Point Manager</h3>
+
+<!-- Bottom Section: Form -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedReviewPoint?.ReviewPointId == 0 ? "Add Review Point" : "Edit Review Point")</h5>
+
+    <EditForm Model="@SelectedReviewPoint" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Module</label>
+            <InputSelect class="form-control" @bind-Value="SelectedReviewPoint.ModuleId">
+                <option value="">-- Select Module --</option>
+                @foreach (var module in Modules)
+                {
+                    <option value="@module.ModuleId">@module.ModuleName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Review Description</label>
+            <InputTextArea class="form-control" @bind-Value="SelectedReviewPoint.ReviewDescription" />
+            <ValidationMessage For="@(() => SelectedReviewPoint.ReviewDescription)" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Module</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rp in ReviewPoints)
+            {
+                <tr class="@((SelectedReviewPoint?.ReviewPointId == rp.ReviewPointId) ? "table-primary" : "")">
+                    <td style="color: white">@rp.ReviewPointId</td>
+                    <td style="color: white">@Modules.FirstOrDefault(m => m.ModuleId == rp.ModuleId)?.ModuleName</td>
+                    <td style="color: white">@rp.ReviewDescription</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(rp)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(rp)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<ReviewPoint> ReviewPoints = [];
+    private List<ProductModule> Modules = [];
+
+    private ReviewPoint SelectedReviewPoint = new()
+    {
+        ReviewDescription = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Modules = await manager.GetAllProductModules();
+        ReviewPoints = await manager.GetAllReviewPoints();
+    }
+
+    private void Edit(ReviewPoint rp)
+    {
+        SelectedReviewPoint = new ReviewPoint
+        {
+            ReviewPointId = rp.ReviewPointId,
+            ModuleId = rp.ModuleId,
+            ReviewDescription = rp.ReviewDescription
+        };
+    }
+
+    private async Task Delete(ReviewPoint rp)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete this review point?");
+        if (!confirmed) return;
+
+        await manager.DeleteReviewPoint(rp);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedReviewPoint.ReviewPointId == 0)
+        {
+            await manager.InsertReviewPoint(SelectedReviewPoint);
+        }
+        else
+        {
+            await manager.UpdateReviewPoint(SelectedReviewPoint);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedReviewPoint = new ReviewPoint
+        {
+            ReviewDescription = string.Empty
+        };
+    }
+}

@@ -4,32 +4,6 @@
 <h3>Grade Manager</h3>
 
 <!-- Top Section: Table -->
-<div class="mb-4">
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Grade Name</th>
-                <th>Grade Score</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var g in Grades)
-            {
-                <tr class="@((SelectedGrade?.GradeId == g.GradeId) ? "table-primary" : "")">
-                    <td style="color: white">@g.GradeId</td>
-                    <td style="color: white">@g.GradeName</td>
-                    <td style="color: white">@g.GradeScore</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(g)">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(g)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
 
 <!-- Bottom Section: Form -->
 <div class="card p-3" style="background-color: transparent;">
@@ -56,6 +30,33 @@
             <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
         </div>
     </EditForm>
+</div>
+
+<div class="mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Grade Name</th>
+                <th>Grade Score</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var g in Grades)
+            {
+                <tr class="@((SelectedGrade?.GradeId == g.GradeId) ? "table-primary" : "")">
+                    <td style="color: white">@g.GradeId</td>
+                    <td style="color: white">@g.GradeName</td>
+                    <td style="color: white">@g.GradeScore</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(g)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(g)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 @code {

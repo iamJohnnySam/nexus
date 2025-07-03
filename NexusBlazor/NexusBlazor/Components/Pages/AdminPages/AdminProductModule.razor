@@ -4,6 +4,28 @@
 <h3>Product Module Manager</h3>
 
 <!-- Top Section: Table -->
+
+<!-- Bottom Section: Form -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedModule?.ModuleId == 0 ? "Add New Module" : "Edit Module")</h5>
+
+    <EditForm Model="@SelectedModule" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Module Name</label>
+            <InputText class="form-control" @bind-Value="SelectedModule.ModuleName" />
+            <ValidationMessage For="@(() => SelectedModule.ModuleName)" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
 <div class="mb-4">
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
@@ -27,27 +49,6 @@
             }
         </tbody>
     </table>
-</div>
-
-<!-- Bottom Section: Form -->
-<div class="card p-3" style="background-color: transparent;">
-    <h5>@(SelectedModule?.ModuleId == 0 ? "Add New Module" : "Edit Module")</h5>
-
-    <EditForm Model="@SelectedModule" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label class="form-label">Module Name</label>
-            <InputText class="form-control" @bind-Value="SelectedModule.ModuleName" />
-            <ValidationMessage For="@(() => SelectedModule.ModuleName)" />
-        </div>
-
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
-        </div>
-    </EditForm>
 </div>
 
 @code {
