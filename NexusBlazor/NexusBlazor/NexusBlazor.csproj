@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NexusBlazor.Client\NexusBlazor.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.16" />
+    <PackageReference Include="SimpleBlazorMultiselect" Version="0.2.0" />
   </ItemGroup>
 
   <ItemGroup>

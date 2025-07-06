@@ -25,7 +25,7 @@
                 Add Project
             </button>
         </div>
-        @foreach (Project project in AllProjects)
+        @foreach (Project project in AllActiveProjects)
         {
             <ProjectComponent project=project OnProjectSelected="HandleProjectSelection" />
         }
@@ -36,12 +36,12 @@
 </div>
 
 @code {
-    private List<Project> AllProjects;
+    private List<Project> AllActiveProjects;
     private Project currentProject;
 
     protected override void OnInitialized()
     {
-        AllProjects = manager.Projects;
+        AllActiveProjects = manager.GetAllActiveProjects().Result;
         currentProject = manager.CurrentProject;
         base.OnInitialized();
     }
@@ -56,14 +56,14 @@
     {
         Project NewProject = manager.GetNewProject();
         manager.InsertProject(NewProject);
-        AllProjects = manager.Projects;
+        AllActiveProjects = manager.GetAllActiveProjects().Result;
         manager.CurrentProject = NewProject;
         currentProject = NewProject;
     }
 
     private void HandleProjectUpdate()
     {
-        AllProjects = manager.Projects;
+        AllActiveProjects = manager.GetAllActiveProjects().Result;
         currentProject = manager.CurrentProject;
     }
 }

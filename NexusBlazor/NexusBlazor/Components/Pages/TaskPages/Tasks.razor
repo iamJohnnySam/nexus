@@ -27,7 +27,7 @@
             @foreach (TaskItem taskItem in parentTask.Value)
             {
                 <div>
-                    <TaskRow ThisTask=taskItem OnTaskUpdated="HandleTaskUpdate" />
+                    <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" />
                     <div style="padding: 10px 0px 10px 30px;">
 
                         @if (SubTaskItems.ContainsKey(taskItem.TaskId))
@@ -36,7 +36,7 @@
                                 @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId])
                                 {
                                     <div>
-                                        <TaskRow ThisTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" />
+                                        <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" />
                                     </div>
                                 }
                             </div>
@@ -55,8 +55,10 @@
 @code {
     private Project CurrentProject;
 
-    private Dictionary<string, List<TaskItem>> ParentTaskItems;
-    private Dictionary<int, List<TaskItem>> SubTaskItems;
+    private Dictionary<string, List<TaskItem>> ParentTaskItems = [];
+    private Dictionary<int, List<TaskItem>> SubTaskItems = [];
+
+    private List<Employee> AllEmployees = [];
 
     public bool ShowAllProjects { get; set; } = false;
     public bool ShowIncompleteOnly { get; set; } = false;
@@ -84,6 +86,7 @@
         {
             GetTasks(CurrentProject.ProjectName, CurrentProject.ProjectId);
         }
+        AllEmployees = manager.GetAllActiveEmployees().Result;
     }
 
     private void GetTasks(string projectName, int projectID = 0)

@@ -14,5 +14,6 @@ public enum SalesStatus
     [Description("PO Project")]
     POProject,
     [Description("After Sales")]
-    AfterSales
+    AfterSales,
+    InternalProject
 }

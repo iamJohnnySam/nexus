@@ -23,5 +23,6 @@ public class TaskItem
     public bool IsCompleted { get; set; }
     public bool IsBlocking { get; set; } = true;
     public int? ParentTaskId { get; set; }
+    public List<Employee> Responsible { get; set; } = [];
 
 }

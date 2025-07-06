@@ -18,6 +18,8 @@ namespace ProjectManager
         Task DeleteProject(Project p);
         Task DeleteReviewItem(ReviewItem item);
         Task DeleteReviewPoint(ReviewPoint point);
+        Task<List<string>> GetAllActiveProjectNames();
+        Task<List<Project>> GetAllActiveProjects();
         Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0);
         Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0);
         Task<List<Customer>> GetAllCustomers();
@@ -62,6 +64,7 @@ namespace ProjectManager
         Task UpdateCustomer(Customer customer);
         Task UpdateDesignation(Designation d);
         Task UpdateEmployee(Employee emp);
+        Task<List<Employee>> GetAllActiveEmployees();
         Task UpdateGrade(Grade g);
         Task UpdateProduct(Product p);
         Task UpdateProductModule(ProductModule module);

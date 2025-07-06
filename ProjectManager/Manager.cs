@@ -226,7 +226,8 @@ namespace ProjectManager
                        pr.ProductId, pr.ProductName
                 FROM Project p
                 LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
-                LEFT JOIN Product pr ON p.ProductId = pr.ProductId;
+                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
+                ORDER BY p.ProjectName ASC;
                 ";
 
             var projects = await conn.QueryAsync<Project, Customer, Product, Project>(
@@ -241,9 +242,43 @@ namespace ProjectManager
             );
             return projects.ToList();
         }
+        public async Task<List<Project>> GetAllActiveProjects()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+            string sql = @"
+                SELECT p.*, 
+                       c.CustomerId, c.CustomerName, 
+                       pr.ProductId, pr.ProductName
+                FROM Project p
+                LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
+                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
+                WHERE p.IsActive = 1
+                ORDER BY p.ProjectName ASC;
+        ";
+
+            var projects = await conn.QueryAsync<Project, Customer, Product, Project>(
+                sql,
+                (project, customer, product) =>
+                {
+                    project.Customer = customer;
+                    project.Product = product;
+                    return project;
+                },
+                splitOn: "CustomerId,ProductId"
+            );
+
+            return projects.ToList();
+        }
         public async Task<List<string>> GetAllProjectNames()
         {
             return (await GetAllProjects()).Select(item => item?.GetType().GetProperty("ProjectName")?.GetValue(item)?.ToString())
+                .Where(projectName => projectName != null)
+                .ToList();
+        }
+        public async Task<List<string>> GetAllActiveProjectNames()
+        {
+            return (await GetAllActiveProjects()).Select(item => item?.GetType().GetProperty("ProjectName")?.GetValue(item)?.ToString())
                 .Where(projectName => projectName != null)
                 .ToList();
         }
@@ -310,6 +345,7 @@ namespace ProjectManager
                 Deadline = DateTime.Now,
             };
         }
+
         public TaskItem GetNewSubTask(TaskItem p)
         {
             return new TaskItem
@@ -320,6 +356,7 @@ namespace ProjectManager
                 ParentTaskId = p.TaskId
             };
         }
+
         public async Task InsertTask(TaskItem p)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -328,17 +365,32 @@ namespace ProjectManager
             if (p.ProjectId == 0)
                 p.ProjectId = currentProject.ProjectId;
 
-            string sql = @"INSERT INTO TaskItem (ProjectId, Title, Description, CreatedOn, StartedOn, Deadline, IsCompleted, ParentTaskId)
-                       VALUES (@ProjectId, @Title, @Description, @CreatedOn, @StartedOn, @Deadline, @IsCompleted, @ParentTaskId);";
+            string sql = @"INSERT INTO TaskItem (ProjectId, Title, Description, CreatedOn, StartedOn, Deadline, IsCompleted, IsBlocking, ParentTaskId)
+                       VALUES (@ProjectId, @Title, @Description, @CreatedOn, @StartedOn, @Deadline, @IsCompleted, @IsBlocking, @ParentTaskId);";
             await conn.ExecuteAsync(sql, p);
             p.TaskId = (int)conn.LastInsertRowId;
+
+            foreach (var emp in p.Responsible)
+            {
+                await conn.ExecuteAsync("INSERT INTO TaskItemResponsibility (TaskId, EmployeeId) VALUES (@TaskId, @EmployeeId);", new { TaskId = p.TaskId, EmployeeId = emp.EmployeeId });
+            }
         }
+
         private async Task<List<TaskItem>> QueryTaskList(string query, object project)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
-            return (await conn.QueryAsync<TaskItem>(query, project)).ToList();
+            var tasks = (await conn.QueryAsync<TaskItem>(query, project)).ToList();
+
+            foreach (var task in tasks)
+            {
+                var res = await conn.QueryAsync<Employee>("SELECT e.* FROM Employee e JOIN TaskItemResponsibility r ON e.EmployeeId = r.EmployeeId WHERE r.TaskId = @TaskId", new { TaskId = task.TaskId });
+                task.Responsible = res.ToList();
+            }
+
+            return tasks;
         }
+
         public async Task<List<TaskItem>> GetAllParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -350,6 +402,7 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0)";
             return await QueryTaskList(query, reference);
         }
+
         public async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -361,6 +414,7 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 0";
             return await QueryTaskList(query, reference);
         }
+
         public async Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -372,6 +426,7 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 1";
             return await QueryTaskList(query, reference);
         }
+
         private Dictionary<int, List<TaskItem>> BundleSubTasks(List<TaskItem> AllTasks)
         {
             Dictionary<int, List<TaskItem>> SubTasks = [];
@@ -389,6 +444,7 @@ namespace ProjectManager
             }
             return SubTasks;
         }
+
         public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -401,6 +457,7 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
+
         public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -413,6 +470,7 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
+
         public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -425,16 +483,19 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
+
         public async Task MarkTaskComplete(TaskItem p)
         {
             p.IsCompleted = true;
             await UpdateTaskCompletion(p);
         }
+
         public async Task MarkTaskIncomplete(TaskItem p)
         {
-            p.IsCompleted = true;
+            p.IsCompleted = false;
             await UpdateTaskCompletion(p);
         }
+
         public async Task UpdateTask(TaskItem p)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -448,16 +509,25 @@ namespace ProjectManager
                            StartedOn = @StartedOn,
                            Deadline = @Deadline,
                            IsCompleted = @IsCompleted,
+                           IsBlocking = @IsBlocking,
                            ParentTaskId = @ParentTaskId
                        WHERE TaskId = @TaskId;";
             await conn.ExecuteAsync(sql, p);
+
+            await conn.ExecuteAsync("DELETE FROM TaskItemResponsibility WHERE TaskId = @TaskId", p);
+
+            foreach (var emp in p.Responsible)
+            {
+                await conn.ExecuteAsync("INSERT INTO TaskItemResponsibility (TaskId, EmployeeId) VALUES (@TaskId, @EmployeeId);", new { TaskId = p.TaskId, EmployeeId = emp.EmployeeId });
+            }
         }
+
         private async Task UpdateTaskCompletion(TaskItem p)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
             string sql = @"UPDATE TaskItem
-                       SET IsCompleted = @IsCompleted,
+                       SET IsCompleted = @IsCompleted
                        WHERE TaskId = @TaskId;";
             await conn.ExecuteAsync(sql, p);
         }
@@ -573,6 +643,15 @@ namespace ProjectManager
             await conn.OpenAsync();
 
             var sql = "SELECT * FROM Employee";
+            var result = await conn.QueryAsync<Employee>(sql);
+            return result.ToList();
+        }
+        public async Task<List<Employee>> GetAllActiveEmployees()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Employee WHERE IsActive = 1";
             var result = await conn.QueryAsync<Employee>(sql);
             return result.ToList();
         }

@@ -1,5 +1,6 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using System.Globalization
+@using SimpleBlazorMultiselect
 
 <div class="row align-items-end" @onclick="ToggleDescription">
     <div class="col">
@@ -11,6 +12,15 @@
     <div class="col-1">
         <InputDate class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisDeadline" />
     </div>
+    <div class="col-2" style="color: white;">
+        <SimpleMultiselect 
+            Options="AllEmployees"
+                           @bind-SelectedOptions="ThisTaskResponsible"
+            StringSelector="person => person.EmployeeName"
+            CanFilter="true"
+                           Class="simple-dropdown" />
+    </div>
+    
     <div class="col-1">
         @if (IsTaskEdited)
         {
@@ -20,12 +30,12 @@
         {
             <div class="col-1">
                 <button class="btn rounded-pill border border-white text-white px-4 py-2" style="font-size: 12px;"
-                @onclick="ToggleComplete"><nobr>@(ThisTask.IsCompleted ? "Not Done" : "✅ Done")</nobr></button>
+                @onclick="ToggleComplete"><nobr>@(InputTask.IsCompleted ? "Not Done" : "✅ Done")</nobr></button>
             </div>
         }
     </div>
 </div>
-@if (ThisTask.Description != string.Empty || ShowDescription)
+@if (InputTask.Description != string.Empty || ShowDescription)
 {
     <div class="row">
         <div class="col" style="padding-left:30px">
@@ -37,10 +47,14 @@
 
 @code {
     [Parameter]
-    public TaskItem ThisTask { get; set; } = default!;
+    public TaskItem InputTask { get; set; } = default!;
 
     [Parameter]
     public EventCallback<TaskItem> OnTaskUpdated { get; set; }
+
+    [Parameter]
+    public List<Employee> AllEmployees { get; set; } = new();
+
 
     private string title;
 
@@ -80,7 +94,7 @@
         }
     }
 
-    private string description;
+    private string description = "";
 
     public string thisDescription
     {
@@ -92,6 +106,19 @@
             _ = TriggerUpdate();
         }
     }
+    
+    private HashSet<Employee> thisTaskResponsible = [];
+
+    public HashSet<Employee> ThisTaskResponsible
+    {
+        get { return thisTaskResponsible; }
+        set { 
+            thisTaskResponsible = value;
+            IsTaskEdited = true;
+            _ = TriggerUpdate();
+        }
+    }
+    
 
 
     private bool IsTaskEdited { get; set; } = false;
@@ -99,10 +126,11 @@
 
     protected override void OnParametersSet()
     {
-        title = ThisTask.Title;
-        startedOn = ThisTask.StartedOn;
-        deadline = ThisTask.Deadline;
-        description = ThisTask.Description;
+        title = InputTask.Title;
+        startedOn = InputTask.StartedOn;
+        deadline = InputTask.Deadline;
+        description = InputTask.Description;
+        thisTaskResponsible = InputTask.Responsible?.ToHashSet() ?? new();
     }
 
     private async Task TriggerUpdate()
@@ -114,18 +142,20 @@
     private TaskItem GetTask()
     {
         return new TaskItem
-            {
-                TaskId = ThisTask.TaskId,
-                ProjectId = ThisTask.ProjectId,
-                Title = thisTitle,
-                Description = thisDescription,
-                CreatedOn = ThisTask.CreatedOn,
-                StartedOn = thisStartedOn,
-                Deadline = thisDeadline,
-                IsCompleted = ThisTask.IsCompleted,
-                ParentTaskId = ThisTask.ParentTaskId
-            };
+        {
+            TaskId = InputTask.TaskId,
+            ProjectId = InputTask.ProjectId,
+            Title = thisTitle,
+            Description = thisDescription,
+            CreatedOn = InputTask.CreatedOn,
+            StartedOn = thisStartedOn,
+            Deadline = thisDeadline,
+            IsCompleted = InputTask.IsCompleted,
+            ParentTaskId = InputTask.ParentTaskId,
+            Responsible = thisTaskResponsible.ToList()
+        };
     }
+
 
     private async Task ToggleComplete()
     {
@@ -138,10 +168,11 @@
 
     private string ItemClass()
     {
-        return ThisTask.IsCompleted ? "form-control item-completed" : "form-control";
+        return InputTask.IsCompleted ? "form-control item-completed" : "form-control";
     }
     private void ToggleDescription()
     {
         ShowDescription = !ShowDescription;
     }
+
 }
