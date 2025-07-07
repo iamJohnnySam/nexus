@@ -10,19 +10,24 @@ namespace ProjectManager
         List<Project> Projects { get; }
 
         Task DeleteCustomer(Customer customer);
+        Task DeleteDeliverable(Deliverables d);
         Task DeleteDesignation(Designation d);
         Task DeleteEmployee(Employee emp);
         Task DeleteGrade(Grade g);
         Task DeleteProduct(Product p);
         Task DeleteProductModule(ProductModule module);
+        Task<Deliverables?> GetDeliverableByProject(Project project);
         Task DeleteProject(Project p);
         Task DeleteReviewItem(ReviewItem item);
         Task DeleteReviewPoint(ReviewPoint point);
+        Task DeleteSimulationScenario(SimulationScenario scenario);
+        Task<List<Employee>> GetAllActiveEmployees();
         Task<List<string>> GetAllActiveProjectNames();
         Task<List<Project>> GetAllActiveProjects();
         Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0);
         Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0);
         Task<List<Customer>> GetAllCustomers();
+        Task<List<Deliverables>> GetAllDeliverables();
         Task<List<Designation>> GetAllDesignations();
         Task<List<Employee>> GetAllEmployees();
         Task<List<Grade>> GetAllGrades();
@@ -35,8 +40,10 @@ namespace ProjectManager
         Task<List<Project>> GetAllProjects();
         Task<List<ReviewItem>> GetAllReviewItems();
         Task<List<ReviewPoint>> GetAllReviewPoints();
+        Task<List<SimulationScenario>> GetAllSimulationScenarios();
         Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID = 0);
         Task<Customer?> GetCustomerById(int id);
+        Task<Deliverables?> GetDeliverableById(int id);
         Task<Designation?> GetDesignationById(int id);
         Task<Employee?> GetEmployeeById(int id);
         Task<Grade?> GetGradeById(int id);
@@ -48,7 +55,9 @@ namespace ProjectManager
         Task<Project?> GetProject(int projectId);
         Task<ReviewItem?> GetReviewItemById(int id);
         Task<ReviewPoint?> GetReviewPointById(int id);
+        Task<SimulationScenario?> GetSimulationScenarioById(int id);
         Task InsertCustomer(Customer customer);
+        Task InsertDeliverable(Deliverables d);
         Task InsertDesignation(Designation d);
         Task InsertEmployee(Employee emp);
         Task InsertGrade(Grade g);
@@ -57,20 +66,22 @@ namespace ProjectManager
         Task InsertProject(Project p);
         Task InsertReviewItem(ReviewItem item);
         Task InsertReviewPoint(ReviewPoint point);
+        Task InsertSimulationScenario(SimulationScenario scenario);
         Task InsertTask(TaskItem p);
         Task MarkTaskComplete(TaskItem p);
         Task MarkTaskIncomplete(TaskItem p);
         Task SelectProjectFromName(string projectName);
         Task UpdateCustomer(Customer customer);
+        Task UpdateDeliverable(Deliverables d);
         Task UpdateDesignation(Designation d);
         Task UpdateEmployee(Employee emp);
-        Task<List<Employee>> GetAllActiveEmployees();
         Task UpdateGrade(Grade g);
         Task UpdateProduct(Product p);
         Task UpdateProductModule(ProductModule module);
         Task UpdateProject(Project p);
         Task UpdateReviewItem(ReviewItem item);
         Task UpdateReviewPoint(ReviewPoint point);
+        Task UpdateSimulationScenario(SimulationScenario scenario);
         Task UpdateTask(TaskItem p);
     }
 }

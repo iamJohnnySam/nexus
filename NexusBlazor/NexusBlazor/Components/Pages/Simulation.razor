@@ -1,0 +1,41 @@
+﻿@page "/simulation"
+@using NexusBlazor.Components.Pages.TaskPages
+@inject IManager manager
+@rendermode InteractiveAuto
+
+<PageTitle>Tasks</PageTitle>
+
+<div class="row">
+    <div class="col-2">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Simulate</h2>
+    </div>
+    <div class="col-2" style="padding-top: 20px;">
+        <SelectProject />
+    </div>
+    <div class="col-2">
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input"
+                           @bind-Value="lotMatch" />
+            <label class="form-check-label">Lot Match</label>
+        </div>
+    </div>
+    <div class="col-2">
+
+    </div>
+    <div class="col-2">
+    </div>
+</div>
+
+
+
+@code {
+    public Project CurrentProject { get; set; }
+
+    private bool lotMatch = true;
+
+    protected override void OnInitialized()
+    {
+        CurrentProject = manager.CurrentProject;
+        base.OnInitialized();
+    }
+}

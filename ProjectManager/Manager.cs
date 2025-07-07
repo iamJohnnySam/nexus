@@ -850,6 +850,116 @@ namespace ProjectManager
         }
 
 
+        // ---- SIMULATION SCENARIO DB
+        public async Task InsertSimulationScenario(SimulationScenario scenario)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = @"INSERT INTO SimulationScenario (SimulationName, ProjectId, XMLFile)
+                   VALUES (@SimulationName, @ProjectId, @XMLFile);";
+            await conn.ExecuteAsync(sql, scenario);
+            scenario.SimulationScenarioId = (int)conn.LastInsertRowId;
+        }
+        public async Task<List<SimulationScenario>> GetAllSimulationScenarios()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM SimulationScenario;";
+            var result = await conn.QueryAsync<SimulationScenario>(sql);
+            return result.ToList();
+        }
+        public async Task<SimulationScenario?> GetSimulationScenarioById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM SimulationScenario WHERE SimulationScenarioId = @id;";
+            return await conn.QueryFirstOrDefaultAsync<SimulationScenario>(sql, new { id });
+        }
+        public async Task UpdateSimulationScenario(SimulationScenario scenario)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = @"UPDATE SimulationScenario
+                   SET ProjectId = @ProjectId,
+                        SimulationName = @SimulationName,
+                       XMLFile = @XMLFile
+                   WHERE SimulationScenarioId = @SimulationScenarioId;";
+            await conn.ExecuteAsync(sql, scenario);
+        }
+        public async Task DeleteSimulationScenario(SimulationScenario scenario)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "DELETE FROM SimulationScenario WHERE SimulationScenarioId = @SimulationScenarioId;";
+            await conn.ExecuteAsync(sql, scenario);
+        }
+
+
+        // ---- DELIVERABLE DB
+        public async Task InsertDeliverable(Deliverables d)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = @"INSERT INTO Deliverables (DeliverableName, DeliverableDescription, DeliverableType)
+                   VALUES (@DeliverableName, @DeliverableDescription, @DeliverableType);";
+            await conn.ExecuteAsync(sql, d);
+            d.DeliverableId = (int)conn.LastInsertRowId;
+        }
+        public async Task<List<Deliverables>> GetAllDeliverables()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM Deliverables;";
+            var result = await conn.QueryAsync<Deliverables>(sql);
+            return result.ToList();
+        }
+        public async Task<Deliverables?> GetDeliverableById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM Deliverables WHERE DeliverableId = @id;";
+            return await conn.QueryFirstOrDefaultAsync<Deliverables>(sql, new { id });
+        }
+        public async Task<Deliverables?> GetDeliverableByProject(Project project)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM Deliverables WHERE ProjectId = @ProjectId;";
+            return await conn.QueryFirstOrDefaultAsync<Deliverables>(sql, project);
+        }
+        public async Task UpdateDeliverable(Deliverables d)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = @"UPDATE Deliverables
+                   SET DeliverableName = @DeliverableName,
+                       DeliverableDescription = @DeliverableDescription,
+                       DeliverableType = @DeliverableType
+                   WHERE DeliverableId = @DeliverableId;";
+            await conn.ExecuteAsync(sql, d);
+        }
+        public async Task DeleteDeliverable(Deliverables d)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "DELETE FROM Deliverables WHERE DeliverableId = @DeliverableId;";
+            await conn.ExecuteAsync(sql, d);
+        }
+
+
+
+
 
         private static string tableCreationString = @"
             CREATE TABLE IF NOT EXISTS Customer (
@@ -948,6 +1058,18 @@ namespace ProjectManager
             CREATE TABLE IF NOT EXISTS ProjectPCodes(
                 ProjectId INTEGER,
                 Code TEXT
+            );
+            CREATE TABLE IF NOT EXISTS Deliverable(
+                DeliverableId INTEGER,
+                DeliverableName TEXT,
+                DeliverableDescription TEXT,
+                DeliverableType TEXT
+            );
+            CREATE TABLE IF NOT EXISTS SimulationScenario(
+                SimulationScenarioId INTERGRER,
+                SimulationName TEXT,
+                ProjectId INTEGER,
+                XMLFile TEXT
             );";
 
     }

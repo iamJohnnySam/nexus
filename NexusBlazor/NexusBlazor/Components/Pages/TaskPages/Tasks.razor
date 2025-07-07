@@ -6,7 +6,7 @@
 
 <div class="row">
     <div class="col">
-        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Project Task Manager (@CurrentProject.ProjectName)</h2>
+        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Project Task Manager</h2>
     </div>
     <div class="col-2" style="padding-top: 20px;">
         <SelectProject />
@@ -16,9 +16,11 @@
     </div>
 </div>
 
-<div style="padding: 10px 30px 10px 30px;">
-
+<div class="fixed-bottom" style="padding: 10px 30px 10px 30px; background-color: #272B2F; border-color: white">
     <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" />
+</div>
+
+<div style="padding: 10px 30px 10px 30px;">
 
     @foreach(KeyValuePair<string, List<TaskItem>> parentTask in ParentTaskItems)
     {
@@ -49,6 +51,9 @@
     }
 
 </div>
+<br />
+<br />
+<br />
 
 
 

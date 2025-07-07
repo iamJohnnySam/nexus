@@ -1,0 +1,130 @@
+﻿@inject IManager manager
+@inject IJSRuntime JS
+
+<h3>Deliverable Manager</h3>
+
+<!-- Top Section: Table -->
+<div class="mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in DeliverablesList)
+            {
+                <tr class="@((SelectedDeliverable?.DeliverableId == d.DeliverableId) ? "table-primary" : "")">
+                    <td style="color: white">@d.DeliverableId</td>
+                    <td style="color: white">@d.DeliverableName</td>
+                    <td style="color: white">@d.DeliverableDescription</td>
+                    <td style="color: white">@d.DeliverableType</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(d)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(d)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Bottom Section: Form -->
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedDeliverable?.DeliverableId == 0 ? "Add Deliverable" : "Edit Deliverable")</h5>
+
+    <EditForm Model="@SelectedDeliverable" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Deliverable Name</label>
+            <InputText class="form-control" @bind-Value="SelectedDeliverable.DeliverableName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control" @bind-Value="SelectedDeliverable.DeliverableDescription" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Type</label>
+            <InputText class="form-control" @bind-Value="SelectedDeliverable.DeliverableType" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private List<Deliverables> DeliverablesList = [];
+    private Deliverables SelectedDeliverable = new()
+    {
+        DeliverableName = string.Empty,
+        DeliverableDescription = string.Empty,
+        DeliverableType = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDeliverables();
+    }
+
+    private async Task LoadDeliverables()
+    {
+        DeliverablesList = await manager.GetAllDeliverables();
+    }
+
+    private void Edit(Deliverables d)
+    {
+        SelectedDeliverable = new Deliverables
+        {
+            DeliverableId = d.DeliverableId,
+            DeliverableName = d.DeliverableName,
+            DeliverableDescription = d.DeliverableDescription,
+            DeliverableType = d.DeliverableType
+        };
+    }
+
+    private async Task Delete(Deliverables d)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{d.DeliverableName}'?");
+        if (!confirmed) return;
+
+        await manager.DeleteDeliverable(d);
+        await LoadDeliverables();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedDeliverable.DeliverableId == 0)
+        {
+            await manager.InsertDeliverable(SelectedDeliverable);
+        }
+        else
+        {
+            await manager.UpdateDeliverable(SelectedDeliverable);
+        }
+
+        await LoadDeliverables();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedDeliverable = new Deliverables
+        {
+            DeliverableName = string.Empty,
+            DeliverableDescription = string.Empty,
+            DeliverableType = string.Empty
+        };
+    }
+}

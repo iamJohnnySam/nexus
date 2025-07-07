@@ -1,0 +1,133 @@
+﻿@inject IManager manager
+@inject IJSRuntime JS
+
+<h3>Simulation Scenario Manager</h3>
+
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedScenario?.SimulationScenarioId == 0 ? "Add New Scenario" : "Edit Scenario")</h5>
+
+    <EditForm Model="@SelectedScenario" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Project</label>
+            <InputSelect class="form-control" @bind-Value="SelectedScenario.ProjectId">
+                <option value="">-- Select Project --</option>
+                @foreach (var project in Projects)
+                {
+                    <option value="@project.ProjectId">@project.ProjectName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Simulation Name</label>
+            <InputText class="form-control" @bind-Value="SelectedScenario.SimulationName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">XML File Name</label>
+            <InputTextArea class="form-control" @bind-Value="SelectedScenario.XMLFile" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Project</th>
+                <th>Simulation Name</th>
+                <th>XML File</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var scenario in Scenarios)
+            {
+                <tr class="@((SelectedScenario?.SimulationScenarioId == scenario.SimulationScenarioId) ? "table-primary" : "")">
+                    <td style="color: white">@scenario.SimulationScenarioId</td>
+                    <td style="color: white">@Projects.FirstOrDefault(p => p.ProjectId == scenario.ProjectId)?.ProjectName</td>
+                    <td style="color: white">@scenario.SimulationName</td>
+                    <td style="color: white">@scenario.XMLFile.</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(scenario)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(scenario)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<SimulationScenario> Scenarios = [];
+    private List<Project> Projects = [];
+
+    private SimulationScenario SelectedScenario = new()
+    {
+        XMLFile = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Projects = await manager.GetAllProjects();
+        Scenarios = await manager.GetAllSimulationScenarios();
+    }
+
+    private void Edit(SimulationScenario scenario)
+    {
+        SelectedScenario = new SimulationScenario
+        {
+            SimulationScenarioId = scenario.SimulationScenarioId,
+            SimulationName = scenario.SimulationName,
+            ProjectId = scenario.ProjectId,
+            XMLFile = scenario.XMLFile
+        };
+    }
+
+    private async Task Delete(SimulationScenario scenario)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this scenario?");
+        if (!confirmed) return;
+
+        await manager.DeleteSimulationScenario(scenario);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedScenario.SimulationScenarioId == 0)
+        {
+            await manager.InsertSimulationScenario(SelectedScenario);
+        }
+        else
+        {
+            await manager.UpdateSimulationScenario(SelectedScenario);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedScenario = new SimulationScenario
+        {
+            XMLFile = string.Empty
+        };
+    }
+}

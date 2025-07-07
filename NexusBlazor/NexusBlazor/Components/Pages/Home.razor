@@ -1,7 +1,7 @@
 ﻿@page "/"
 @inject IManager manager
 
-<PageTitle>Home</PageTitle>
+<PageTitle>nexus by iamJohnnySam</PageTitle>
 
 <section class="hero" id="home">
     <h1>Welcome to Your Project Hub</h1>
@@ -35,7 +35,7 @@
 </section>
 
 @code {
-    private List<Project> projects;
+    private List<Project> projects = [];
 
     protected override async Task OnInitializedAsync()
     {

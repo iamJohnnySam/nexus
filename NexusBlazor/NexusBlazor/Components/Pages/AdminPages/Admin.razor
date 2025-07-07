@@ -53,6 +53,14 @@
             {
                 <AdminReviewItem />
             }
+            else if (SelectedTable == "Deliverables")
+            {
+                <AdminDeliverable />
+            }
+            else if (SelectedTable == "Simulation")
+            {
+                <AdminSimulationScenario />
+            }
             else
             {
                 <p class="text-gray-500">Please select a table to view.</p>
@@ -64,7 +72,7 @@
 
 
 @code {
-    private List<string> TableNames = new() { "Project", "Customer", "Product", "Module", "Grade", "Designation", "Employee", "Review Point", "Review Item" };
+    private List<string> TableNames = new() { "Project", "Customer", "Product", "Module", "Grade", "Designation", "Employee", "Review Point", "Review Item", "Deliverables", "Simulation" };
     private string SelectedTable = "Project";
 
     private void SelectTable(string table)
