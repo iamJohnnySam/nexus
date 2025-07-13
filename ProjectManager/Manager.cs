@@ -278,9 +278,20 @@ namespace ProjectManager
         }
         public async Task<List<string>> GetAllActiveProjectNames()
         {
-            return (await GetAllActiveProjects()).Select(item => item?.GetType().GetProperty("ProjectName")?.GetValue(item)?.ToString())
-                .Where(projectName => projectName != null)
-                .ToList();
+            return CompileProjectNames(await (GetAllActiveProjects()));
+        }
+        private List<string> CompileProjectNames(List<Project> projects)
+        {
+            List<string> projectNames = [];
+            foreach (Project project in projects)
+            {
+                string name = string.Empty;
+                if (project.DesignCode != null && project.DesignCode != string.Empty)
+                    name = $"{project.DesignCode} | ";
+                name = name + project.ProjectName;
+                projectNames.Add(name);
+            }
+            return projectNames;
         }
         public async Task SelectProjectFromName(string projectName)
         {
@@ -1070,6 +1081,20 @@ namespace ProjectManager
                 SimulationName TEXT,
                 ProjectId INTEGER,
                 XMLFile TEXT
+            );
+            CREATE TABLE NOT EXISTS Milestones (
+                MilestoneId INT PRIMARY KEY IDENTITY,
+                ProjectId INT NOT NULL,
+                Name NVARCHAR(255) NOT NULL,
+                StartDate DATETIME NOT NULL,
+                EndDate DATETIME NOT NULL
+            );
+
+            CREATE TABLE NOT EXISTS MilestoneDependencies (
+                DependencyId INT PRIMARY KEY IDENTITY,
+                MilestoneId INT NOT NULL,
+                DependsOnMilestoneId INT NOT NULL,
+                Type INT NOT NULL,
             );";
 
     }

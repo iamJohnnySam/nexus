@@ -1,11 +1,31 @@
 ﻿@using SequenceSimulator
 <h3>Simulator</h3>
 
+
+<div class ="fixed-bottom" style="padding: 10px 30px 10px 30px; background-color: #272B2F; border-color: white">
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-1">
+            <button />
+        </div>
+        <div class="col-1"></div>
+        <div class="col-1"></div>
+        <div class="col"></div>
+    </div>
+</div>
+
 @code {
     [Parameter]
     public string SimulatorData { get; set; } = "";
 
+    [Parameter]
+    public bool IgnoreLotMatch { get; set; } = false;
+
     private Simulator simulator = new();
-
-
+    
+    protected override void OnInitialized()
+    {
+        simulator.InitializeSimulator(SimulatorData, IgnoreLotMatch);
+        base.OnInitialized();
+    }
 }
