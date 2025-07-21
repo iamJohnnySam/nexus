@@ -73,7 +73,8 @@
 
     private SimulationScenario SelectedScenario = new()
     {
-        XMLFile = string.Empty
+        XMLFile = string.Empty,
+        SimulationName = "New Simulation"
     };
 
     protected override async Task OnInitializedAsync()
@@ -127,7 +128,8 @@
     {
         SelectedScenario = new SimulationScenario
         {
-            XMLFile = string.Empty
+            XMLFile = string.Empty,
+            SimulationName = "New Simulation"
         };
     }
 }

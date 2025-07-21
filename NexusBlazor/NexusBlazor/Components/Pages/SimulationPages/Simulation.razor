@@ -1,0 +1,110 @@
+﻿@page "/simulation"
+@inject IManager manager
+@rendermode InteractiveServer
+
+<PageTitle>Simulation for @CurrentProject</PageTitle>
+
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">Simulation</h2>
+    </div>
+    <div class="col-3">
+        <SelectActiveProject OnProjectChange="HandleProjectChange" />
+    </div>
+    <div class="col-2">
+       
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+    </div>
+    <div class="col">
+    </div>
+    <div class="col-1">
+        <div class="form-check">
+            <InputCheckbox class="form-check-input"
+                           @bind-Value="lotMatch" />
+            <label class="form-check-label">Lot Match</label>
+        </div>
+    </div>
+    <div class="col-1">
+        <div class="form-check">
+            <InputCheckbox class="form-check-input"
+                           @bind-Value="autoComplete" />
+            <label class="form-check-label">Auto Run</label>
+        </div>
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+<div class="row">
+
+    <div class="col-5">
+        <div class="mb-4">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Simulation Name</th>
+                        <th>Project ID</th>
+                        <th>XML</th>
+                        <th>Last Throughput</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Scenarios)
+                    {
+                        <tr class="@((SelectedScenario?.SimulationScenarioId == e.SimulationScenarioId) ? "table-primary" : "")">
+                            <td style="color: white">@e.SimulationScenarioId</td>
+                            <td style="color: white">@e.SimulationName</td>
+                            <td style="color: white">@e.ProjectId</td>
+                            <td style="color: white">@e.XMLFile</td>
+                            <td style="color: white">@e.LastThroughput</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Start(e)">Edit</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col">
+        <SimulationLayoutCreator />
+    </div>
+
+
+</div>
+
+
+@code {
+    public Project CurrentProject { get; set; }
+    private List<SimulationScenario> Scenarios = [];
+    private SimulationScenario SelectedScenario = new SimulationScenario
+    {
+        SimulationName = "",
+        XMLFile =""
+    };
+
+    private bool lotMatch = true;
+    private bool autoComplete = true;
+
+    protected override void OnInitialized()
+    {
+        CurrentProject = manager.CurrentProject;
+        base.OnInitialized();
+    }
+
+    private void HandleProjectChange(string projectName)
+    {
+        CurrentProject = manager.CurrentProject;
+    }
+
+    private void Start(SimulationScenario simulationScenario)
+    {
+        
+    }
+
+}

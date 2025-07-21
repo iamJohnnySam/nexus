@@ -15,6 +15,7 @@ namespace ProjectManager
         Task DeleteEmployee(Employee emp);
         Task DeleteGrade(Grade g);
         Task DeleteProduct(Product p);
+        string CompileProjectName(Project project);
         Task DeleteProductModule(ProductModule module);
         Task<Deliverables?> GetDeliverableByProject(Project project);
         Task DeleteProject(Project p);

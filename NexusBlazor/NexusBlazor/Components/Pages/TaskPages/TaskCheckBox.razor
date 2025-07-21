@@ -1,14 +1,14 @@
-﻿<div class="p-3 text-white">
+﻿<div class="text-white">
     <div class="form-check mb-2">
         <InputCheckbox class="form-check-input"
                        @bind-Value="ShowAll" />
-        <label class="form-check-label">Show All</label>
+        <label class="form-check-label">Show All Projects</label>
     </div>
 
     <div class="form-check">
         <InputCheckbox class="form-check-input"
-                       @bind-Value="ShowIncomplete" />
-        <label class="form-check-label">Show Incomplete</label>
+                       @bind-Value="ShowAllTasks" />
+        <label class="form-check-label">Show All Tasks</label>
     </div>
 </div>
 
@@ -31,14 +31,14 @@
             }
     }
 
-    private bool showIncomplete;
+    private bool showAllTasks;
 
-    public bool ShowIncomplete
+    public bool ShowAllTasks
     {
-        get { return showIncomplete; }
+        get { return showAllTasks; }
         set
         {
-            showIncomplete = value;
+            showAllTasks = value;
             OnShowIncompleteChanged.InvokeAsync(value); }
     } 
 }

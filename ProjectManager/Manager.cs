@@ -36,7 +36,6 @@ namespace ProjectManager
             }
         }
 
-
         public Manager()
         {
             _connectionString = $"Data Source={dbPath};Version=3;";
@@ -48,12 +47,12 @@ namespace ProjectManager
                 databaseNotExist = true;
             }
 
+            using var connection = new SQLiteConnection(_connectionString);
+            connection.Open();
+            connection.Execute(tableCreationString);
+
             if (databaseNotExist)
             {
-                using var connection = new SQLiteConnection(_connectionString);
-                connection.Open();
-                connection.Execute(tableCreationString);
-
                 Customer newCustomer = new() { CustomerName = "Internal" };
                 InsertCustomer(newCustomer).Wait();
 
@@ -72,6 +71,7 @@ namespace ProjectManager
             }
             currentProject = GetProject(1).Result!;
         }
+
 
         // ---- CUSTOMER DB
         public async Task InsertCustomer(Customer customer)
@@ -285,13 +285,17 @@ namespace ProjectManager
             List<string> projectNames = [];
             foreach (Project project in projects)
             {
-                string name = string.Empty;
-                if (project.DesignCode != null && project.DesignCode != string.Empty)
-                    name = $"{project.DesignCode} | ";
-                name = name + project.ProjectName;
-                projectNames.Add(name);
+                projectNames.Add(CompileProjectName(project));
             }
             return projectNames;
+        }
+        public string CompileProjectName(Project project)
+        {
+            string name = string.Empty;
+            if (project.DesignCode != null && project.DesignCode != string.Empty)
+                name = $"{project.DesignCode} | ";
+            name = name + project.ProjectName;
+            return name;
         }
         public async Task SelectProjectFromName(string projectName)
         {
@@ -354,39 +358,32 @@ namespace ProjectManager
                 Title = "Untitled Task",
                 ProjectId = currentProject.ProjectId,
                 Deadline = DateTime.Now,
+                ResponsibleId = 0
             };
         }
-
-        public TaskItem GetNewSubTask(TaskItem p)
+        public TaskItem GetNewSubTask(TaskItem t)
         {
             return new TaskItem
             {
                 Title = "Untitled Task",
                 ProjectId = currentProject.ProjectId,
                 Deadline = DateTime.Now,
-                ParentTaskId = p.TaskId
+                ParentTaskId = t.TaskId,
+                ResponsibleId = 0
             };
         }
-
-        public async Task InsertTask(TaskItem p)
+        public async Task InsertTask(TaskItem t)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
-            if (p.ProjectId == 0)
-                p.ProjectId = currentProject.ProjectId;
-
-            string sql = @"INSERT INTO TaskItem (ProjectId, Title, Description, CreatedOn, StartedOn, Deadline, IsCompleted, IsBlocking, ParentTaskId)
-                       VALUES (@ProjectId, @Title, @Description, @CreatedOn, @StartedOn, @Deadline, @IsCompleted, @IsBlocking, @ParentTaskId);";
-            await conn.ExecuteAsync(sql, p);
-            p.TaskId = (int)conn.LastInsertRowId;
-
-            foreach (var emp in p.Responsible)
-            {
-                await conn.ExecuteAsync("INSERT INTO TaskItemResponsibility (TaskId, EmployeeId) VALUES (@TaskId, @EmployeeId);", new { TaskId = p.TaskId, EmployeeId = emp.EmployeeId });
-            }
+            string sql = @"INSERT INTO TaskItem (ProjectId, Title, Description, CreatedOn, StartedOn, Deadline,
+                                         ResponsibleId, IsCompleted, IsBlocking, ParentTaskId)
+                   VALUES (@ProjectId, @Title, @Description, @CreatedOn, @StartedOn, @Deadline,
+                           @ResponsibleId, @IsCompleted, @IsBlocking, @ParentTaskId);";
+            await conn.ExecuteAsync(sql, t);
+            t.TaskId = (int)conn.LastInsertRowId;
         }
-
         private async Task<List<TaskItem>> QueryTaskList(string query, object project)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -395,13 +392,12 @@ namespace ProjectManager
 
             foreach (var task in tasks)
             {
-                var res = await conn.QueryAsync<Employee>("SELECT e.* FROM Employee e JOIN TaskItemResponsibility r ON e.EmployeeId = r.EmployeeId WHERE r.TaskId = @TaskId", new { TaskId = task.TaskId });
-                task.Responsible = res.ToList();
+                task.Responsible = await conn.QueryFirstOrDefaultAsync<Employee>(
+                    "SELECT * FROM Employee WHERE EmployeeId = @EmployeeId", new { EmployeeId = task.ResponsibleId });
             }
 
             return tasks;
         }
-
         public async Task<List<TaskItem>> GetAllParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -413,7 +409,6 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0)";
             return await QueryTaskList(query, reference);
         }
-
         public async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -425,7 +420,6 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 0";
             return await QueryTaskList(query, reference);
         }
-
         public async Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -437,7 +431,6 @@ namespace ProjectManager
             string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 1";
             return await QueryTaskList(query, reference);
         }
-
         private Dictionary<int, List<TaskItem>> BundleSubTasks(List<TaskItem> AllTasks)
         {
             Dictionary<int, List<TaskItem>> SubTasks = [];
@@ -455,7 +448,6 @@ namespace ProjectManager
             }
             return SubTasks;
         }
-
         public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -468,7 +460,6 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
-
         public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -481,7 +472,6 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
-
         public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks(int projectID = 0)
         {
             object reference = currentProject;
@@ -494,45 +484,35 @@ namespace ProjectManager
             List<TaskItem> AllTasks = await QueryTaskList(query, reference);
             return BundleSubTasks(AllTasks);
         }
-
-        public async Task MarkTaskComplete(TaskItem p)
+        public async Task MarkTaskComplete(TaskItem t)
         {
-            p.IsCompleted = true;
-            await UpdateTaskCompletion(p);
+            t.IsCompleted = true;
+            await UpdateTaskCompletion(t);
         }
-
-        public async Task MarkTaskIncomplete(TaskItem p)
+        public async Task MarkTaskIncomplete(TaskItem t)
         {
-            p.IsCompleted = false;
-            await UpdateTaskCompletion(p);
+            t.IsCompleted = false;
+            await UpdateTaskCompletion(t);
         }
-
-        public async Task UpdateTask(TaskItem p)
+        public async Task UpdateTask(TaskItem t)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
             string sql = @"UPDATE TaskItem
-                       SET ProjectId = @ProjectId,
-                           Title = @Title,
-                           Description = @Description,
-                           CreatedOn = @CreatedOn,
-                           StartedOn = @StartedOn,
-                           Deadline = @Deadline,
-                           IsCompleted = @IsCompleted,
-                           IsBlocking = @IsBlocking,
-                           ParentTaskId = @ParentTaskId
-                       WHERE TaskId = @TaskId;";
-            await conn.ExecuteAsync(sql, p);
-
-            await conn.ExecuteAsync("DELETE FROM TaskItemResponsibility WHERE TaskId = @TaskId", p);
-
-            foreach (var emp in p.Responsible)
-            {
-                await conn.ExecuteAsync("INSERT INTO TaskItemResponsibility (TaskId, EmployeeId) VALUES (@TaskId, @EmployeeId);", new { TaskId = p.TaskId, EmployeeId = emp.EmployeeId });
-            }
+                   SET ProjectId = @ProjectId,
+                       Title = @Title,
+                       Description = @Description,
+                       CreatedOn = @CreatedOn,
+                       StartedOn = @StartedOn,
+                       Deadline = @Deadline,
+                       ResponsibleId = @ResponsibleId,
+                       IsCompleted = @IsCompleted,
+                       IsBlocking = @IsBlocking,
+                       ParentTaskId = @ParentTaskId
+                   WHERE TaskId = @TaskId;";
+            await conn.ExecuteAsync(sql, t);
         }
-
         private async Task UpdateTaskCompletion(TaskItem p)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -867,8 +847,8 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
-            string sql = @"INSERT INTO SimulationScenario (SimulationName, ProjectId, XMLFile)
-                   VALUES (@SimulationName, @ProjectId, @XMLFile);";
+            string sql = @"INSERT INTO SimulationScenario (SimulationName, ProjectId, XMLFile, LastThroughput)
+                   VALUES (@SimulationName, @ProjectId, @XMLFile, @LastThroughput);";
             await conn.ExecuteAsync(sql, scenario);
             scenario.SimulationScenarioId = (int)conn.LastInsertRowId;
         }
@@ -897,7 +877,8 @@ namespace ProjectManager
             string sql = @"UPDATE SimulationScenario
                    SET ProjectId = @ProjectId,
                         SimulationName = @SimulationName,
-                       XMLFile = @XMLFile
+                        XMLFile = @XMLFile,
+                        LastThroughput = @LastThroughput
                    WHERE SimulationScenarioId = @SimulationScenarioId;";
             await conn.ExecuteAsync(sql, scenario);
         }
@@ -1051,14 +1032,10 @@ namespace ProjectManager
                 CreatedOn TEXT,
                 StartedOn TEXT,
                 Deadline TEXT NOT NULL,
+                ResponsibleId INTEGER,
                 IsCompleted INTEGER,
                 IsBlocking INTEGER DEFAULT 1,
                 ParentTaskId INTEGER
-            );
-
-            CREATE TABLE IF NOT EXISTS TaskItemResponsibility(
-                TaskId INTEGER,
-                EmployeeId INTEGER
             );
 
             CREATE TABLE IF NOT EXISTS PreviousProjectCodes(
@@ -1076,25 +1053,26 @@ namespace ProjectManager
                 DeliverableDescription TEXT,
                 DeliverableType TEXT
             );
-            CREATE TABLE IF NOT EXISTS SimulationScenario(
-                SimulationScenarioId INTERGRER,
-                SimulationName TEXT,
+            CREATE TABLE IF NOT EXISTS SimulationScenario (
+                SimulationScenarioId INTEGER PRIMARY KEY,
+                SimulationName TEXT NOT NULL,
                 ProjectId INTEGER,
-                XMLFile TEXT
+                XMLFile TEXT NOT NULL,
+                LastThroughput REAL
             );
-            CREATE TABLE NOT EXISTS Milestones (
-                MilestoneId INT PRIMARY KEY IDENTITY,
+            CREATE TABLE IF NOT EXISTS Milestones (
+                MilestoneId INT PRIMARY KEY,
                 ProjectId INT NOT NULL,
-                Name NVARCHAR(255) NOT NULL,
-                StartDate DATETIME NOT NULL,
-                EndDate DATETIME NOT NULL
+                Name TEXT NOT NULL,
+                StartDate TEXT NOT NULL,
+                EndDate TEXT NOT NULL
             );
 
-            CREATE TABLE NOT EXISTS MilestoneDependencies (
-                DependencyId INT PRIMARY KEY IDENTITY,
+            CREATE TABLE IF NOT EXISTS MilestoneDependencies (
+                DependencyId INT PRIMARY KEY,
                 MilestoneId INT NOT NULL,
                 DependsOnMilestoneId INT NOT NULL,
-                Type INT NOT NULL,
+                Type INT NOT NULL
             );";
 
     }

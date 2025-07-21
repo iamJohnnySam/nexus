@@ -1,6 +1,5 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using System.Globalization
-@using SimpleBlazorMultiselect
 
 <div class="row align-items-end" @onclick="ToggleDescription">
     <div class="col">
@@ -13,12 +12,13 @@
         <InputDate class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisDeadline" />
     </div>
     <div class="col-2" style="color: white;">
-        <SimpleMultiselect 
-            Options="AllEmployees"
-                           @bind-SelectedOptions="ThisTaskResponsible"
-            StringSelector="person => person.EmployeeName"
-            CanFilter="true"
-                           Class="simple-dropdown" />
+        
+
+
+
+
+
+
     </div>
     
     <div class="col-1">
@@ -106,19 +106,15 @@
             _ = TriggerUpdate();
         }
     }
-    
-    private HashSet<Employee> thisTaskResponsible = [];
+    private Employee? responsible;
 
-    public HashSet<Employee> ThisTaskResponsible
+    public Employee? Responsible
     {
-        get { return thisTaskResponsible; }
-        set { 
-            thisTaskResponsible = value;
-            IsTaskEdited = true;
-            _ = TriggerUpdate();
-        }
+        get { return responsible; }
+        set { responsible = value; }
     }
-    
+
+
 
 
     private bool IsTaskEdited { get; set; } = false;
@@ -130,7 +126,7 @@
         startedOn = InputTask.StartedOn;
         deadline = InputTask.Deadline;
         description = InputTask.Description;
-        thisTaskResponsible = InputTask.Responsible?.ToHashSet() ?? new();
+        responsible = InputTask.Responsible;
     }
 
     private async Task TriggerUpdate()
@@ -152,7 +148,7 @@
             Deadline = thisDeadline,
             IsCompleted = InputTask.IsCompleted,
             ParentTaskId = InputTask.ParentTaskId,
-            Responsible = thisTaskResponsible.ToList()
+            Responsible = InputTask.Responsible
         };
     }
 

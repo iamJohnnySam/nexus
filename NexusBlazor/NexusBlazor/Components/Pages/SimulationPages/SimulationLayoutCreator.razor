@@ -1,0 +1,313 @@
+﻿@using System.Xml
+@using System.Text
+@using LayoutModels.Creator
+
+<h3 class="text-xl font-bold mb-4">Simulation Creator</h3>
+
+<div class="row">
+    <div class="col">
+        <h4 class="font-semibold mb-2">Stations</h4>
+        @foreach (CStation station in Stations)
+        {
+            <div class="row">
+                <div class="col-4"><label>Identifier</label></div>
+                <div class="col"><InputText @bind-Value="station.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Payload Type</label></div>
+                <div class="col"><InputText @bind-Value="station.PayloadType" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Capacity</label></div>
+                <div class="col"><InputNumber @bind-Value="station.Capacity" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Process Time</label></div>
+                <div class="col"><InputNumber @bind-Value="station.ProcessTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Locations Accessible With Door</label></div>
+            </div>
+            <div class="row">
+                @for (int i = 0; i < station.AccessibleLocationsWithDoor.Count; i++)
+                {
+                    <div class="col-1">
+                        <InputText @bind-Value="station.AccessibleLocationsWithDoor[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                    </div>
+                }
+                <div class="col-1">
+                    <button class="btn btn-primary w-100" @onclick="() => AddDoorLocation(station)">Add</button>
+                </div>
+            </div>
+            <div class="row">
+                @for (int i = 0; i < station.DoorTransitionTimes.Count; i++)
+                {
+                    <div class="col-1">
+                        <InputNumber @bind-Value="station.DoorTransitionTimes[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                    </div>
+                }
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Locations Accessible Without Door</label></div>
+            </div>
+            <div class="row">
+                @for (int i = 0; i < station.AccessibleLocationsWithoutDoor.Count; i++)
+                {
+                    <div class="col-1">
+                        <InputText @bind-Value="station.AccessibleLocationsWithoutDoor[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                    </div>
+                }
+                <div class="col-1">
+                    <button class="btn btn-primary w-100" @onclick="() => AddNoDoorLocation(station)">Add</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="row">
+                    <InputCheckbox @bind-Value="station.ConcurrentLocationAccess" /> Concurrent Access
+                    </div>
+                    <div class="row">
+                    <InputCheckbox @bind-Value="station.Processable" /> Processable?
+                    </div>
+                    <div class="row">
+                        <InputCheckbox @bind-Value="station.PodDockable" /> Pod Dockable?
+                    </div>
+                </div>
+                <div class="col">
+
+                <div class="row">
+                    <InputCheckbox @bind-Value="station.AutoLoadPod" /> Auto Load Pod
+                    </div>
+                    <div class="row">
+                    <InputCheckbox @bind-Value="station.AutoDoorControl" /> Auto Door Control
+                    </div>
+                    <div class="row">
+                    <InputCheckbox @bind-Value="station.LowPriority" /> Low Priority
+                    </div>
+                    <div class="row">
+                    <InputCheckbox @bind-Value="station.PartialProcess" /> Partial Process
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Count</label></div>
+                <div class="col"><InputNumber @bind-Value="station.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+        }
+        <div class="row">
+            <button class="btn btn-primary w-100" @onclick="AddStation">Add Station</button>
+        </div>
+
+
+        <h4 class="font-semibold mb-2">Manipulators</h4>
+        @foreach (CManipulator manipulator in Manipulators)
+        {
+            <div class="row">
+                <div class="col-4"><label>Identifier</label></div>
+                <div class="col"><InputText @bind-Value="manipulator.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Station to Station Motion Time</label></div>
+                <div class="col"><InputNumber @bind-Value="manipulator.MotionTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Arm Extend Time</label></div>
+                <div class="col"><InputNumber @bind-Value="manipulator.ExtendTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Arm Retract Time</label></div>
+                <div class="col"><InputNumber @bind-Value="manipulator.RetractTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>End Effectors</label></div>
+            </div>
+            <div class="row">
+                @for (int i = 0; i < manipulator.EndEffectors.Count; i++)
+                {
+                    <div class="col-1">
+                            <InputText @bind-Value="manipulator.EndEffectors[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                    </div>
+                }
+                <div class="col-1">
+                        <button class="btn btn-primary w-100" @onclick="() => AddEndEffector(manipulator)">Add</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4"><label>Locations</label></div>
+            </div>
+            <div class="row">
+                    @for (int i = 0; i < manipulator.Locations.Count; i++)
+                {
+                    <div class="col-1">
+                            <InputText @bind-Value="manipulator.Locations[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                    </div>
+                }
+                <div class="col-1">
+                    <button class="btn btn-primary w-100" @onclick="() => AddMLocation(manipulator)">Add</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-4"><label>Count</label></div>
+                <div class="col"><InputNumber @bind-Value="manipulator.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            </div>
+        }
+    </div>
+    <div class="row">
+        <button class="btn btn-primary w-100" @onclick="AddManipulator">Add Manipulator</button>
+    </div>
+    <div class="col">
+        <h4 class="font-semibold mb-2">XML Output</h4>
+        <pre class="bg-gray-100 p-2 rounded whitespace-pre-wrap">@XmlOutput</pre>
+    </div>
+</div>
+
+
+
+@code {
+
+
+    private List<CStation> Stations = new();
+    private List<CManipulator> Manipulators = new();
+    private CStation NewStation = new()
+    {
+        Identifier = "New Station"
+    };
+    private CManipulator NewManipulator = new()
+    {
+        Identifier = "New Manipulator"
+    };
+    private string XmlOutput = string.Empty;
+
+
+
+    private void AddStation()
+    {
+        Stations.Add(new CStation()
+        {
+            Identifier = "New Station"
+        });
+        GenerateXml();
+    }
+    private void AddManipulator()
+    {
+        Manipulators.Add(new CManipulator()
+        {
+            Identifier = "New Manipulator"
+        });
+        GenerateXml();
+    }
+
+    private void AddDoorLocation(CStation station)
+    {
+        CleanStationLists(station);
+        station.AccessibleLocationsWithDoor.Add("New");
+        station.DoorTransitionTimes.Add(10);
+    }
+    private void AddNoDoorLocation(CStation station)
+    {
+        CleanStationLists(station);
+        station.AccessibleLocationsWithoutDoor.Add("New");
+    }
+    private void AddEndEffector(CManipulator manipulator)
+    {
+        CleanManipulatorLists(manipulator);
+        manipulator.EndEffectors.Add("New");
+    }
+    private void AddMLocation(CManipulator manipulator)
+    {
+        CleanManipulatorLists(manipulator);
+        manipulator.Locations.Add("New");
+    }
+
+    private void CleanUpArray(List<string> a, List<int>? attList = null)
+    {
+        for(int i = 0; i < a.Count; i++)
+        {
+            if(a[i] == string.Empty || a[i] == " ")
+            {
+                a.RemoveAt(i);
+                if (attList != null)
+                {
+                    attList.RemoveAt(i);
+                }
+            }
+        }
+    }
+    private void CleanStationLists(CStation station)
+    {
+        CleanUpArray(station.AccessibleLocationsWithDoor, station.DoorTransitionTimes);
+        CleanUpArray(station.AccessibleLocationsWithoutDoor);
+    }
+    private void CleanManipulatorLists(CManipulator manipulator){
+        CleanUpArray(manipulator.EndEffectors);
+        CleanUpArray(manipulator.Locations);
+    }
+
+
+    private void GenerateXml()
+    {
+        var settings = new XmlWriterSettings { Indent = true, IndentChars = "  ", OmitXmlDeclaration = true };
+        var sb = new StringBuilder();
+        using var writer = XmlWriter.Create(sb, settings);
+
+        writer.WriteStartElement("Simulation");
+
+        writer.WriteStartElement("Stations");
+        foreach (var station in Stations)
+        {
+            writer.WriteStartElement("Station");
+            writer.WriteAttributeString("Identifier", station.Identifier);
+            writer.WriteAttributeString("PayloadType", station.PayloadType);
+            writer.WriteAttributeString("Capacity", station.Capacity.ToString());
+            writer.WriteAttributeString("ProcessTime", station.ProcessTime.ToString());
+            writer.WriteAttributeString("PodDockable", station.PodDockable.ToString());
+            writer.WriteAttributeString("AutoLoadPod", station.AutoLoadPod.ToString());
+            writer.WriteAttributeString("AutoDoorControl", station.AutoDoorControl.ToString());
+            writer.WriteAttributeString("LowPriority", station.LowPriority.ToString());
+            writer.WriteAttributeString("PartialProcess", station.PartialProcess.ToString());
+            writer.WriteAttributeString("Count", station.Count.ToString());
+
+            foreach (var process in station.Processes)
+            {
+                writer.WriteStartElement("Process");
+                writer.WriteAttributeString("ProcessName", process.ProcessName);
+                writer.WriteAttributeString("InputState", process.InputState);
+                writer.WriteAttributeString("OutputState", process.OutputState);
+                writer.WriteAttributeString("Location", process.Location);
+                writer.WriteAttributeString("ProcessTime", process.ProcessTime.ToString());
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+        writer.WriteEndElement();
+
+        writer.WriteStartElement("Manipulators");
+        foreach (var m in Manipulators)
+        {
+            writer.WriteStartElement("Manipulator");
+            writer.WriteAttributeString("Identifier", m.Identifier);
+            writer.WriteAttributeString("MotionTime", m.MotionTime.ToString());
+            writer.WriteAttributeString("ExtendTime", m.ExtendTime.ToString());
+            writer.WriteAttributeString("RetractTime", m.RetractTime.ToString());
+            writer.WriteAttributeString("Count", m.Count.ToString());
+
+            writer.WriteStartElement("EndEffectors");
+            foreach (var e in m.EndEffectors)
+                writer.WriteElementString("Effector", e);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Locations");
+            foreach (var l in m.Locations)
+                writer.WriteElementString("Location", l);
+            writer.WriteEndElement();
+
+            writer.WriteEndElement();
+        }
+        writer.WriteEndElement();
+
+        writer.WriteEndElement();
+        XmlOutput = sb.ToString();
+    }
+}

@@ -20,9 +20,9 @@ public class TaskItem
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public DateTime StartedOn {  get; set; } = DateTime.Now;
     public required DateTime Deadline { get; set; }
+    public Employee? Responsible { get; set; }
+    public int ResponsibleId { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsBlocking { get; set; } = true;
     public int? ParentTaskId { get; set; }
-    public List<Employee> Responsible { get; set; } = [];
-
 }

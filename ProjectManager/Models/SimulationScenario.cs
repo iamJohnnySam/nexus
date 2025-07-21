@@ -11,7 +11,8 @@ public class SimulationScenario
 {
     [Key]
     public int SimulationScenarioId { get; set; }
-    public string SimulationName { get; set; } = string.Empty;
+    public required string SimulationName { get; set; }
     public int ProjectId { get; set; }
-    public string XMLFile { get; set; } = string.Empty;
+    public required string XMLFile { get; set; }
+    public float LastThroughput { get; set; }
 }
