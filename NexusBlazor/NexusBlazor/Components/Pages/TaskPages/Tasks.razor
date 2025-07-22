@@ -20,7 +20,8 @@
 
 
 
-<div class="fixed-bottom" style="padding: 10px 30px 10px 30px; background-color: #272B2F; border-color: white">
+<div class="fixed-bottom" style="padding: 10px 0px 10px 30px; background-color: #272B2F;">
+    <hr style="border-top: 1px solid white" />
     <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" />
 </div>
 
@@ -28,16 +29,15 @@
 
 
 <div style="padding: 10px 10px 10px 30px;">
-
     @foreach(KeyValuePair<string, List<TaskItem>> parentTask in ParentTaskItems)
     {
         <div>
-            <h3 style="padding-top: 0px">@parentTask.Key</h3>
+            <h4>@parentTask.Key</h4>
             @foreach (TaskItem taskItem in parentTask.Value)
             {
-                <div>
-                    <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" />
-                    <div style="padding: 10px 0px 10px 30px;">
+                <div @onclick="() => ToggleActive(taskItem.TaskId)">
+                    <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" IsBold="@SubTaskItems.ContainsKey(taskItem.TaskId)" />
+                    <div style="padding: 10px 0px 10px 0px;">
 
                         @if (SubTaskItems.ContainsKey(taskItem.TaskId))
                         {
@@ -50,12 +50,16 @@
                                 }
                             </div>
                         }
-                        <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" />
+                        @if(SelectedParentTaskId == taskItem.TaskId)
+                        {
+                            <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" />
+                        }
                     </div>
                 </div>
+                <hr style="border-top: 3px solid white" />
             }
         </div>
-        <hr style="border-top: 2px solid white" />
+        <hr style="border-top: 5px solid white" />
     }
 
 </div>
@@ -75,6 +79,7 @@
 
     public bool ShowAllProjects { get; set; } = false;
     public bool ShowIncompleteOnly { get; set; } = true;
+    private int SelectedParentTaskId = 0;
 
     protected override void OnInitialized()
     {
@@ -140,6 +145,10 @@
     {
         task.ProjectId = CurrentProject.ProjectId;
         manager.InsertTask(task);
+        if(task.ParentTaskId == 0)
+        {
+            SelectedParentTaskId = 0;
+        }
         RefreshTasks();
     }
 
@@ -159,5 +168,9 @@
     {
         ShowIncompleteOnly = !showIncomplete;
         RefreshTasks();
+    }
+    private void ToggleActive(int ParentTaskId)
+    {
+        SelectedParentTaskId = ParentTaskId;
     }
 }

@@ -336,7 +336,8 @@ namespace ProjectManager
                            DesignCode = @DesignCode,
                            Priority = @Priority,
                            POStatus = @POStatus,
-                           ProductId = @ProductId
+                           ProductId = @ProductId,
+                            IsActive = @IsActive
                        WHERE ProjectId = @ProjectId;";
             await conn.ExecuteAsync(sql, p);
         }

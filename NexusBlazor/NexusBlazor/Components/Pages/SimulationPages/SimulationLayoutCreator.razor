@@ -5,7 +5,7 @@
 <h3 class="text-xl font-bold mb-4">Simulation Creator</h3>
 
 <div class="row">
-    <div class="col">
+    <div class="col-6">
         <h4 class="font-semibold mb-2">Stations</h4>
         @foreach (CStation station in Stations)
         {
@@ -36,7 +36,7 @@
                     </div>
                 }
                 <div class="col-1">
-                    <button class="btn btn-primary w-100" @onclick="() => AddDoorLocation(station)">Add</button>
+                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddDoorLocation(station)">Add</button>
                 </div>
             </div>
             <div class="row">
@@ -58,35 +58,34 @@
                     </div>
                 }
                 <div class="col-1">
-                    <button class="btn btn-primary w-100" @onclick="() => AddNoDoorLocation(station)">Add</button>
+                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddNoDoorLocation(station)">Add</button>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col">
                     <div class="row">
-                    <InputCheckbox @bind-Value="station.ConcurrentLocationAccess" /> Concurrent Access
+                        <InputCheckbox @bind-Value="station.ConcurrentLocationAccess" /> Concurrent Access
                     </div>
                     <div class="row">
-                    <InputCheckbox @bind-Value="station.Processable" /> Processable?
+                        <InputCheckbox @bind-Value="station.Processable" /> Processable?
                     </div>
                     <div class="row">
                         <InputCheckbox @bind-Value="station.PodDockable" /> Pod Dockable?
                     </div>
                 </div>
                 <div class="col">
-
-                <div class="row">
-                    <InputCheckbox @bind-Value="station.AutoLoadPod" /> Auto Load Pod
+                    <div class="row">
+                        <InputCheckbox @bind-Value="station.AutoLoadPod" /> Auto Load Pod
                     </div>
                     <div class="row">
-                    <InputCheckbox @bind-Value="station.AutoDoorControl" /> Auto Door Control
+                        <InputCheckbox @bind-Value="station.AutoDoorControl" /> Auto Door Control
                     </div>
+                     <div class="row">
+                        <InputCheckbox @bind-Value="station.LowPriority" /> Low Priority
+                     </div>
                     <div class="row">
-                    <InputCheckbox @bind-Value="station.LowPriority" /> Low Priority
-                    </div>
-                    <div class="row">
-                    <InputCheckbox @bind-Value="station.PartialProcess" /> Partial Process
+                        <InputCheckbox @bind-Value="station.PartialProcess" /> Partial Process
                     </div>
                 </div>
             </div>
@@ -94,11 +93,15 @@
                 <div class="col-4"><label>Count</label></div>
                 <div class="col"><InputNumber @bind-Value="station.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
             </div>
+            <hr style="border-top: 1px solid white" />
         }
-        <div class="row">
-            <button class="btn btn-primary w-100" @onclick="AddStation">Add Station</button>
+        <div class="row" style="padding: 5px 30px 5px 30px;">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddStation">Add Station</button>
         </div>
 
+        <br />
+        <hr style="border-top: 5px solid white" />
+        <br />
 
         <h4 class="font-semibold mb-2">Manipulators</h4>
         @foreach (CManipulator manipulator in Manipulators)
@@ -130,7 +133,7 @@
                     </div>
                 }
                 <div class="col-1">
-                        <button class="btn btn-primary w-100" @onclick="() => AddEndEffector(manipulator)">Add</button>
+                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddEndEffector(manipulator)">Add</button>
                 </div>
             </div>
             <div class="row">
@@ -144,7 +147,7 @@
                     </div>
                 }
                 <div class="col-1">
-                    <button class="btn btn-primary w-100" @onclick="() => AddMLocation(manipulator)">Add</button>
+                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddMLocation(manipulator)">Add</button>
                 </div>
             </div>
 
@@ -152,13 +155,17 @@
                 <div class="col-4"><label>Count</label></div>
                 <div class="col"><InputNumber @bind-Value="manipulator.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
             </div>
+            <hr style="border-top: 1px solid white" />
         }
-    </div>
-    <div class="row">
-        <button class="btn btn-primary w-100" @onclick="AddManipulator">Add Manipulator</button>
+        <div class="row" style="padding: 5px 30px 5px 30px;">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddManipulator">Add Manipulator</button>
+        </div>
     </div>
     <div class="col">
         <h4 class="font-semibold mb-2">XML Output</h4>
+        <div class="row" style="padding: 5px 30px 5px 30px;">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="GenerateXml">Generate XML</button>
+        </div>
         <pre class="bg-gray-100 p-2 rounded whitespace-pre-wrap">@XmlOutput</pre>
     </div>
 </div>

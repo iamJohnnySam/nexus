@@ -1,24 +1,26 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using System.Globalization
 
-<div class="row align-items-end" @onclick="ToggleDescription">
+<div class="row align-items-end" @onclick="ItemClicked">
     <div class="col">
-        <InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisTitle" />
-    </div>
-    <div class="col-1">
-        <InputDate class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisStartedOn" />
+        @if (IsBold)
+        {
+            <InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none; font-weight:bold;" @bind-Value="thisTitle" />
+        }
+        else if(!IsBold && InputTask.ParentTaskId != 0)
+        {
+            <div style="display: flex; width: 100%;">
+                <div style="width: 10px;">•</div>
+                <div style="flex: 1;"><InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisTitle" /></div>
+            </div>
+        }
+        else
+        {
+            <InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisTitle" />
+        }
     </div>
     <div class="col-1">
         <InputDate class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisDeadline" />
-    </div>
-    <div class="col-2" style="color: white;">
-        
-
-
-
-
-
-
     </div>
     
     <div class="col-1">
@@ -40,6 +42,7 @@
     <div class="row">
         <div class="col" style="padding-left:30px">
             <InputTextArea class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none; font-size: 12px;"
+                           onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
                            oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="thisDescription" />
         </div>
     </div>
@@ -53,7 +56,13 @@
     public EventCallback<TaskItem> OnTaskUpdated { get; set; }
 
     [Parameter]
+    public EventCallback<TaskItem> OnTaskClicked { get; set; }
+
+    [Parameter]
     public List<Employee> AllEmployees { get; set; } = new();
+
+    [Parameter]
+    public bool IsBold { get; set; } = false;
 
 
     private string title;
@@ -166,9 +175,10 @@
     {
         return InputTask.IsCompleted ? "form-control item-completed" : "form-control";
     }
-    private void ToggleDescription()
+    private async void ItemClicked()
     {
         ShowDescription = !ShowDescription;
+        await OnTaskUpdated.InvokeAsync(GetTask());
     }
 
 }
