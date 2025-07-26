@@ -2,29 +2,33 @@
 @using System.Text
 @using LayoutModels.Creator
 
-<h3 class="text-xl font-bold mb-4">Simulation Creator</h3>
+<h3 class="text-xl font-bold mb-4">Simulation Editor</h3>
 
 <div class="row">
-    <div class="col-6">
-        <h4 class="font-semibold mb-2">Stations</h4>
-        @foreach (CStation station in Stations)
-        {
-            <div class="row">
-                <div class="col-4"><label>Identifier</label></div>
-                <div class="col"><InputText @bind-Value="station.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Payload Type</label></div>
-                <div class="col"><InputText @bind-Value="station.PayloadType" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Capacity</label></div>
-                <div class="col"><InputNumber @bind-Value="station.Capacity" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Process Time</label></div>
-                <div class="col"><InputNumber @bind-Value="station.ProcessTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
+    <h4 class="font-semibold mb-2">Stations</h4>
+    @foreach (CStation station in Stations)
+    {
+        <h5 class="font-semibold mb-2" style="color: red">Station @station.Identifier</h5>
+        <div class="row">
+            <div class="col"><label>Identifier</label></div>
+            <div class="col"><InputText @bind-Value="station.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            <div class="col"><label>Payload Type</label></div>
+            <div class="col"><InputText @bind-Value="station.PayloadType" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col"><label>Capacity</label></div>
+            <div class="col"><InputNumber @bind-Value="station.Capacity" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            <div class="col"><label>Process Time</label></div>
+            <div class="col"><InputNumber @bind-Value="station.ProcessTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col"><label>Count</label></div>
+            <div class="col"><InputNumber @bind-Value="station.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+            <div class="col"></div>
+            <div class="col"></div>
+        </div>
+
+        <div style="border:solid; border-color:gray; border-width: 1px; margin: 5px; padding: 5px">
             <div class="row">
                 <div class="col-4"><label>Locations Accessible With Door</label></div>
             </div>
@@ -36,7 +40,7 @@
                     </div>
                 }
                 <div class="col-1">
-                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddDoorLocation(station)">Add</button>
+                    <button style="color: white; background:rgba(0, 0, 0, 0)" @onclick="() => AddDoorLocation(station)">Add</button>
                 </div>
             </div>
             <div class="row">
@@ -47,6 +51,9 @@
                     </div>
                 }
             </div>
+        </div>
+
+        <div style="border:solid; border-color:gray; border-width: 1pt; margin: 5px; padding: 5px">
             <div class="row">
                 <div class="col-4"><label>Locations Accessible Without Door</label></div>
             </div>
@@ -58,108 +65,123 @@
                     </div>
                 }
                 <div class="col-1">
-                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddNoDoorLocation(station)">Add</button>
+                    <button style="color: white; background:rgba(0, 0, 0, 0)" @onclick="() => AddNoDoorLocation(station)">Add</button>
                 </div>
             </div>
+        </div>
+        
 
-            <div class="row">
-                <div class="col">
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.ConcurrentLocationAccess" /> Concurrent Access
-                    </div>
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.Processable" /> Processable?
-                    </div>
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.PodDockable" /> Pod Dockable?
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.AutoLoadPod" /> Auto Load Pod
-                    </div>
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.AutoDoorControl" /> Auto Door Control
-                    </div>
-                     <div class="row">
-                        <InputCheckbox @bind-Value="station.LowPriority" /> Low Priority
-                     </div>
-                    <div class="row">
-                        <InputCheckbox @bind-Value="station.PartialProcess" /> Partial Process
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Count</label></div>
-                <div class="col"><InputNumber @bind-Value="station.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <hr style="border-top: 1px solid white" />
-        }
-        <div class="row" style="padding: 5px 30px 5px 30px;">
-            <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddStation">Add Station</button>
+        <div class="row">
+            <div class="col"><InputCheckbox @bind-Value="station.ConcurrentLocationAccess" /> Concurrent Access </div>
+            <div class="col"><InputCheckbox @bind-Value="station.PartialProcess" /> Partial Process? </div>
+            <div class="col"><InputCheckbox @bind-Value="station.LowPriority" /> Low Priority </div>
+            <div class="col"> </div>
         </div>
 
-        <br />
-        <hr style="border-top: 5px solid white" />
-        <br />
-
-        <h4 class="font-semibold mb-2">Manipulators</h4>
-        @foreach (CManipulator manipulator in Manipulators)
-        {
-            <div class="row">
-                <div class="col-4"><label>Identifier</label></div>
-                <div class="col"><InputText @bind-Value="manipulator.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Station to Station Motion Time</label></div>
-                <div class="col"><InputNumber @bind-Value="manipulator.MotionTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Arm Extend Time</label></div>
-                <div class="col"><InputNumber @bind-Value="manipulator.ExtendTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Arm Retract Time</label></div>
-                <div class="col"><InputNumber @bind-Value="manipulator.RetractTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>End Effectors</label></div>
-            </div>
-            <div class="row">
-                @for (int i = 0; i < manipulator.EndEffectors.Count; i++)
-                {
-                    <div class="col-1">
-                            <InputText @bind-Value="manipulator.EndEffectors[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
-                    </div>
-                }
-                <div class="col-1">
-                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddEndEffector(manipulator)">Add</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4"><label>Locations</label></div>
-            </div>
-            <div class="row">
-                    @for (int i = 0; i < manipulator.Locations.Count; i++)
-                {
-                    <div class="col-1">
-                            <InputText @bind-Value="manipulator.Locations[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
-                    </div>
-                }
-                <div class="col-1">
-                    <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddMLocation(manipulator)">Add</button>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-4"><label>Count</label></div>
-                <div class="col"><InputNumber @bind-Value="manipulator.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
-            </div>
-            <hr style="border-top: 1px solid white" />
-        }
-        <div class="row" style="padding: 5px 30px 5px 30px;">
-            <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddManipulator">Add Manipulator</button>
+        <div class="row">
+            <div class="col"><InputCheckbox @bind-Value="station.PodDockable" /> Pod Dockable? </div>
+            <div class="col"><InputCheckbox @bind-Value="station.Processable" /> Processable? </div>
+            <div class="col"><InputCheckbox @bind-Value="station.AutoLoadPod" /> Auto Load Pod </div>
+            <div class="col"><InputCheckbox @bind-Value="station.AutoDoorControl" /> Auto Door Control </div>
         </div>
+
+        <div class="row">
+            @foreach(CProcess process in station.Processes)
+            {
+                <div class="col-4" style="border-width: 1pt; border:dashed; border-color: gray; margin: 5px; padding: 5px">
+                    <div class="row">
+                        <div class="col"><label>Process Name</label></div>
+                        <div class="col"><InputText @bind-Value="process.ProcessName" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label>Input State</label></div>
+                        <div class="col"><InputText @bind-Value="process.InputState" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label>Output State</label></div>
+                        <div class="col"><InputText @bind-Value="process.OutputState" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label>Location after Process</label></div>
+                        <div class="col"><InputText @bind-Value="process.Location" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label>ProcessTime</label></div>
+                        <div class="col"><InputNumber @bind-Value="process.ProcessTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+                    </div>
+                </div>
+            }
+            <div class="col-3">
+                <button style="color: white; background:rgba(0, 0, 0, 0)" @onclick="() => AddNoDoorLocation(station)">Add Process</button>
+            </div>
+        </div>
+        
+        <hr style="border-top: 2px solid white; margin-top: 20px" />
+    }
+    <div class="row" style="padding: 5px 30px 5px 30px;">
+        <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddStation">Add Station</button>
+    </div>
+
+    <hr style="border-top: 5px solid white; margin-top: 20px" />
+    <br />
+
+    <h4 class="font-semibold mb-2">Manipulators</h4>
+    @foreach (CManipulator manipulator in Manipulators)
+    {
+        <h5 class="font-semibold mb-2" style="color: red">Station @manipulator.Identifier</h5>
+        <div class="row">
+            <div class="col-4"><label>Identifier</label></div>
+            <div class="col"><InputText @bind-Value="manipulator.Identifier" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col-4"><label>Station to Station Motion Time</label></div>
+            <div class="col"><InputNumber @bind-Value="manipulator.MotionTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col-4"><label>Arm Extend Time</label></div>
+            <div class="col"><InputNumber @bind-Value="manipulator.ExtendTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col-4"><label>Arm Retract Time</label></div>
+            <div class="col"><InputNumber @bind-Value="manipulator.RetractTime" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <div class="row">
+            <div class="col-4"><label>End Effectors</label></div>
+        </div>
+        <div class="row">
+            @for (int i = 0; i < manipulator.EndEffectors.Count; i++)
+            {
+                <div class="col-1">
+                    <InputText @bind-Value="manipulator.EndEffectors[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                </div>
+            }
+            <div class="col-1">
+                <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddEndEffector(manipulator)">Add</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4"><label>Locations</label></div>
+        </div>
+        <div class="row">
+            @for (int i = 0; i < manipulator.Locations.Count; i++)
+            {
+                <div class="col-1">
+                    <InputText @bind-Value="manipulator.Locations[i]" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" />
+                </div>
+            }
+            <div class="col-1">
+                <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="() => AddMLocation(manipulator)">Add</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-4"><label>Count</label></div>
+            <div class="col"><InputNumber @bind-Value="manipulator.Count" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" /></div>
+        </div>
+        <hr style="border-top: 1px solid white" />
+    }
+    <div class="row" style="padding: 5px 30px 5px 30px;">
+        <button class="btn rounded-pill border border-white text-white px-4 py-2" @onclick="AddManipulator">Add Manipulator</button>
     </div>
     <div class="col">
         <h4 class="font-semibold mb-2">XML Output</h4>
@@ -174,9 +196,12 @@
 
 @code {
 
+    [Parameter]
+    public List<CStation> Stations { get; set; } = new();
 
-    private List<CStation> Stations = new();
-    private List<CManipulator> Manipulators = new();
+    [Parameter]
+    public List<CManipulator> Manipulators { get; set; } = new();
+
     private CStation NewStation = new()
     {
         Identifier = "New Station"
@@ -185,7 +210,7 @@
     {
         Identifier = "New Manipulator"
     };
-    private string XmlOutput = string.Empty;
+    private string XmlOutput { get; set; } = string.Empty;
 
 
 

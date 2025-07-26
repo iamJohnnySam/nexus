@@ -1,4 +1,5 @@
-﻿using LayoutModels.Manipulators;
+﻿using LayoutModels.Creator;
+using LayoutModels.Manipulators;
 using LayoutModels.Readers;
 using LayoutModels.Stations;
 using Logger;
@@ -28,7 +29,7 @@ namespace LayoutModels
         public ConcurrentDictionary<string, Pod> Pods { get; set; } = [];
         public Dictionary<string, Station> StationList { get; set; } = [];
         public Dictionary<string, Manipulator> ManipulatorList { get; set; } = [];
-        public Dictionary<string, Reader> Readers { get; set; } = [];
+        public Dictionary<string, Reader> ReaderList { get; set; } = [];
 
 
         private LayoutState simState = LayoutState.Stopped;
@@ -50,128 +51,24 @@ namespace LayoutModels
         public void InitializeLayout(string xmlPath, bool autoMode)
         {
             XDocument simDoc = XDocument.Load(xmlPath);
-            CreateStations(simDoc.Descendants("Station"), autoMode);
-            CreateManipulators(simDoc.Descendants("Manipulator"), autoMode);
-            CreateReaders(simDoc.Descendants("Reader"));
-        }
+            StationList = ModuleCreator.CreateStations(simDoc.Descendants("Station"), autoMode);
+            ManipulatorList = ModuleCreator.CreateManipulators(simDoc.Descendants("Manipulator"), autoMode);
+            ReaderList = ModuleCreator.CreateReaders(simDoc.Descendants("Reader"), StationList);
 
-        public void CreateStations(IEnumerable<XElement> stations, bool autoMode)
-        {
-            foreach (var station in stations)
+            foreach (Station station in StationList.Values)
             {
-                string identifier = station.Element("Identifier")?.Value ?? throw new ErrorResponse(ErrorCodes.ProgramError, "No Station Identifier");
-                int count = int.Parse(station.Element("Count")?.Value ?? "1");
-                string backUpProcessTime = station.Element("ProcessTime")?.Value ?? "5";
-
-                Dictionary<string, (string, string, string, float)> map = [];
-                foreach (var process in station.Descendants("Process"))
-                {
-                    if (process.Element("InputState") == null && process.Element("OutputState") == null)
-                    {
-                        map.Add(process.Element("Name")?.Value ?? "process",(string.Empty, string.Empty,
-                        process.Element("Location")?.Value ?? throw new ErrorResponse(ErrorCodes.ProgramError, "Missing Location"),
-                        float.Parse(process.Element("ProcessTime")?.Value ?? backUpProcessTime)));
-                    }
-                    else
-                    {
-                        map.Add(process.Element("Name")?.Value ?? "process", (
-                        process.Element("InputState")?.Value ?? throw new ErrorResponse(ErrorCodes.ProgramError, "Missing Input State"),
-                        process.Element("OutputState")?.Value ?? throw new ErrorResponse(ErrorCodes.ProgramError, "Missing Output State"),
-                        process.Element("Location")?.Value ?? throw new ErrorResponse(ErrorCodes.ProgramError, "Missing Location"),
-                        float.Parse(process.Element("ProcessTime")?.Value ?? backUpProcessTime)));
-                    }
-                }
-
-                string payloadType = station.Element("PayloadType")?.Value ?? "payload";
-                int capacity = int.Parse(station.Element("Capacity")?.Value ?? "1");
-                List<string> doorLocations = (station.Element("AccessibleLocationsWithDoor")?.Value ?? "").Split(',').Select(loc => loc.Trim()).ToList();
-                List<string> noDoorLocations = (station.Element("AccessibleLocationsWitouthDoor")?.Value ?? "").Split(',').Select(loc => loc.Trim()).ToList();
-                List<string> doorTransitionTimeString = (station.Element("DoorTransitionTimes")?.Value ?? "0").Split(',').Select(loc => loc.Trim()).ToList();
-                List<float> doorTransitionTime = doorTransitionTimeString.Select(float.Parse).ToList();
-
-                for (int i = 0; i < count; i++)
-                {
-                    int j = i + 1;
-                    string stationName = $"{identifier}{j++}";
-                    while (StationList.ContainsKey(stationName))
-                        stationName = $"{identifier}{j}";
-                    StationList.Add(stationName, new Station(
-                        stationID: stationName,
-                        stationType: identifier,
-                        payloadType: payloadType,
-                        payloadStateMap: map,
-                        capacity: capacity,
-                        accessibleLocationsWithDoor: doorLocations,
-                        accessibleLocationsWithoutDoor: noDoorLocations,
-                        doorTransitionTime: doorTransitionTime,
-                        concurrentLocationAccess: station.Element("ConcurrentLocationAccess")?.Value == "1",
-                        processable: station.Element("Processable")?.Value == "1",
-                        podDockable: station.Element("PodDockable")?.Value == "1",
-                        autoLoadPod: station.Element("AutoLoadPod")?.Value == "1",
-                        autoDoorControl: station.Element("AutoDoorControl")?.Value == "1",
-                        lowPriority: station.Element("LowPriority")?.Value == "1",
-                        partialProcess: station.Element("PartialProcess")?.Value == "1",
-                        acceptedCommands: (station.Element("AcceptedCommands")?.Value ?? "").Split(',').Select(loc => loc.Trim()).ToList()));
-                    StationList[stationName].OnLogEvent += LogEvent;
-                    StationList[stationName].Tickable = !autoMode;
-                }
+                station.OnLogEvent += LogEvent;
+            }
+            foreach (Manipulator manipulator in ManipulatorList.Values)
+            {
+                manipulator.OnLogEvent += LogEvent;
+            }
+            foreach (Reader reader in ReaderList.Values)
+            {
+                reader.OnLogEvent += LogEvent;
             }
         }
-        public void CreateManipulators(IEnumerable<XElement> manipulators, bool autoMode)
-        {
-            foreach (var manipulator in manipulators)
-            {
-                string identifier = manipulator.Element("Identifier")?.Value ?? "R";
-                List<string> endEffectorsTypes = (manipulator.Element("EndEffectors")?.Value ?? "payload").Split(',').Select(loc => loc.Trim()).ToList();
-                List<string> locations = (manipulator.Element("Locations")?.Value ?? "location").Split(',').Select(loc => loc.Trim()).ToList();
-                float motionTime = float.Parse(manipulator.Element("MotionTime")?.Value ?? "0");
-                float extendTime = float.Parse(manipulator.Element("ExtendTime")?.Value ?? "0");
-                float retractTime = float.Parse(manipulator.Element("RetractTime")?.Value ?? "0");
-                int count = int.Parse(manipulator.Element("Count")?.Value ?? "0");
-
-                Dictionary<int, Dictionary<string, Payload>> endEffectors = [];
-                int endEffector = 1;
-                foreach (string payload in endEffectorsTypes)
-                    endEffectors.Add(endEffector++, []);
-
-
-                for (int i = 0; i < count; i++)
-                {
-                    int j = i + 1;
-                    string manipulatornName = $"{identifier}{j++}";
-                    while (ManipulatorList.ContainsKey(manipulatornName))
-                        manipulatornName = $"{identifier}{j}";
-                    ManipulatorList.Add(manipulatornName, new Manipulator(manipulatornName, identifier, endEffectors, endEffectorsTypes, locations, motionTime, extendTime, retractTime));
-                    ManipulatorList[manipulatornName].OnLogEvent += LogEvent;
-                    ManipulatorList[manipulatornName].Tickable = !autoMode;
-                }
-            }
-        }
-        public void CreateReaders(IEnumerable<XElement> readers)
-        {
-            foreach (var reader in readers)
-            {
-                string identifier = reader.Element("Identifier")?.Value ?? "B";
-                string stationID = reader.Element("StationIdentifier")?.Value ?? "P";
-                string type = reader.Element("Type")?.Value ?? "PAYLOAD";
-                int slot = int.Parse(reader.Element("Slot")?.Value ?? "1");
-
-                int j = 1;
-                string targetStation = $"{stationID}{j}";
-
-                while (StationList.ContainsKey(targetStation))
-                {
-                    string readerName = $"{identifier}{j++}";
-                    if (type == "PAYLOAD")
-                        Readers.Add(readerName, new Reader(readerName, identifier, StationList[targetStation], slot));
-                    else
-                        Readers.Add(readerName, new Reader(readerName, identifier, StationList[targetStation]));
-                    j++;
-                    targetStation = $"{stationID}{j}";
-
-                }
-            }
-        }
+        
         public string CreatePod(Job command, int IDLength)
         {
             string podID = GetID(IDLength);
@@ -214,7 +111,7 @@ namespace LayoutModels
         }
         private void CheckReaderExist(string target)
         {
-            if (!Readers.ContainsKey(target))
+            if (!ReaderList.ContainsKey(target))
                 throw new NAckResponse(NAckCodes.TargetNotExist, $"Could not find reader {target}.");
         }
 
@@ -587,7 +484,7 @@ namespace LayoutModels
 
                 case CommandType.ReadPod:
                 case CommandType.ReadSlot:
-                    response = Readers[command.Target].ReadID(command.TransactionID);
+                    response = ReaderList[command.Target].ReadID(command.TransactionID);
                     break;
 
                 case CommandType.Pod:

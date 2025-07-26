@@ -8,9 +8,9 @@ namespace LayoutModels.Creator;
 
 public class CProcess
 {
-    public string? ProcessName { get; set; }
+    public required string ProcessName { get; set; }
     public string InputState { get; set; } = string.Empty;
     public string OutputState { get; set; } = string.Empty;
-    public string? Location { get; set; }
+    public string Location { get; set; } = string.Empty;
     public int ProcessTime { get; set; }
 }

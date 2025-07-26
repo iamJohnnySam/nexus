@@ -49,6 +49,10 @@ namespace ProjectManager
 
             using var connection = new SQLiteConnection(_connectionString);
             connection.Open();
+            connection.Execute(CustomerTableCreationString);
+            connection.Execute(ProjectTableCreationString);
+            connection.Execute(TaskItemTableCreationString);
+            connection.Execute(SimulationScenarioTableCreationString);
             connection.Execute(tableCreationString);
 
             if (databaseNotExist)
@@ -74,6 +78,10 @@ namespace ProjectManager
 
 
         // ---- CUSTOMER DB
+        string CustomerTableCreationString = @"
+                        CREATE TABLE IF NOT EXISTS Customer (
+                            CustomerId INTEGER PRIMARY KEY,
+                            CustomerName TEXT NOT NULL);";
         public async Task InsertCustomer(Customer customer)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -176,6 +184,16 @@ namespace ProjectManager
 
 
         // ---- PROJECT DB
+        string ProjectTableCreationString = @"
+                        CREATE TABLE IF NOT EXISTS Project (
+                            ProjectId INTEGER PRIMARY KEY,
+                            ProjectName TEXT NOT NULL,
+                            CustomerId INTEGER,
+                            DesignCode TEXT,
+                            Priority INTEGER,
+                            POStatus INTEGER,
+                            ProductId INTEGER,
+                            IsActive INTEGER);";
         public Project GetNewProject()
         {
             return new Project { ProjectName = "Untitled Project" };
@@ -352,6 +370,20 @@ namespace ProjectManager
 
 
         // ---- TASK DB
+        string TaskItemTableCreationString = @"
+                        CREATE TABLE IF NOT EXISTS TaskItem(
+                            TaskId INTEGER PRIMARY KEY,
+                            ProjectId INTEGER,
+                            Title TEXT NOT NULL,
+                            Description TEXT,
+                            CreatedOn TEXT,
+                            StartedOn TEXT,
+                            Deadline TEXT NOT NULL,
+                            ResponsibleId INTEGER,
+                            IsCompleted INTEGER,
+                            IsBlocking INTEGER DEFAULT 1,
+                            ParentTaskId INTEGER,
+                            PriorityTask INTEGER);";
         public TaskItem GetNewParentTask()
         {
             return new TaskItem
@@ -379,9 +411,9 @@ namespace ProjectManager
             conn.Open();
 
             string sql = @"INSERT INTO TaskItem (ProjectId, Title, Description, CreatedOn, StartedOn, Deadline,
-                                         ResponsibleId, IsCompleted, IsBlocking, ParentTaskId)
+                                         ResponsibleId, IsCompleted, IsBlocking, ParentTaskId, PriorityTask)
                    VALUES (@ProjectId, @Title, @Description, @CreatedOn, @StartedOn, @Deadline,
-                           @ResponsibleId, @IsCompleted, @IsBlocking, @ParentTaskId);";
+                           @ResponsibleId, @IsCompleted, @IsBlocking, @ParentTaskId, @PriorityTask);";
             await conn.ExecuteAsync(sql, t);
             t.TaskId = (int)conn.LastInsertRowId;
         }
@@ -510,7 +542,8 @@ namespace ProjectManager
                        ResponsibleId = @ResponsibleId,
                        IsCompleted = @IsCompleted,
                        IsBlocking = @IsBlocking,
-                       ParentTaskId = @ParentTaskId
+                       ParentTaskId = @ParentTaskId,
+                        PriorityTask = @PriorityTask
                    WHERE TaskId = @TaskId;";
             await conn.ExecuteAsync(sql, t);
         }
@@ -843,6 +876,13 @@ namespace ProjectManager
 
 
         // ---- SIMULATION SCENARIO DB
+        string SimulationScenarioTableCreationString = @"
+                    CREATE TABLE IF NOT EXISTS SimulationScenario (
+                        SimulationScenarioId INTEGER PRIMARY KEY,
+                        SimulationName TEXT NOT NULL,
+                        ProjectId INTEGER,
+                        XMLFile TEXT NOT NULL,
+                        LastThroughput REAL);";
         public async Task InsertSimulationScenario(SimulationScenario scenario)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -862,13 +902,22 @@ namespace ProjectManager
             var result = await conn.QueryAsync<SimulationScenario>(sql);
             return result.ToList();
         }
-        public async Task<SimulationScenario?> GetSimulationScenarioById(int id)
+        public async Task<SimulationScenario> GetSimulationScenarioById(int id)
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
             string sql = "SELECT * FROM SimulationScenario WHERE SimulationScenarioId = @id;";
             return await conn.QueryFirstOrDefaultAsync<SimulationScenario>(sql, new { id });
+        }
+        public async Task<List<SimulationScenario>> GetSimulationScenarioByProjectId(int projectId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            string sql = "SELECT * FROM SimulationScenario WHERE ProjectId = @projectId;";
+            var result = await conn.QueryAsync<SimulationScenario>(sql, new { projectId });
+            return result.ToList();
         }
         public async Task UpdateSimulationScenario(SimulationScenario scenario)
         {
@@ -955,48 +1004,31 @@ namespace ProjectManager
 
 
         private static string tableCreationString = @"
-            CREATE TABLE IF NOT EXISTS Customer (
-                CustomerId INTEGER PRIMARY KEY,
-                CustomerName TEXT NOT NULL
-            );
+            
 
             CREATE TABLE IF NOT EXISTS Product (
                 ProductId INTEGER PRIMARY KEY,
-                ProductName TEXT NOT NULL
-            );
+                ProductName TEXT NOT NULL);
 
-            CREATE TABLE IF NOT EXISTS Project (
-                ProjectId INTEGER PRIMARY KEY,
-                ProjectName TEXT NOT NULL,
-                CustomerId INTEGER,
-                DesignCode TEXT,
-                Priority INTEGER,
-                POStatus INTEGER,
-                ProductId INTEGER,
-                IsActive INTEGER
-            );
+            
             
             CREATE TABLE IF NOT EXISTS ProductModule(
                 ModuleId INTEGER PRIMARY KEY,
-                ModuleName TEXT NOT NULL
-            );
+                ModuleName TEXT NOT NULL);
 
             CREATE TABLE IF NOT EXISTS Product(
                 ProductId INTEGER PRIMARY KEY,
-                ProductName TEXT NOT NULL
-            );
+                ProductName TEXT NOT NULL);
 
             CREATE TABLE IF NOT EXISTS Grade(
                 GradeId INTEGER PRIMARY KEY,
                 GradeName TEXT NOT NULL,
-                GradeScore INTEGER
-            );
+                GradeScore INTEGER);
         
             CREATE TABLE IF NOT EXISTS Designation(
                 DesignationId INTEGER PRIMARY KEY,
                 DesignationName TEXT NOT NULL,
-                Department TEXT
-            );
+                Department TEXT);
 
             CREATE TABLE IF NOT EXISTS Employee(
                 EmployeeId INTEGER PRIMARY KEY,
@@ -1006,14 +1038,12 @@ namespace ProjectManager
                 JoinDate TEXT,
                 LeaveDate TEXT,
                 IsActive INTEGER,
-                ReplacedEmployeeId INTEGER
-            );
+                ReplacedEmployeeId INTEGER);
 
             CREATE TABLE IF NOT EXISTS ReviewPoint(
                 ReviewPointId INTEGER PRIMARY KEY,
                 ModuleId INTEGER,
-                ReviewDescription TEXT NOT NULL
-            );
+                ReviewDescription TEXT NOT NULL);
 
             CREATE TABLE IF NOT EXISTS ReviewItem(
                 ReviewItemId INTEGER PRIMARY KEY,
@@ -1022,59 +1052,35 @@ namespace ProjectManager
                 Approved INTEGER,
                 LastReviewDate TEXT,
                 ReviewComments TEXT,
-                ReviewResponsibleID INTEGER
-            );
+                ReviewResponsibleID INTEGER);
 
-            CREATE TABLE IF NOT EXISTS TaskItem(
-                TaskId INTEGER PRIMARY KEY,
-                ProjectId INTEGER,
-                Title TEXT NOT NULL,
-                Description TEXT,
-                CreatedOn TEXT,
-                StartedOn TEXT,
-                Deadline TEXT NOT NULL,
-                ResponsibleId INTEGER,
-                IsCompleted INTEGER,
-                IsBlocking INTEGER DEFAULT 1,
-                ParentTaskId INTEGER
-            );
+            
 
             CREATE TABLE IF NOT EXISTS PreviousProjectCodes(
                 ProjectId INTEGER,
-                Code TEXT
-            );
+                Code TEXT);
 
             CREATE TABLE IF NOT EXISTS ProjectPCodes(
                 ProjectId INTEGER,
-                Code TEXT
-            );
+                Code TEXT);
             CREATE TABLE IF NOT EXISTS Deliverable(
                 DeliverableId INTEGER,
                 DeliverableName TEXT,
                 DeliverableDescription TEXT,
-                DeliverableType TEXT
-            );
-            CREATE TABLE IF NOT EXISTS SimulationScenario (
-                SimulationScenarioId INTEGER PRIMARY KEY,
-                SimulationName TEXT NOT NULL,
-                ProjectId INTEGER,
-                XMLFile TEXT NOT NULL,
-                LastThroughput REAL
-            );
+                DeliverableType TEXT);
+            
             CREATE TABLE IF NOT EXISTS Milestones (
                 MilestoneId INT PRIMARY KEY,
                 ProjectId INT NOT NULL,
                 Name TEXT NOT NULL,
                 StartDate TEXT NOT NULL,
-                EndDate TEXT NOT NULL
-            );
+                EndDate TEXT NOT NULL);
 
             CREATE TABLE IF NOT EXISTS MilestoneDependencies (
                 DependencyId INT PRIMARY KEY,
                 MilestoneId INT NOT NULL,
                 DependsOnMilestoneId INT NOT NULL,
-                Type INT NOT NULL
-            );";
+                Type INT NOT NULL);";
 
     }
 }

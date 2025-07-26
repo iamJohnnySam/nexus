@@ -24,4 +24,5 @@ public class CStation
     public bool LowPriority { get; set; }
     public bool PartialProcess { get; set; } = false;
     public int Count { get; set; }
+    public List<string> AcceptedCommands { get; set; } = [];
 }

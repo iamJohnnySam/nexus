@@ -1,4 +1,6 @@
 ﻿@page "/simulation"
+@using LayoutModels.Creator
+@using System.Xml.Linq
 @inject IManager manager
 @rendermode InteractiveServer
 
@@ -44,11 +46,8 @@
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
                         <th>Simulation Name</th>
-                        <th>Project ID</th>
                         <th>XML</th>
-                        <th>Last Throughput</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -56,13 +55,11 @@
                     @foreach (var e in Scenarios)
                     {
                         <tr class="@((SelectedScenario?.SimulationScenarioId == e.SimulationScenarioId) ? "table-primary" : "")">
-                            <td style="color: white">@e.SimulationScenarioId</td>
-                            <td style="color: white">@e.SimulationName</td>
-                            <td style="color: white">@e.ProjectId</td>
-                            <td style="color: white">@e.XMLFile</td>
-                            <td style="color: white">@e.LastThroughput</td>
+                            <td style="color: white">@e.SimulationName (@e.LastThroughput WPH)</td>
+                            <td style="color: white; font-size: 7pt;">@e.XMLFile</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Start(e)">Edit</button>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(e)">Edit</button>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Start(e)">Start</button>
                             </td>
                         </tr>
                     }
@@ -72,7 +69,7 @@
     </div>
 
     <div class="col">
-        <SimulationLayoutCreator />
+        <SimulationLayoutCreator Stations="@Stations.Values.ToList()" Manipulators="@Manipulators.Values.ToList()" />
     </div>
 
 
@@ -82,6 +79,11 @@
 @code {
     public Project CurrentProject { get; set; }
     private List<SimulationScenario> Scenarios = [];
+
+    private Dictionary<string, CStation> Stations { get; set; } = new();
+    private Dictionary<string, CManipulator> Manipulators { get; set; } = new();
+    private Dictionary<string, CReader> Readers { get; set; } = new();
+
     private SimulationScenario SelectedScenario = new SimulationScenario
     {
         SimulationName = "",
@@ -94,17 +96,26 @@
     protected override void OnInitialized()
     {
         CurrentProject = manager.CurrentProject;
+        Scenarios = manager.GetSimulationScenarioByProjectId(manager.CurrentProject.ProjectId).Result;
         base.OnInitialized();
     }
 
     private void HandleProjectChange(string projectName)
     {
         CurrentProject = manager.CurrentProject;
+        Scenarios = manager.GetSimulationScenarioByProjectId(manager.CurrentProject.ProjectId).Result;
     }
 
     private void Start(SimulationScenario simulationScenario)
     {
-        
+    }
+
+    private void Edit(SimulationScenario simulationScenario)
+    {
+        XDocument simDoc = XDocument.Parse(simulationScenario.XMLFile);
+        Stations = ModuleCreator.CreateCStations(simDoc.Descendants("Station"));
+        Manipulators = ModuleCreator.CreateCManipulators(simDoc.Descendants("Manipulator"));
+        Readers = ModuleCreator.CreateCReaders(simDoc.Descendants("Reader"));
     }
 
 }

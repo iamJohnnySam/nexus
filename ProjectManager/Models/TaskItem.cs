@@ -23,6 +23,7 @@ public class TaskItem
     public Employee? Responsible { get; set; }
     public int ResponsibleId { get; set; }
     public bool IsCompleted { get; set; }
-    public bool IsBlocking { get; set; } = true;
+    public bool IsBlocking { get; set; } = true; // Is blocking the timeline and not a background task
     public int? ParentTaskId { get; set; }
+    public bool PriorityTask { get; set; } = false;
 }
