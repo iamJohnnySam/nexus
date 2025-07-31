@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace ProjectManager
 {
-    public class Manager : IManager
+    public class Manager
     {
         private readonly string dbPath = "NexusDB.sqlite";
         private readonly string _connectionString;
@@ -53,6 +53,8 @@ namespace ProjectManager
             connection.Execute(ProjectTableCreationString);
             connection.Execute(TaskItemTableCreationString);
             connection.Execute(SimulationScenarioTableCreationString);
+            connection.Execute(ResourceBlockTableCreationString);
+            connection.Execute(FunctionalKPITableCreationString);
             connection.Execute(tableCreationString);
 
             if (databaseNotExist)
@@ -654,12 +656,25 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = @"INSERT INTO Employee 
-        (EmployeeName, GradeId, DesignationId, JoinDate, LeaveDate, IsActive, ReplacedEmployeeId)
-        VALUES (@EmployeeName, @GradeId, @DesignationId, @JoinDate, @LeaveDate, @IsActive, @ReplacedEmployeeId);
+            const string sql = @"
+        INSERT INTO Employee (
+            EmployeeName, GradeId, DesignationId, JoinDate, LeaveDate, IsActive, ReplacedEmployeeId
+        ) VALUES (
+            @EmployeeName, @GradeId, @DesignationId, @JoinDate, @LeaveDate, @IsActive, @ReplacedEmployeeId
+        );
         SELECT last_insert_rowid();";
 
-            var id = await conn.ExecuteScalarAsync<long>(sql, emp);
+            var id = await conn.ExecuteScalarAsync<long>(sql, new
+            {
+                emp.EmployeeName,
+                emp.GradeId,
+                emp.DesignationId,
+                emp.JoinDate,
+                emp.LeaveDate,
+                emp.IsActive,
+                emp.ReplacedEmployeeId
+            });
+
             emp.EmployeeId = (int)id;
         }
         public async Task<List<Employee>> GetAllEmployees()
@@ -667,51 +682,96 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM Employee";
-            var result = await conn.QueryAsync<Employee>(sql);
-            return result.ToList();
+            var employees = (await conn.QueryAsync<Employee>("SELECT * FROM Employee")).ToList();
+
+            foreach (var emp in employees)
+            {
+                emp.EmployeeGrade = await GetGradeById(emp.GradeId);
+                emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
+            }
+
+            return employees;
         }
         public async Task<List<Employee>> GetAllActiveEmployees()
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM Employee WHERE IsActive = 1";
-            var result = await conn.QueryAsync<Employee>(sql);
-            return result.ToList();
+            var employees = (await conn.QueryAsync<Employee>("SELECT * FROM Employee WHERE IsActive = 1")).ToList();
+
+            foreach (var emp in employees)
+            {
+                emp.EmployeeGrade = await GetGradeById(emp.GradeId);
+                emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
+            }
+
+            return employees;
         }
         public async Task<Employee?> GetEmployeeById(int id)
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM Employee WHERE EmployeeId = @id";
-            return await conn.QueryFirstOrDefaultAsync<Employee>(sql, new { id });
+            var emp = await conn.QueryFirstOrDefaultAsync<Employee>(
+                "SELECT * FROM Employee WHERE EmployeeId = @id", new { id });
+
+            if (emp != null)
+            {
+                emp.EmployeeGrade = await GetGradeById(emp.GradeId);
+                emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
+            }
+
+            return emp;
+        }
+        public async Task<List<Employee>> GetAllActiveEmployeesByDesignationId(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var employees = (await conn.QueryAsync<Employee>("SELECT * FROM Employee WHERE IsActive = 1 AND DesignationId = @id", new { id })).ToList();
+
+            foreach (var emp in employees)
+            {
+                emp.EmployeeGrade = await GetGradeById(emp.GradeId);
+                emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
+            }
+
+            return employees;
         }
         public async Task UpdateEmployee(Employee emp)
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = @"UPDATE Employee SET
-        EmployeeName = @EmployeeName,
-        GradeId = @GradeId,
-        DesignationId = @DesignationId,
-        JoinDate = @JoinDate,
-        LeaveDate = @LeaveDate,
-        IsActive = @IsActive,
-        ReplacedEmployeeId = @ReplacedEmployeeId
+            const string sql = @"
+        UPDATE Employee SET
+            EmployeeName = @EmployeeName,
+            GradeId = @GradeId,
+            DesignationId = @DesignationId,
+            JoinDate = @JoinDate,
+            LeaveDate = @LeaveDate,
+            IsActive = @IsActive,
+            ReplacedEmployeeId = @ReplacedEmployeeId
         WHERE EmployeeId = @EmployeeId";
 
-            await conn.ExecuteAsync(sql, emp);
+            await conn.ExecuteAsync(sql, new
+            {
+                emp.EmployeeName,
+                emp.GradeId,
+                emp.DesignationId,
+                emp.JoinDate,
+                emp.LeaveDate,
+                emp.IsActive,
+                emp.ReplacedEmployeeId,
+                emp.EmployeeId
+            });
         }
         public async Task DeleteEmployee(Employee emp)
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "DELETE FROM Employee WHERE EmployeeId = @EmployeeId";
-            await conn.ExecuteAsync(sql, emp);
+            await conn.ExecuteAsync("DELETE FROM Employee WHERE EmployeeId = @EmployeeId", new { emp.EmployeeId });
         }
 
 
@@ -1000,6 +1060,138 @@ namespace ProjectManager
         }
 
 
+        // ---- RESOURCE BLOCK DB
+        string ResourceBlockTableCreationString = @"
+                    CREATE TABLE IF NOT EXISTS ResourceBlock (
+                        ResourceBlockId INTEGER PRIMARY KEY,
+                        EmployeeId INTEGER NOT NULL,
+                        ProjectId INTEGER,
+                        Year INTEGER NOT NULL,
+                        Week INTEGER NOT NULL
+                    );";
+        public async Task InsertResourceBlock(ResourceBlock resourceBlock)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO ResourceBlock (EmployeeId, ProjectId, Year, Week)
+                VALUES (@EmployeeId, @ProjectId, @Year, @Week);
+                SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, resourceBlock);
+            resourceBlock.ResourceBlockId = (int)id;
+        }
+        public async Task<List<ResourceBlock>> GetAllResourceBlocks()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ResourceBlock";
+            var result = await conn.QueryAsync<ResourceBlock>(sql);
+            return result.ToList();
+        }
+        public async Task<ResourceBlock?> GetResourceBlockById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ResourceBlock WHERE ResourceBlockId = @id";
+            return await conn.QueryFirstOrDefaultAsync<ResourceBlock>(sql, new { id });
+        }
+        public async Task<ResourceBlock?> GetResourceBlockByEmployeeId(int id, int year, int week)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ResourceBlock WHERE EmployeeId = @id AND Year = @year AND Week = @week";
+            return await conn.QueryFirstOrDefaultAsync<ResourceBlock>(sql, new { id, year, week });
+        }
+        public async Task UpdateResourceBlock(ResourceBlock resourceBlock)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE ResourceBlock SET 
+                EmployeeId = @EmployeeId, 
+                ProjectId = @ProjectId,
+                Year = @Year, 
+                Week = @Week 
+                WHERE ResourceBlockId = @ResourceBlockId";
+
+            await conn.ExecuteAsync(sql, resourceBlock);
+        }
+        public async Task DeleteResourceBlock(ResourceBlock resourceBlock)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM ResourceBlock WHERE ResourceBlockId = @ResourceBlockId";
+            await conn.ExecuteAsync(sql, resourceBlock);
+        }
+
+
+        // ---- FUNCTIONAL KPI DB
+        string FunctionalKPITableCreationString = @"
+                CREATE TABLE IF NOT EXISTS FunctionalKPI (
+                    FunctionalKPIId INTEGER PRIMARY KEY,
+                    KPIName TEXT NOT NULL,
+                    KPIDescription TEXT,
+                    KPIDepartment TEXT NOT NULL DEFAULT 'Engineering Design',
+                    KPIEffectiveFrom INTEGER NOT NULL
+                );";
+
+        public async Task InsertFunctionalKPI(FunctionalKPI kpi)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO FunctionalKPI 
+    (KPIName, KPIDescription, KPIDepartment, KPIEffectiveFrom)
+    VALUES (@KPIName, @KPIDescription, @KPIDepartment, @KPIEffectiveFrom);
+    SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, kpi);
+            kpi.FunctionalKPIId = (int)id;
+        }
+        public async Task<List<FunctionalKPI>> GetAllFunctionalKPIs()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM FunctionalKPI";
+            var result = await conn.QueryAsync<FunctionalKPI>(sql);
+            return result.ToList();
+        }
+        public async Task<FunctionalKPI?> GetFunctionalKPIById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM FunctionalKPI WHERE FunctionalKPIId = @id";
+            return await conn.QueryFirstOrDefaultAsync<FunctionalKPI>(sql, new { id });
+        }
+        public async Task UpdateFunctionalKPI(FunctionalKPI kpi)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE FunctionalKPI SET
+        KPIName = @KPIName,
+        KPIDescription = @KPIDescription,
+        KPIDepartment = @KPIDepartment,
+        KPIEffectiveFrom = @KPIEffectiveFrom
+        WHERE FunctionalKPIId = @FunctionalKPIId";
+
+            await conn.ExecuteAsync(sql, kpi);
+        }
+        public async Task DeleteFunctionalKPI(FunctionalKPI kpi)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM FunctionalKPI WHERE FunctionalKPIId = @FunctionalKPIId";
+            await conn.ExecuteAsync(sql, kpi);
+        }
 
 
 

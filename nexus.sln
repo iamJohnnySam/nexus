@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SequenceSimulatorConsole", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{8D285D80-3608-474E-B403-CFD7CB8FED9D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hardware", "Hardware", "{5342B5A3-C79B-4C31-9F82-3D1913449785}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LayoutSimulatorModel", "LayoutSimulatorModel", "{5342B5A3-C79B-4C31-9F82-3D1913449785}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Librarian", "Librarian\Librarian.csproj", "{90B3C02F-B6F8-42CB-A51E-5F672BF58386}"
 EndProject
@@ -21,8 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPiUI", "RPiUI\RPiUI.csproj", "{4E68DCC5-B97C-4530-B94B-44FA66FC92BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseManagers", "DatabaseManager\DatabaseManagers.csproj", "{80BFBC37-6C99-427B-8131-174B12EA9399}"
 EndProject
@@ -45,6 +43,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusBlazor.Client", "NexusBlazor\NexusBlazor.Client\NexusBlazor.Client.csproj", "{59F77E74-BCA9-4ACB-A9C3-F9143467ABF9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusTest", "NexusTest\NexusTest.csproj", "{DAFB1FC5-C935-4ABA-AD1F-8324B6992C11}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Communication", "Communication", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationManager", "CommunicationManager\CommunicationManager.csproj", "{92F99A20-1470-4535-8EA7-A8CA3D7D5674}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,10 +74,6 @@ Global
 		{90B3C02F-B6F8-42CB-A51E-5F672BF58386}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90B3C02F-B6F8-42CB-A51E-5F672BF58386}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90B3C02F-B6F8-42CB-A51E-5F672BF58386}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E68DCC5-B97C-4530-B94B-44FA66FC92BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E68DCC5-B97C-4530-B94B-44FA66FC92BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E68DCC5-B97C-4530-B94B-44FA66FC92BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E68DCC5-B97C-4530-B94B-44FA66FC92BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{80BFBC37-6C99-427B-8131-174B12EA9399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{80BFBC37-6C99-427B-8131-174B12EA9399}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80BFBC37-6C99-427B-8131-174B12EA9399}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -116,6 +114,10 @@ Global
 		{DAFB1FC5-C935-4ABA-AD1F-8324B6992C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAFB1FC5-C935-4ABA-AD1F-8324B6992C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAFB1FC5-C935-4ABA-AD1F-8324B6992C11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92F99A20-1470-4535-8EA7-A8CA3D7D5674}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92F99A20-1470-4535-8EA7-A8CA3D7D5674}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92F99A20-1470-4535-8EA7-A8CA3D7D5674}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92F99A20-1470-4535-8EA7-A8CA3D7D5674}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -131,6 +133,7 @@ Global
 		{FC3EBF9A-8B25-4493-91D0-A1598834D4F7} = {8D285D80-3608-474E-B403-CFD7CB8FED9D}
 		{F6F8A5F8-577C-4B42-BB22-CFF461872FAD} = {84FD8C6F-CE4F-4087-9A7E-C157672EF3E6}
 		{3BA54CC3-5452-4ABE-9730-5904B1710625} = {8D285D80-3608-474E-B403-CFD7CB8FED9D}
+		{92F99A20-1470-4535-8EA7-A8CA3D7D5674} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9E660DC7-EE33-4929-9F84-F434279D451E}

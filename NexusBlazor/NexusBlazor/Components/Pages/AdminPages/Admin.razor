@@ -1,6 +1,6 @@
 ﻿@page "/admin"
 @rendermode InteractiveServer
-@inject IManager manager
+@inject Manager manager
 
 <PageTitle>Admin Dashboard</PageTitle>
 
@@ -61,6 +61,10 @@
             {
                 <AdminSimulationScenario />
             }
+            else if (SelectedTable == "Functional KPI")
+            {
+                <AdminFunctionalKPI />
+            }
             else
             {
                 <p class="text-gray-500">Please select a table to view.</p>
@@ -72,7 +76,7 @@
 
 
 @code {
-    private List<string> TableNames = new() { "Project", "Customer", "Product", "Module", "Grade", "Designation", "Employee", "Review Point", "Review Item", "Deliverables", "Simulation" };
+    private List<string> TableNames = new() { "Project", "Customer", "Product", "Module", "Grade", "Designation", "Employee", "Review Point", "Review Item", "Deliverables", "Simulation", "Functional KPI" };
     private string SelectedTable = "Project";
 
     private void SelectTable(string table)

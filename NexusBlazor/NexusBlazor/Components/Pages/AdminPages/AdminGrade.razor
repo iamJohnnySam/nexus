@@ -1,11 +1,8 @@
-﻿@inject IManager manager
+﻿@inject Manager manager
 @inject IJSRuntime JS
 
 <h3>Grade Manager</h3>
 
-<!-- Top Section: Table -->
-
-<!-- Bottom Section: Form -->
 <div class="card p-3" style="background-color: transparent;">
     <h5>@(SelectedGrade?.GradeId == 0 ? "Add New Grade" : "Edit Grade")</h5>
 

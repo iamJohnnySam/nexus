@@ -1,0 +1,91 @@
+﻿@inject Manager manager
+
+<tr>
+    <td>@SelectedEmployee.EmployeeName</td>
+    <td>@string.Join("", SelectedEmployee.EmployeeGrade.GradeName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]))</td>
+    <td>@SelectedEmployee.EmployeeDesignation.DesignationName</td>
+    @foreach(KeyValuePair<int, ResourceBlock> kvp in EmployeeBlocks)
+    {
+        <td>
+            <ResourceBlockComponent ThisRB="kvp.Value" Projects="Projects" OnResourceBlockUpdated="UpdateResourceBlock" />
+        </td>
+    }
+</tr>
+
+@code {
+    private Employee _selectedEmployee;
+
+    [Parameter]
+    public required Employee SelectedEmployee { 
+        get 
+        {
+            return _selectedEmployee; 
+        }
+        set 
+        {
+            _selectedEmployee = value;
+            UpdateEmployeeBlocks();
+        } 
+    }
+
+    [Parameter]
+    public List<Project> Projects { get; set; } = [];
+
+    [Parameter]
+    public int CurrentWeek { get; set; } = 0;
+
+    [Parameter]
+    public int CurrentYear { get; set; } = 2025;
+
+    [Parameter]
+    public int NumberWeeks { get; set; } = 16;
+
+    public Dictionary<int, ResourceBlock> EmployeeBlocks { get; set; }
+
+    protected override void OnInitialized()
+    {
+        UpdateEmployeeBlocks();
+        base.OnInitialized();
+    }
+
+    private void UpdateEmployeeBlocks()
+    {
+        EmployeeBlocks = [];
+        int year = CurrentYear;
+        int week = 0;
+        for (int i = CurrentWeek; i < CurrentWeek + NumberWeeks; i++)
+        {
+            if (i > 52)
+            {
+                week = i - 52;
+            }
+            else
+            {
+                week = i;
+            }
+            ResourceBlock? resourceBlock = manager.GetResourceBlockByEmployeeId(SelectedEmployee.EmployeeId, year, week).Result;
+            if (resourceBlock == null)
+            {
+                resourceBlock = new ResourceBlock()
+                {
+                    EmployeeId = SelectedEmployee.EmployeeId,
+                    Year = year,
+                    Week = week
+                };
+                manager.InsertResourceBlock(resourceBlock).Wait();
+            }
+            EmployeeBlocks.Add(i, resourceBlock);
+
+            if (i == 52)
+            {
+                year = CurrentYear + 1;
+            }
+        }
+    }
+
+    private void UpdateResourceBlock(ResourceBlock resourceBlock)
+    {
+        _ = manager.UpdateResourceBlock(resourceBlock);
+
+    }
+}

@@ -1,3 +1,4 @@
+using CommunicationManager;
 using NexusBlazor.Client.Pages;
 using NexusBlazor.Components;
 using ProjectManager;
@@ -9,7 +10,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddSingleton<IManager, Manager>();
+builder.Services.AddSingleton<Manager>();
+builder.Services.AddSingleton<CommManager>();
 
 var app = builder.Build();
 

@@ -1,0 +1,76 @@
+﻿@page "/milestone"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>Overview & Milestone Tracker</PageTitle>
+
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">Overview & Milestone Tracker</h2>
+    </div>
+    <div class="col-3">
+        
+    </div>
+    <div class="col-2">
+        
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+<div class="row">
+    <div class="col-1" style="@GetMenuStyle("Timeline")" @onclick="selectMenuTimeline">
+        Project
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Department")" @onclick="selectMenuDepartment">
+        Department
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Resources")" @onclick="selectMenuResources">
+        Resources
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+@if(menuSelected == "Timeline")
+{
+    <ProjectTracker />
+}
+else if(menuSelected == "Department")
+{
+    <DepartmentUtilizationTracker />
+}
+else if (menuSelected == "Resources")
+{
+    <ResourceTracker />
+}
+
+@code{
+    private string menuSelected = "Timeline";
+
+    private void selectMenuTimeline()
+    {
+        menuSelected = "Timeline";
+    }
+
+    private void selectMenuResources()
+    {
+        menuSelected = "Resources";
+    }
+
+    private void selectMenuDepartment()
+    {
+        menuSelected = "Department";
+    }
+
+    private string GetMenuStyle(string selectedItem)
+    {
+        if(selectedItem == menuSelected)
+        {
+            return "text-align: center; background-color: darkred;";
+        }
+        else
+        {
+            return "text-align: center";
+        }
+    }
+
+}

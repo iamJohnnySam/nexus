@@ -1,0 +1,102 @@
+﻿@using System.Globalization
+@inject Manager manager
+
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h3>Resource Tracker</h3>
+    </div>
+    <div class="col">
+    </div>
+    <div class="col-2">
+        <InputSelect class="form-control" @bind-Value="CurrentDesignationId">
+            @foreach (var des in Designations)
+            {
+                <option value="@des.DesignationId">@des.DesignationName</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="col">
+    </div>
+</div>
+
+
+<table style="width: 100%; ">
+    <tr style="border-bottom: 1px solid red;">
+        <th>Incumbent</th>
+        <th>Grade</th>
+        <th>Designation</th>
+        @for (int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
+        {
+            <th style=@cellStyle>
+                Week @(i % 52)
+            </th>
+        }
+    </tr>
+    @foreach(Employee employee in Employees)
+    {
+        <ResourceEmployeeBlock SelectedEmployee="employee" Projects="Projects" CurrentWeek="CurrentWeek" CurrentYear="DateTime.Now.Year" NumberWeeks="nWeeks" />
+    }
+</table>
+
+@code {
+    List<Employee> Employees { get; set; } = [];
+    List<Project> Projects { get; set; } = [];
+    List<Designation> Designations { get; set; } = [];
+
+    int CurrentWeek { get; set; }
+    int nWeeks = 12;
+
+    int cellWidth = 85;
+    string cellStyle = "width: 85px;";
+
+    Designation CurrentDesignation { get; set; }
+    private int currentDesignationId = 0;
+
+    public int CurrentDesignationId
+    {
+        get { return currentDesignationId; }
+        set 
+        { 
+            currentDesignationId = value;
+            GetEmployees();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        GetEmployees();
+        Projects = manager.GetAllActiveProjects().Result.OrderByDescending(p => p.DesignCode).ToList();
+        Designations = manager.GetAllDesignations().Result;
+        CurrentWeek = WeekOfYear(DateTime.Now);
+        cellWidth = (85 * 16) / nWeeks;
+        cellStyle = $"width: {cellWidth}px; ";
+    }
+
+    private void GetEmployees()
+    {
+        if(currentDesignationId == 0)
+        {
+            Employees = manager.GetAllActiveEmployees().Result;
+        }
+        else
+        {
+            Employees = manager.GetAllActiveEmployeesByDesignationId(currentDesignationId).Result;
+        }
+        
+    }
+
+ 
+
+    public static int WeekOfYear(DateTime time)
+    {
+        DayOfWeek day = CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(time);
+        if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
+        {
+            time = time.AddDays(3);
+        }
+        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+    }
+
+    
+
+}

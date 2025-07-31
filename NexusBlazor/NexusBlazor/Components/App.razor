@@ -18,3 +18,12 @@
 </body>
 
 </html>
+
+<script>
+    function openSimulationPageWithXml(xmlString) {
+        const newTab = window.open("/LayoutSimulator", "_blank");
+        setTimeout(() => {
+            newTab.postMessage({ type: "InitXml", xml: xmlString }, "*");
+        }, 500);
+    }
+</script>
