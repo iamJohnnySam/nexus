@@ -1,0 +1,38 @@
+﻿@inject Manager manager
+
+<select @onchange="OnSelectionChanged" class="form-select">
+    <option disabled selected value>-- Select an option --</option>
+    @foreach (var option in Options)
+    {
+        <option value="@option" selected="@(_selected == option)">
+            @option
+        </option>
+    }
+</select>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnProjectChange { get; set; }
+
+    private string _selected = "General";
+
+    private List<string> Options = new();
+
+    protected override void OnInitialized()
+    {
+        Options = manager.GetAllActiveTrackedProjectNames().Result;
+        _selected = manager.CompileProjectName(manager.CurrentProject);
+    }
+
+    private async void OnSelectionChanged(ChangeEventArgs e)
+    {
+        if (e.Value != null)
+        {
+            _selected = e.Value.ToString();
+            string projectName = _selected.Split(" | ").Last();
+            manager.SelectProjectFromName(projectName).Wait();
+
+            await OnProjectChange.InvokeAsync(projectName);
+        }
+    }
+}

@@ -298,6 +298,10 @@ namespace ProjectManager
         {
             return CompileProjectNames(await (GetAllActiveProjects()));
         }
+        public async Task<List<string>> GetAllActiveTrackedProjectNames()
+        {
+            return CompileProjectNames(await (GetAllActiveTrackedProjects()));
+        }
         private List<string> CompileProjectNames(List<Project> projects)
         {
             List<string> projectNames = [];
@@ -1319,16 +1323,16 @@ namespace ProjectManager
 
         // ---- MILESTONE DB
         string MilestoneTableCreationString = @"
-    CREATE TABLE IF NOT EXISTS Milestone(
-        MilestoneId INTEGER PRIMARY KEY,
-        ProjectId INTEGER,
-        Name TEXT NOT NULL,
-        StartDate TEXT,
-        RequiredDays INTEGER,
-        DependentMilestoneId INTEGER,
-        DependencyType INTEGER DEFAULT 0,
-        EngineerId INTEGER,
-        IsCompleted INTEGER DEFAULT 0);";
+            CREATE TABLE IF NOT EXISTS Milestone(
+                MilestoneId INTEGER PRIMARY KEY,
+                ProjectId INTEGER,
+                Name TEXT NOT NULL,
+                StartDate TEXT,
+                RequiredDays INTEGER,
+                DependentMilestoneId INTEGER,
+                DependencyType INTEGER DEFAULT 0,
+                EngineerId INTEGER,
+                IsCompleted INTEGER DEFAULT 0);";
         public async Task InsertMilestone(Milestone milestone)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -1395,17 +1399,13 @@ namespace ProjectManager
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
-
-                // Find all milestones that depend on the current one
                 if (!dependencyGraph.ContainsKey(current.MilestoneId)) 
                     continue;
 
                 foreach (var dependent in dependencyGraph[current.MilestoneId])
                 {
-                    // Only process if not already resolved
                     if (resolved.Contains(dependent.MilestoneId)) continue;
 
-                    // Fix StartDate based on dependency
                     switch (dependent.DependencyType)
                     {
                         case DependencyType.FinishToStart:
@@ -1448,16 +1448,32 @@ namespace ProjectManager
           AND ProjectId != @ExcludeProjectId
           AND DATE(StartDate) IS NOT NULL
           AND (
-                DATE(StartDate) <= @EndDate
-                AND DATE(StartDate, '+' || RequiredDays || ' days') > @StartDate
-              );";
+              -- New start is within existing task
+              DATE(@StartDate) >= DATE(StartDate)
+              AND DATE(@StartDate) < DATE(StartDate, '+' || RequiredDays || ' days')
+              
+              OR
+              -- New end is within existing task
+              DATE(@EndDate) > DATE(StartDate)
+              AND DATE(@EndDate) <= DATE(StartDate, '+' || RequiredDays || ' days')
+              
+              OR
+              -- Existing task starts within new task window
+              DATE(StartDate) >= DATE(@StartDate)
+              AND DATE(StartDate) < DATE(@EndDate)
+
+              OR
+              -- Existing task ends within new task window
+              DATE(StartDate, '+' || RequiredDays || ' days') > DATE(@StartDate)
+              AND DATE(StartDate, '+' || RequiredDays || ' days') <= DATE(@EndDate)
+          );";
 
             var milestones = await conn.QueryAsync<Milestone>(sql, new
             {
                 EngineerId = engineerId,
+                ExcludeProjectId = excludeProjectId,
                 StartDate = startDate.ToString("yyyy-MM-dd"),
-                EndDate = endDate.ToString("yyyy-MM-dd"),
-                ExcludeProjectId = excludeProjectId
+                EndDate = endDate.ToString("yyyy-MM-dd")
             });
 
             foreach (var milestone in milestones)

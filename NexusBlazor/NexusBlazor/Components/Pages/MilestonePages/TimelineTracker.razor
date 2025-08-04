@@ -8,7 +8,7 @@
         <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">Timeline for @CurrentProject.DesignCode | @CurrentProject.ProjectName (@CurrentProject.ProjectCode)</h2>
     </div>
     <div class="col-3">
-        <SelectActiveProject OnProjectChange="HandleProjectChange" />
+        <SelectActiveTrackedProject OnProjectChange="HandleProjectChange" />
     </div>
     <div class="col-2">
         <button class="btn btn-primary" @onclick="NewMilestone">
@@ -37,15 +37,19 @@
 
         if (BlockingMilestones.ContainsKey(milestone.MilestoneId))
         {
+            @foreach (Milestone milestone1 in BlockingMilestones[milestone.MilestoneId])
+            {
                 currentRow++;
-                <div style="background: @color; grid-row: @currentRow; grid-column: @left / @endDate; font-size:9pt;">
-                    @foreach(Milestone milestone1 in BlockingMilestones[milestone.MilestoneId])
-                    {
-                        <div style="color: white; padding: 2px;">
-                        Block @milestone1.Project.DesignCode @milestone1.Name <span style="font-size:8pt">(@milestone1.StartDate.ToString("yyyy-MM,dd") - @(milestone.EndDate ?? milestone.StartDate).ToString("yyyy-MM,dd"))</span>
-                        </div>
-                }
+                manager.AddMilestoneEndDate(milestone1);
+                var blockLeft = milestone1.StartDate < ChartStart ? 1 : (milestone1.StartDate - ChartStart).Days + 1;
+                var blockRight = milestone1.EndDate > ChartEnd ? -1 : ((milestone1.EndDate ?? milestone1.StartDate) - ChartStart).Days + 1;
+
+                <div style="background: #BA3F3F; grid-row: @currentRow; grid-column: @blockLeft / @blockRight; font-size:9pt;">
+                    Block @milestone1.Project?.DesignCode @milestone1.Name <span style="font-size:8pt">(@milestone1.StartDate.ToString("yyyy-MM-dd") - @((milestone.EndDate ?? milestone.StartDate).ToString("yyyy-MM-dd")))</span>
                 </div>
+            }
+
+            
         }
         
         currentRow++;
@@ -96,9 +100,11 @@
         BlockingMilestones = [];
         foreach(Milestone m in Milestones)
         {
+            manager.AddMilestoneEndDate(m);
             if(m.EngineerId != 0)
             {
-                List<Milestone> blockedMilestones = manager.GetAllMilestonesOfBlockingEngineers(m.EngineerId, m.StartDate, m.EndDate ?? m.StartDate, m.ProjectId).Result;
+                DateTime endDate = m.EndDate ?? m.StartDate.AddDays(m.RequiredDays).Date;
+                List<Milestone> blockedMilestones = manager.GetAllMilestonesOfBlockingEngineers(m.EngineerId, m.StartDate, endDate, m.ProjectId).Result;
                 if (blockedMilestones.Count > 0)
                 {
                     BlockingMilestones.Add(m.MilestoneId, blockedMilestones);
@@ -113,8 +119,9 @@
         }
         else
         {
+            var maxMil = Milestones.Max(m => m.EndDate) ?? Milestones.Min(m => m.StartDate);
             ChartStart = Milestones.Min(m => m.StartDate).Date;
-            ChartEnd = Milestones.Max(m => m.StartDate.AddDays(m.RequiredDays)).Date;
+            ChartEnd = maxMil.Date;
         }
         ChartDays = Enumerable.Range(0, (ChartEnd - ChartStart).Days + 1).Select(offset => ChartStart.AddDays(offset));
         StateHasChanged();
