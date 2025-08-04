@@ -1,0 +1,47 @@
+﻿<div style="font-size: small;">
+    <InputSelect class="form-control" @bind-Value="ProjectStageId">
+        @foreach (var des in ProjectStages)
+        {
+            <option value="@des.ProjectStageId">@des.ProjectStageName</option>
+        }
+    </InputSelect>
+
+</div>
+@code {
+
+    [Parameter]
+    public required ProjectBlock block { get; set; }
+
+    [Parameter]
+    public List<ProjectStage> ProjectStages { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<ProjectBlock> OnBlockUpdated { get; set; }
+
+    private int projectStageId;
+
+    public int ProjectStageId
+    {
+        get { return projectStageId; }
+        set
+        {
+            projectStageId = value;
+            block.ProjectPhaseId = value;
+            OnBlockUpdated.InvokeAsync(block);
+        }
+    }
+
+
+    protected override void OnInitialized()
+    {
+        projectStageId = block.ProjectPhaseId;
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Sync local property with parameter every time parent updates
+        projectStageId = block.ProjectPhaseId;
+    }
+
+}

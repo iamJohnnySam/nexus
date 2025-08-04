@@ -3,9 +3,6 @@
 
 <h3>Project Manager</h3>
 
-<!-- Top Section: Table -->
-
-<!-- Bottom Section: Form -->
 <div class="card p-3" style="background-color: transparent;">
     <h5>@(SelectedProject?.ProjectId == 0 ? "Add New Project" : "Edit Project")</h5>
 
@@ -16,15 +13,16 @@
         <div class="mb-3">
             <label class="form-label">Project Name</label>
             <InputText class="form-control" @bind-Value="SelectedProject.ProjectName" />
+            <ValidationMessage For="@(() => SelectedProject.ProjectName)" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Customer</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.CustomerId">
                 <option value="">-- Select Customer --</option>
-                @foreach (var customer in Customers)
+                @foreach (var c in Customers)
                 {
-                    <option value="@customer.CustomerId">@customer.CustomerName</option>
+                    <option value="@c.CustomerId">@c.CustomerName</option>
                 }
             </InputSelect>
         </div>
@@ -33,9 +31,9 @@
             <label class="form-label">Product</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.ProductId">
                 <option value="">-- Select Product --</option>
-                @foreach (var product in Products)
+                @foreach (var p in Products)
                 {
-                    <option value="@product.ProductId">@product.ProductName</option>
+                    <option value="@p.ProductId">@p.ProductName</option>
                 }
             </InputSelect>
         </div>
@@ -46,11 +44,16 @@
         </div>
 
         <div class="mb-3">
+            <label class="form-label">Project Code</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.ProjectCode" />
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Priority</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
-                @foreach (var priority in Enum.GetValues(typeof(ProjectPriority)))
+                @foreach (var p in Enum.GetValues<ProjectPriority>())
                 {
-                    <option value="@priority">@priority</option>
+                    <option value="@p">@p</option>
                 }
             </InputSelect>
         </div>
@@ -58,16 +61,32 @@
         <div class="mb-3">
             <label class="form-label">PO Status</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
-                @foreach (var status in Enum.GetValues(typeof(SalesStatus)))
+                @foreach (var s in Enum.GetValues<SalesStatus>())
                 {
-                    <option value="@status">@status</option>
+                    <option value="@s">@s</option>
                 }
             </InputSelect>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Active</label>
+            <label class="form-label">Primary Designer</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.PrimaryDesignerId">
+                <option value="">-- Select Designer --</option>
+                @foreach (var e in Employees)
+                {
+                    <option value="@e.EmployeeId">@e.EmployeeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-check mb-2">
             <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
+            <label class="form-check-label">Is Active</label>
+        </div>
+
+        <div class="form-check mb-3">
+            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsTrackedProject" />
+            <label class="form-check-label">Tracked Project</label>
         </div>
 
         <div class="d-flex gap-2">
@@ -77,18 +96,20 @@
     </EditForm>
 </div>
 
-<div class="mb-4">
+<div class="mb-4 mt-4">
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
-                <th>Name</th>
+                <th>P Code</th>
+                <th>Design</th>
+                <th>Project Name</th>
                 <th>Customer</th>
                 <th>Product</th>
-                <th>Design Code</th>
                 <th>Priority</th>
-                <th>PO Status</th>
+                <th>Status</th>
                 <th>Active</th>
+                <th>Tracked</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -97,13 +118,15 @@
             {
                 <tr class="@((SelectedProject?.ProjectId == p.ProjectId) ? "table-primary" : "")">
                     <td style="color: white">@p.ProjectId</td>
-                    <td style="color: white">@p.ProjectName</td>
-                    <td style="color: white">@Customers.FirstOrDefault(c => c.CustomerId == p.CustomerId)?.CustomerName</td>
-                    <td style="color: white">@Products.FirstOrDefault(pr => pr.ProductId == p.ProductId)?.ProductName</td>
+                    <td style="color: white">@p.ProjectCode</td>
                     <td style="color: white">@p.DesignCode</td>
+                    <td style="color: white">@p.ProjectName</td>
+                    <td style="color: white">@p.Customer?.CustomerName</td>
+                    <td style="color: white">@p.Product?.ProductName</td>
                     <td style="color: white">@p.Priority</td>
                     <td style="color: white">@p.POStatus</td>
                     <td style="color: white">@p.IsActive</td>
+                    <td style="color: white">@p.IsTrackedProject</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(p)">Edit</button>
                         <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(p)">Delete</button>
@@ -118,11 +141,13 @@
     private List<Project> Projects = [];
     private List<Customer> Customers = [];
     private List<Product> Products = [];
+    private List<Employee> Employees = [];
 
     private Project SelectedProject = new()
     {
         ProjectName = string.Empty,
-        Priority = ProjectPriority.Normal
+        DesignCode = string.Empty,
+        ProjectCode = string.Empty
     };
 
     protected override async Task OnInitializedAsync()
@@ -132,9 +157,10 @@
 
     private async Task LoadData()
     {
+        Projects = await manager.GetAllProjects();
         Customers = await manager.GetAllCustomers();
         Products = await manager.GetAllProducts();
-        Projects = await manager.GetAllProjects();
+        Employees = await manager.GetAllEmployees();
     }
 
     private void Edit(Project p)
@@ -144,18 +170,21 @@
             ProjectId = p.ProjectId,
             ProjectName = p.ProjectName,
             CustomerId = p.CustomerId,
-            ProductId = p.ProductId,
             DesignCode = p.DesignCode,
+            ProjectCode = p.ProjectCode,
             Priority = p.Priority,
             POStatus = p.POStatus,
-            IsActive = p.IsActive
+            ProductId = p.ProductId,
+            IsActive = p.IsActive,
+            IsTrackedProject = p.IsTrackedProject,
+            PrimaryDesignerId = p.PrimaryDesignerId
         };
     }
 
     private async Task Delete(Project p)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete project '{p.ProjectName}'?");
-        if (!confirmed) return;
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this project?");
+        if (!confirm) return;
 
         await manager.DeleteProject(p);
         await LoadData();
@@ -182,7 +211,10 @@
         SelectedProject = new Project
         {
             ProjectName = string.Empty,
-            Priority = ProjectPriority.Normal
+            DesignCode = string.Empty,
+            ProjectCode = string.Empty,
+            IsActive = true,
+            IsTrackedProject = true
         };
     }
 }

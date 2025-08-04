@@ -65,6 +65,14 @@
             {
                 <AdminFunctionalKPI />
             }
+            else if (SelectedTable == "Project Stage")
+            {
+                <AdminProjectStage />
+            }
+            else if (SelectedTable == "Milestone")
+            {
+                <AdminMilestone />
+            }
             else
             {
                 <p class="text-gray-500">Please select a table to view.</p>
@@ -76,7 +84,21 @@
 
 
 @code {
-    private List<string> TableNames = new() { "Project", "Customer", "Product", "Module", "Grade", "Designation", "Employee", "Review Point", "Review Item", "Deliverables", "Simulation", "Functional KPI" };
+    private List<string> TableNames = new() { 
+        "Project", 
+        "Customer", 
+        "Product", 
+        "Module", 
+        "Grade", 
+        "Designation", 
+        "Employee", 
+        "Project Stage", 
+        "Milestone",
+        "Review Point", 
+        "Review Item", 
+        "Deliverables", 
+        "Simulation", 
+        "Functional KPI" };
     private string SelectedTable = "Project";
 
     private void SelectTable(string table)

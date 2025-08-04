@@ -1,10 +1,10 @@
-﻿@page "/milestone"
+﻿@page "/trackers"
 @inject Manager manager
 @rendermode InteractiveServer
 
 <PageTitle>Overview & Milestone Tracker</PageTitle>
 
-<div class="row" style="padding-top: 20px;">
+<div class="row" style="padding-top: 20px; width: 100vw">
     <div class="col">
         <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">Overview & Milestone Tracker</h2>
     </div>
@@ -17,12 +17,12 @@
 </div>
 <hr style="border-top: 1px solid white" />
 
-<div class="row">
-    <div class="col-1" style="@GetMenuStyle("Timeline")" @onclick="selectMenuTimeline">
+<div class="row" style="width: 100vw">
+    <div class="col-1" style="@GetMenuStyle("Project")" @onclick="selectMenuProject">
         Project
     </div>
-    <div class="col-1" style="@GetMenuStyle("Department")" @onclick="selectMenuDepartment">
-        Department
+    <div class="col-1" style="@GetMenuStyle("Timeline")" @onclick="selectMenuTimeline">
+        Timeline
     </div>
     <div class="col-1" style="@GetMenuStyle("Resources")" @onclick="selectMenuResources">
         Resources
@@ -30,13 +30,13 @@
 </div>
 <hr style="border-top: 1px solid white" />
 
-@if(menuSelected == "Timeline")
+@if (menuSelected == "Project")
 {
     <ProjectTracker />
 }
-else if(menuSelected == "Department")
+else if (menuSelected == "Timeline")
 {
-    <DepartmentUtilizationTracker />
+    <TimelineTracker />
 }
 else if (menuSelected == "Resources")
 {
@@ -44,11 +44,11 @@ else if (menuSelected == "Resources")
 }
 
 @code{
-    private string menuSelected = "Timeline";
+    private string menuSelected = "Project";
 
-    private void selectMenuTimeline()
+    private void selectMenuProject()
     {
-        menuSelected = "Timeline";
+        menuSelected = "Project";
     }
 
     private void selectMenuResources()
@@ -56,9 +56,9 @@ else if (menuSelected == "Resources")
         menuSelected = "Resources";
     }
 
-    private void selectMenuDepartment()
+    private void selectMenuTimeline()
     {
-        menuSelected = "Department";
+        menuSelected = "Timeline";
     }
 
     private string GetMenuStyle(string selectedItem)

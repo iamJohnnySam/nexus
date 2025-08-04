@@ -1,0 +1,95 @@
+﻿@inject Manager manager
+
+<tr>
+    <td>@SelectedProject.DesignCode</td>
+    <td>@SelectedProject.ProjectCode</td>
+    <td>@SelectedProject.ProjectName</td>
+    @foreach (KeyValuePair<int, ProjectBlock> kvp in ProjectBlocks)
+    {
+        <td>
+            <ProjectBlockComponent block="kvp.Value" ProjectStages="ProjectStages" OnBlockUpdated="UpdateBlock" />
+        </td>
+    }
+</tr>
+
+@code {
+    private Project _selectedProject;
+
+    [Parameter]
+    public required Project SelectedProject
+    {
+        get
+        {
+            return _selectedProject;
+        }
+        set
+        {
+            _selectedProject = value;
+            UpdateProjectBlocks();
+        }
+    }
+
+    [Parameter]
+    public List<Project> Projects { get; set; } = [];
+
+    [Parameter]
+    public int CurrentWeek { get; set; } = 0;
+
+    [Parameter]
+    public int CurrentYear { get; set; } = 2025;
+
+    [Parameter]
+    public int NumberWeeks { get; set; } = 16;
+    public List<ProjectStage> ProjectStages { get; set; }
+
+    public Dictionary<int, ProjectBlock> ProjectBlocks { get; set; }
+
+    protected override void OnInitialized()
+    {
+        UpdateProjectBlocks();
+        ProjectStages = manager.GetAllProjectStages().Result;
+        base.OnInitialized();
+    }
+
+    private void UpdateProjectBlocks()
+    {
+        ProjectBlocks = [];
+        int year = CurrentYear;
+        int week = 0;
+        for (int i = CurrentWeek; i < CurrentWeek + NumberWeeks; i++)
+        {
+            if (i > 52)
+            {
+                week = i - 52;
+            }
+            else
+            {
+                week = i;
+            }
+            ProjectBlock? block = manager.GetProjectBlockByProjectId(SelectedProject.ProjectId, year, week).Result;
+            if (block == null)
+            {
+                block = new ProjectBlock()
+                {
+                    ProjectId = SelectedProject.ProjectId,
+                    ProjectPhaseId = 0,
+                    Year = year,
+                    Week = week
+                };
+                manager.InsertProjectBlock(block).Wait();
+            }
+            ProjectBlocks.Add(i, block);
+
+            if (i == 52)
+            {
+                year = CurrentYear + 1;
+            }
+        }
+    }
+
+    private void UpdateBlock(ProjectBlock block)
+    {
+        _ = manager.UpdateProjectBlock(block);
+
+    }
+}

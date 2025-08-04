@@ -1,0 +1,181 @@
+﻿@using ProjectManager.Tools
+@inject Manager manager
+@inject IJSRuntime JS
+
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedMilestone?.MilestoneId == 0 ? "Add New Milestone" : "Edit Milestone")</h5>
+
+    <EditForm Model="@SelectedMilestone" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Milestone Name</label>
+            <InputText class="form-control" @bind-Value="SelectedMilestone.Name" />
+            <ValidationMessage For="@(() => SelectedMilestone.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Start Date</label>
+                    <InputDate class="form-control" @bind-Value="SelectedMilestone.StartDate" />
+                </div>
+                <div class="col">
+                    <label class="form-label">Required Days</label>
+                    <InputNumber class="form-control" @bind-Value="SelectedMilestone.RequiredDays" />
+                </div>
+                <div class="col">
+                    <label class="form-label">End Date (Optional)</label>
+                    <InputDate class="form-control" @bind-Value="EndDate" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Dependent Milestone</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedMilestone.DependentMilestoneId">
+                        <option value="0">-- None --</option>
+                        @foreach (var m in FilteredMilestones)
+                        {
+                            <option value="@m.MilestoneId">@m.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col">
+                    <label class="form-label">Dependency Type</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedMilestone.DependencyType">
+                        @foreach (var d in Enum.GetValues<DependencyType>())
+                        {
+                            <option value="@d">@d</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>  
+        </div>
+
+        <div class="mb-3">
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Engineer</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedMilestone.EngineerId">
+                        <option value="">-- Select Engineer --</option>
+                        @foreach (var e in Engineers)
+                        {
+                            <option value="@e.EmployeeId">@e.EmployeeName</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-secondary" @onclick="RemoveEmployee">Remove</button>
+                </div>
+                <div class="col-2">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedMilestone.IsCompleted" />
+                    <label class="form-check-label">Completed</label>
+                </div>
+            </div>
+        </div>
+
+       
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="DeleteMilestone">Delete</button>
+            <button type="button" class="btn btn-secondary" @onclick="CloseBox">Close</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private List<Employee> Engineers = [];
+    private List<Milestone> FilteredMilestones = [];
+
+    [Parameter]
+    public required Milestone SelectedMilestone { get; set; }
+
+    [Parameter]
+    public EventCallback OnMilestoneChange { get; set; }
+
+    private DateTime endDate = DateTime.Today;
+
+    public DateTime EndDate
+    {
+        get { return endDate; }
+        set { 
+            endDate = value;
+            SelectedMilestone.RequiredDays = CalendarLogic.GetWorkDays(SelectedMilestone.StartDate, value, []);
+
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        List<Milestone> Milestones = await manager.GetAllMilestones();
+        FilteredMilestones = Milestones
+            .Where(m => m.ProjectId == SelectedMilestone.ProjectId && m.MilestoneId != SelectedMilestone.MilestoneId)
+            .ToList();
+
+        SelectedMilestone.DependentMilestoneId = 0; // Reset dependency on project change
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedMilestone.MilestoneId == 0)
+        {
+            await manager.InsertMilestone(SelectedMilestone);
+        }
+        else
+        {
+            await manager.UpdateMilestone(SelectedMilestone);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task LoadData()
+    {
+        Engineers = await manager.GetAllEmployees();
+    }
+
+    private async void DeleteMilestone()
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this milestone?");
+        if (!confirm) return;
+
+        await manager.DeleteMilestone(SelectedMilestone);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async void CloseBox()
+    {
+        ResetForm();
+    }
+
+    private void RemoveEmployee()
+    {
+        SelectedMilestone.EngineerId = 0;
+    }
+
+    private async void ResetForm()
+    {
+        SelectedMilestone = new Milestone
+        {
+            ProjectId = manager.CurrentProject.ProjectId,
+            Name = string.Empty,
+            StartDate = DateTime.Today,
+            RequiredDays = 1,
+            DependencyType = DependencyType.FinishToStart
+        };
+        await OnMilestoneChange.InvokeAsync();
+    }
+
+}

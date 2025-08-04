@@ -1,5 +1,59 @@
-﻿<h3>Project Tracker</h3>
+﻿@using ProjectManager.Tools
+@inject Manager manager
+
+<table style="width: 100%; ">
+    <tr style="border-bottom: 1px solid red;">
+        <th>Design</th>
+        <th>P Code</th>
+        <th>Project Name</th>
+        @for (int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
+        {
+            <th style=@cellStyle>
+                Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
+            </th>
+        }
+    </tr>
+    @foreach (Project project in Projects)
+    {
+        <ProjectBlockView SelectedProject="project" Projects="Projects" CurrentWeek="CurrentWeek" CurrentYear="DateTime.Now.Year" NumberWeeks="nWeeks" />
+    }
+</table>
 
 @code {
+    List<Project> Projects { get; set; } = [];
+
+    int CurrentWeek { get; set; }
+    int nWeeks = 12;
+
+    int cellWidth = 90;
+    string cellStyle = "width: 85px;";
+
+    protected override void OnInitialized()
+    {
+        Projects = manager.GetAllActiveTrackedProjects().Result
+            .OrderBy(p =>
+                {
+                    if (p.ProjectCode == null) return 3; 
+                    if (p.ProjectCode.StartsWith("P")) return 0; 
+                    if (p.ProjectCode.StartsWith("TSS")) return 1;
+                    return 2;
+                })
+            .ThenByDescending(p =>
+                {
+                    if (p.ProjectCode == null) return "";
+                    if (p.ProjectCode.StartsWith("P") || p.ProjectCode.StartsWith("TSS"))
+                    return p.ProjectCode;
+                    return "";
+                })
+            .ThenBy(p => p.ProjectCode)
+            .ToList();
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        cellWidth = (90 * 16) / nWeeks;
+        cellStyle = $"width: {cellWidth}px; ";
+    }
+
+    
+
+
 
 }

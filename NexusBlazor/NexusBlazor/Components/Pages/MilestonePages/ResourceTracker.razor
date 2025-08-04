@@ -1,4 +1,4 @@
-﻿@using System.Globalization
+﻿@using ProjectManager.Tools
 @inject Manager manager
 
 <div class="row" style="padding-top: 20px;">
@@ -28,13 +28,13 @@
         @for (int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
         {
             <th style=@cellStyle>
-                Week @(i % 52)
+                Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
             </th>
         }
     </tr>
     @foreach(Employee employee in Employees)
     {
-        <ResourceEmployeeBlock SelectedEmployee="employee" Projects="Projects" CurrentWeek="CurrentWeek" CurrentYear="DateTime.Now.Year" NumberWeeks="nWeeks" />
+        <ResourceBlockView SelectedEmployee="employee" Projects="Projects" CurrentWeek="CurrentWeek" CurrentYear="DateTime.Now.Year" NumberWeeks="nWeeks" />
     }
 </table>
 
@@ -67,7 +67,7 @@
         GetEmployees();
         Projects = manager.GetAllActiveProjects().Result.OrderByDescending(p => p.DesignCode).ToList();
         Designations = manager.GetAllDesignations().Result;
-        CurrentWeek = WeekOfYear(DateTime.Now);
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
         cellWidth = (85 * 16) / nWeeks;
         cellStyle = $"width: {cellWidth}px; ";
     }
@@ -83,18 +83,6 @@
             Employees = manager.GetAllActiveEmployeesByDesignationId(currentDesignationId).Result;
         }
         
-    }
-
- 
-
-    public static int WeekOfYear(DateTime time)
-    {
-        DayOfWeek day = CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(time);
-        if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
-        {
-            time = time.AddDays(3);
-        }
-        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
     }
 
     

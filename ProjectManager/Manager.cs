@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using ProjectManager.Models;
+using ProjectManager.Tools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -55,6 +56,10 @@ namespace ProjectManager
             connection.Execute(SimulationScenarioTableCreationString);
             connection.Execute(ResourceBlockTableCreationString);
             connection.Execute(FunctionalKPITableCreationString);
+            connection.Execute(ProjectStageTableCreationString);
+            connection.Execute(ProjectBlockTableCreationString);
+            connection.Execute(MilestoneTableCreationString);
+
             connection.Execute(tableCreationString);
 
             if (databaseNotExist)
@@ -75,7 +80,7 @@ namespace ProjectManager
                     ProductId = newProduct.ProductId,
                 }).Wait();
             }
-            currentProject = GetProject(1).Result!;
+            currentProject = GetProjectById(1).Result;
         }
 
 
@@ -192,10 +197,13 @@ namespace ProjectManager
                             ProjectName TEXT NOT NULL,
                             CustomerId INTEGER,
                             DesignCode TEXT,
+                            ProjectCode, TEXT,
                             Priority INTEGER,
                             POStatus INTEGER,
                             ProductId INTEGER,
-                            IsActive INTEGER);";
+                            IsActive INTEGER,
+                            IsTrackedProject INTEGER,
+                            PrimaryDesignerId INTEGER);";
         public Project GetNewProject()
         {
             return new Project { ProjectName = "Untitled Project" };
@@ -205,90 +213,80 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
-            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, Priority, POStatus, ProductId, IsActive)
-                       VALUES (@ProjectName, @CustomerId, @DesignCode, @Priority, @POStatus, @ProductId, @IsActive);";
+            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, ProjectCode, Priority, POStatus, ProductId, IsActive, IsTrackedProject, PrimaryDesignerId)
+                       VALUES (@ProjectName, @CustomerId, @DesignCode, @ProjectCode, @Priority, @POStatus, @ProductId, @IsActive, @IsTrackedProject, @PrimaryDesignerId);";
             await conn.ExecuteAsync(sql, p);
             p.ProjectId = (int)conn.LastInsertRowId;
         }
-        public async Task<Project?> GetProject(int projectId)
+        public async Task GetProjectObjects(Project project)
+        {
+            project.Customer = await GetCustomerById(project.CustomerId);
+            project.Product = await GetProductById(project.ProductId);
+            project.PrimaryDesigner = await GetEmployeeById(project.PrimaryDesignerId);
+        }
+        public async Task<Project> GetProjectById(int projectId)
         {
             using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
 
-            string sql = @"
-                SELECT p.*, c.CustomerId, c.CustomerName, pr.ProductId, pr.ProductName
-                FROM Project p
-                LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
-                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
-                WHERE p.ProjectId = @projectId;
-                ";
+            var sql = "SELECT * FROM Project WHERE ProjectId = @projectId";
+            var project = await conn.QueryFirstOrDefaultAsync<Project>(sql, new { projectId });
 
-            var result = await conn.QueryAsync<Project, Customer, Product, Project>(
-                sql,
-                (project, customer, product) =>
-                {
-                    project.Customer = customer;
-                    project.Product = product;
-                    return project;
-                },
-                new { projectId },
-                splitOn: "CustomerId,ProductId"
-            );
-            return result.FirstOrDefault();
+            if (project != null)
+                await GetProjectObjects(project);
+            else
+                throw new Exception($"Project with ID '{projectId}' not found.");
+
+            return project;
         }
         public async Task<List<Project>> GetAllProjects()
         {
             using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-            string sql = @"
-                SELECT p.*, 
-                       c.CustomerId, c.CustomerName, 
-                       pr.ProductId, pr.ProductName
-                FROM Project p
-                LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
-                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
-                ORDER BY p.ProjectName ASC;
-                ";
+            await conn.OpenAsync();
 
-            var projects = await conn.QueryAsync<Project, Customer, Product, Project>(
-                sql,
-                (project, customer, product) =>
-                {
-                    project.Customer = customer;
-                    project.Product = product;
-                    return project;
-                },
-                splitOn: "CustomerId,ProductId"
-            );
-            return projects.ToList();
+            var sql = "SELECT * FROM Project ORDER BY ProjectName ASC;";
+            var projects = (await conn.QueryAsync<Project>(sql)).ToList();
+
+            foreach (var project in projects)
+            {
+                await GetProjectObjects(project);
+            }
+
+            return projects;
         }
         public async Task<List<Project>> GetAllActiveProjects()
         {
             using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-            string sql = @"
-                SELECT p.*, 
-                       c.CustomerId, c.CustomerName, 
-                       pr.ProductId, pr.ProductName
-                FROM Project p
-                LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
-                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
-                WHERE p.IsActive = 1
-                ORDER BY p.ProjectName ASC;
-        ";
+            await conn.OpenAsync();
 
-            var projects = await conn.QueryAsync<Project, Customer, Product, Project>(
-                sql,
-                (project, customer, product) =>
-                {
-                    project.Customer = customer;
-                    project.Product = product;
-                    return project;
-                },
-                splitOn: "CustomerId,ProductId"
-            );
+            var sql = @"SELECT * FROM Project 
+                        WHERE IsActive = 1 
+                        ORDER BY ProjectName ASC;";
+            var projects = (await conn.QueryAsync<Project>(sql)).ToList();
 
-            return projects.ToList();
+            foreach (var project in projects)
+            {
+                await GetProjectObjects(project);
+            }
+
+            return projects;
+        }
+        public async Task<List<Project>> GetAllActiveTrackedProjects()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT * FROM Project 
+                        WHERE IsActive = 1 AND IsTrackedProject = 1
+                        ORDER BY ProjectName ASC;";
+            var projects = (await conn.QueryAsync<Project>(sql)).ToList();
+
+            foreach (var project in projects)
+            {
+                await GetProjectObjects(project);
+            }
+
+            return projects;
         }
         public async Task<List<string>> GetAllProjectNames()
         {
@@ -317,33 +315,24 @@ namespace ProjectManager
             name = name + project.ProjectName;
             return name;
         }
-        public async Task SelectProjectFromName(string projectName)
+        public async Task<Project> SelectProjectFromName(string projectName)
         {
             using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
 
-            string sql = @"
-                SELECT p.*, c.CustomerId, c.CustomerName, pr.ProductId, pr.ProductName
-                FROM Project p
-                LEFT JOIN Customer c ON p.CustomerId = c.CustomerId
-                LEFT JOIN Product pr ON p.ProductId = pr.ProductId
-                WHERE p.ProjectName = @projectName;
-                ";
+            var sql = "SELECT * FROM Project WHERE ProjectName = @projectName";
+            var project = await conn.QueryFirstOrDefaultAsync<Project>(sql, new { projectName });
 
-            var result = await conn.QueryAsync<Project, Customer, Product, Project>(
-                sql,
-                (project, customer, product) =>
-                {
-                    project.Customer = customer;
-                    project.Product = product;
-                    return project;
-                },
-                new { projectName },
-                splitOn: "CustomerId,ProductId"
-            );
-            Project? project = result.FirstOrDefault();
             if (project != null)
+            {
+                await GetProjectObjects(project);
                 currentProject = project;
+            }
+            else
+            {
+                throw new Exception($"Project with name '{projectName}' not found.");
+            }
+            return project;
         }
         public async Task UpdateProject(Project p)
         {
@@ -354,10 +343,13 @@ namespace ProjectManager
                        SET ProjectName = @ProjectName,
                            CustomerId = @CustomerId,
                            DesignCode = @DesignCode,
-                           Priority = @Priority,
-                           POStatus = @POStatus,
-                           ProductId = @ProductId,
-                            IsActive = @IsActive
+                            ProjectCode = @ProjectCode, 
+                            Priority = @Priority,
+                            POStatus = @POStatus,
+                            ProductId = @ProductId,
+                            IsActive = @IsActive,
+                            IsTrackedProject = @IsTrackedProject,
+                            PrimaryDesignerId = @PrimaryDesignerId
                        WHERE ProjectId = @ProjectId;";
             await conn.ExecuteAsync(sql, p);
         }
@@ -1129,6 +1121,76 @@ namespace ProjectManager
             await conn.ExecuteAsync(sql, resourceBlock);
         }
 
+        // ---- PROJECT BLOCK DB
+        string ProjectBlockTableCreationString = @"
+    CREATE TABLE IF NOT EXISTS ProjectBlock(
+        ProjectBlockId INTEGER PRIMARY KEY,
+        ProjectId INTEGER,
+        ProjectPhaseId INTEGER,
+        Year INTEGER,
+        Week INTEGER);";
+        public async Task InsertProjectBlock(ProjectBlock block)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO ProjectBlock 
+        (ProjectId, ProjectPhaseId, Year, Week) 
+        VALUES (@ProjectId, @ProjectPhaseId, @Year, @Week);
+        SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, block);
+            block.ProjectBlockId = (int)id;
+        }
+        public async Task<List<ProjectBlock>> GetAllProjectBlocks()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ProjectBlock";
+            var result = await conn.QueryAsync<ProjectBlock>(sql);
+            return result.ToList();
+        }
+        public async Task<ProjectBlock?> GetProjectBlockById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ProjectBlock WHERE ProjectBlockId = @id";
+            return await conn.QueryFirstOrDefaultAsync<ProjectBlock>(sql, new { id });
+        }
+        public async Task<ProjectBlock?> GetProjectBlockByProjectId(int id, int year, int week)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ProjectBlock WHERE ProjectId = @id AND Year = @year AND Week = @week";
+            return await conn.QueryFirstOrDefaultAsync<ProjectBlock>(sql, new { id, year, week });
+        }
+        public async Task UpdateProjectBlock(ProjectBlock block)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE ProjectBlock SET
+        ProjectId = @ProjectId,
+        ProjectPhaseId = @ProjectPhaseId,
+        Year = @Year,
+        Week = @Week
+        WHERE ProjectBlockId = @ProjectBlockId";
+
+            await conn.ExecuteAsync(sql, block);
+        }
+        public async Task DeleteProjectBlock(ProjectBlock block)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM ProjectBlock WHERE ProjectBlockId = @ProjectBlockId";
+            await conn.ExecuteAsync(sql, block);
+        }
+
+
 
         // ---- FUNCTIONAL KPI DB
         string FunctionalKPITableCreationString = @"
@@ -1194,6 +1256,264 @@ namespace ProjectManager
         }
 
 
+        // ---- PROJECT STAGE DB
+        string ProjectStageTableCreationString = @"
+            CREATE TABLE IF NOT EXISTS ProjectStage(
+                ProjectStageId INTEGER PRIMARY KEY,
+                ProjectStageName TEXT NOT NULL,
+                ProjectStageDescription TEXT NOT NULL,
+                Sequence INTEGER);";
+        public async Task InsertProjectStage(ProjectStage stage)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO ProjectStage 
+    (ProjectStageName, ProjectStageDescription, Sequence)
+    VALUES (@ProjectStageName, @ProjectStageDescription, @Sequence);
+    SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, stage);
+            stage.ProjectStageId = (int)id;
+        }
+        public async Task<List<ProjectStage>> GetAllProjectStages()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ProjectStage ORDER BY Sequence";
+            var result = await conn.QueryAsync<ProjectStage>(sql);
+            return result.ToList();
+        }
+        public async Task<ProjectStage?> GetProjectStageById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ProjectStage WHERE ProjectStageId = @id";
+            return await conn.QueryFirstOrDefaultAsync<ProjectStage>(sql, new { id });
+        }
+        public async Task UpdateProjectStage(ProjectStage stage)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE ProjectStage SET
+        ProjectStageName = @ProjectStageName,
+        ProjectStageDescription = @ProjectStageDescription,
+        Sequence = @Sequence
+        WHERE ProjectStageId = @ProjectStageId";
+
+            await conn.ExecuteAsync(sql, stage);
+        }
+        public async Task DeleteProjectStage(ProjectStage stage)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM ProjectStage WHERE ProjectStageId = @ProjectStageId";
+            await conn.ExecuteAsync(sql, stage);
+        }
+
+
+
+        // ---- MILESTONE DB
+        string MilestoneTableCreationString = @"
+    CREATE TABLE IF NOT EXISTS Milestone(
+        MilestoneId INTEGER PRIMARY KEY,
+        ProjectId INTEGER,
+        Name TEXT NOT NULL,
+        StartDate TEXT,
+        RequiredDays INTEGER,
+        DependentMilestoneId INTEGER,
+        DependencyType INTEGER DEFAULT 0,
+        EngineerId INTEGER,
+        IsCompleted INTEGER DEFAULT 0);";
+        public async Task InsertMilestone(Milestone milestone)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO Milestone 
+        (ProjectId, Name, StartDate, RequiredDays, DependentMilestoneId, DependencyType, EngineerId, IsCompleted)
+        VALUES 
+        (@ProjectId, @Name, @StartDate, @RequiredDays, @DependentMilestoneId, @DependencyType, @EngineerId, @IsCompleted);
+        SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, milestone);
+            milestone.MilestoneId = (int)id;
+        }
+        public async Task<List<Milestone>> GetAllMilestones()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Milestone";
+            var milestones = (await conn.QueryAsync<Milestone>(sql)).ToList();
+
+            return milestones;
+        }
+        public async Task<List<Milestone>> GetAllMilestonesByProjectId(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Milestone WHERE ProjectId = @id";
+            var milestones = (await conn.QueryAsync<Milestone>(sql, new { id })).ToList();
+
+            foreach(Milestone m in milestones)
+            {
+                if (m.EngineerId != 0)
+                {
+                    m.Engineer = await GetEmployeeById(m.EngineerId);
+                }
+            }
+
+            return milestones
+                .OrderBy(m => m.StartDate)
+                .ThenBy(m => m.StartDate.AddDays(m.RequiredDays))
+                .ToList();
+        }
+        public async Task FixMilestoneStartDates(int id)
+        {
+            List<Milestone> milestones = await GetAllMilestonesByProjectId(id);
+            var milestoneDict = milestones.ToDictionary(m => m.MilestoneId);
+            var dependencyGraph = milestones
+                .GroupBy(m => m.DependentMilestoneId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var resolved = new HashSet<int>();
+            var queue = new Queue<Milestone>();
+
+            foreach (Milestone milestone in milestones.Where(m => m.DependentMilestoneId == 0))
+            {
+                AddMilestoneEndDate(milestone);
+                resolved.Add(milestone.MilestoneId);
+                queue.Enqueue(milestone);
+            }
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+                // Find all milestones that depend on the current one
+                if (!dependencyGraph.ContainsKey(current.MilestoneId)) 
+                    continue;
+
+                foreach (var dependent in dependencyGraph[current.MilestoneId])
+                {
+                    // Only process if not already resolved
+                    if (resolved.Contains(dependent.MilestoneId)) continue;
+
+                    // Fix StartDate based on dependency
+                    switch (dependent.DependencyType)
+                    {
+                        case DependencyType.FinishToStart:
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays, []);
+                            break;
+
+                        case DependencyType.StartToStart:
+                            dependent.StartDate = current.StartDate;
+                            break;
+
+                        case DependencyType.FinishToFinish:
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays - dependent.RequiredDays, []);
+                            break;
+
+                        case DependencyType.StartToFinish:
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, -dependent.RequiredDays, []);
+                            break;
+                    }
+
+                    AddMilestoneEndDate(dependent);
+                    _ = UpdateMilestone(dependent);
+
+                    resolved.Add(dependent.MilestoneId);
+                    queue.Enqueue(dependent);
+                }
+            }
+        }
+        public void AddMilestoneEndDate(Milestone milestone)
+        {
+            milestone.EndDate = CalendarLogic.AddWorkDays(milestone.StartDate, milestone.RequiredDays, []);
+        }
+        public async Task<List<Milestone>> GetAllMilestonesOfBlockingEngineers(int engineerId, DateTime startDate, DateTime endDate, int excludeProjectId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"
+        SELECT * FROM Milestone
+        WHERE EngineerId = @EngineerId
+          AND ProjectId != @ExcludeProjectId
+          AND DATE(StartDate) IS NOT NULL
+          AND (
+                DATE(StartDate) <= @EndDate
+                AND DATE(StartDate, '+' || RequiredDays || ' days') > @StartDate
+              );";
+
+            var milestones = await conn.QueryAsync<Milestone>(sql, new
+            {
+                EngineerId = engineerId,
+                StartDate = startDate.ToString("yyyy-MM-dd"),
+                EndDate = endDate.ToString("yyyy-MM-dd"),
+                ExcludeProjectId = excludeProjectId
+            });
+
+            foreach (var milestone in milestones)
+            {
+                milestone.Project = await GetProjectById(milestone.ProjectId);
+                if (milestone.EngineerId != 0)
+                {
+                    milestone.Engineer = await GetEmployeeById(milestone.EngineerId);
+                }
+            }
+
+            return milestones.ToList();
+        }
+        public async Task<Milestone?> GetMilestoneById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Milestone WHERE MilestoneId = @id";
+            return await conn.QueryFirstOrDefaultAsync<Milestone>(sql, new { id });
+        }
+        public async Task UpdateMilestone(Milestone milestone)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE Milestone SET
+        ProjectId = @ProjectId,
+        Name = @Name,
+        StartDate = @StartDate,
+        RequiredDays = @RequiredDays,
+        DependentMilestoneId = @DependentMilestoneId,
+        DependencyType = @DependencyType,
+        EngineerId = @EngineerId,
+        IsCompleted = @IsCompleted
+        WHERE MilestoneId = @MilestoneId";
+
+            await conn.ExecuteAsync(sql, milestone);
+        }
+        public async Task DeleteMilestone(Milestone milestone)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM Milestone WHERE MilestoneId = @MilestoneId";
+            await conn.ExecuteAsync(sql, milestone);
+        }
+
+
+
+
+
+
+
+
+
 
         private static string tableCreationString = @"
             
@@ -1207,10 +1527,6 @@ namespace ProjectManager
             CREATE TABLE IF NOT EXISTS ProductModule(
                 ModuleId INTEGER PRIMARY KEY,
                 ModuleName TEXT NOT NULL);
-
-            CREATE TABLE IF NOT EXISTS Product(
-                ProductId INTEGER PRIMARY KEY,
-                ProductName TEXT NOT NULL);
 
             CREATE TABLE IF NOT EXISTS Grade(
                 GradeId INTEGER PRIMARY KEY,
@@ -1259,20 +1575,7 @@ namespace ProjectManager
                 DeliverableId INTEGER,
                 DeliverableName TEXT,
                 DeliverableDescription TEXT,
-                DeliverableType TEXT);
-            
-            CREATE TABLE IF NOT EXISTS Milestones (
-                MilestoneId INT PRIMARY KEY,
-                ProjectId INT NOT NULL,
-                Name TEXT NOT NULL,
-                StartDate TEXT NOT NULL,
-                EndDate TEXT NOT NULL);
-
-            CREATE TABLE IF NOT EXISTS MilestoneDependencies (
-                DependencyId INT PRIMARY KEY,
-                MilestoneId INT NOT NULL,
-                DependsOnMilestoneId INT NOT NULL,
-                Type INT NOT NULL);";
+                DeliverableType TEXT);";
 
     }
 }

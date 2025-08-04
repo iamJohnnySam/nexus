@@ -1,0 +1,131 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+
+<h3>Project Stage Manager</h3>
+
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedStage?.ProjectStageId == 0 ? "Add New Project Stage" : "Edit Project Stage")</h5>
+
+    <EditForm Model="@SelectedStage" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Stage Name</label>
+            <InputText class="form-control" @bind-Value="SelectedStage.ProjectStageName" />
+            <ValidationMessage For="@(() => SelectedStage.ProjectStageName)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputText class="form-control" @bind-Value="SelectedStage.ProjectStageDescription" />
+            <ValidationMessage For="@(() => SelectedStage.ProjectStageDescription)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Sequence</label>
+            <InputNumber class="form-control" @bind-Value="SelectedStage.Sequence" />
+            <ValidationMessage For="@(() => SelectedStage.Sequence)" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="mb-4 mt-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Sequence</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stage in ProjectStages)
+            {
+                <tr class="@((SelectedStage?.ProjectStageId == stage.ProjectStageId) ? "table-primary" : "")">
+                    <td style="color: white">@stage.ProjectStageId</td>
+                    <td style="color: white">@stage.ProjectStageName</td>
+                    <td style="color: white">@stage.ProjectStageDescription</td>
+                    <td style="color: white">@stage.Sequence</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(stage)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(stage)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<ProjectStage> ProjectStages = [];
+    private ProjectStage SelectedStage = new()
+    {
+        ProjectStageName = string.Empty,
+        ProjectStageDescription = string.Empty,
+        Sequence = 0
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjectStages();
+    }
+
+    private async Task LoadProjectStages()
+    {
+        ProjectStages = await manager.GetAllProjectStages();
+    }
+
+    private void Edit(ProjectStage stage)
+    {
+        SelectedStage = new ProjectStage
+        {
+            ProjectStageId = stage.ProjectStageId,
+            ProjectStageName = stage.ProjectStageName,
+            ProjectStageDescription = stage.ProjectStageDescription,
+            Sequence = stage.Sequence
+        };
+    }
+
+    private async Task Delete(ProjectStage stage)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this stage?");
+        if (!confirmed) return;
+
+        await manager.DeleteProjectStage(stage);
+        await LoadProjectStages();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedStage.ProjectStageId == 0)
+        {
+            await manager.InsertProjectStage(SelectedStage);
+        }
+        else
+        {
+            await manager.UpdateProjectStage(SelectedStage);
+        }
+
+        await LoadProjectStages();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedStage = new ProjectStage
+        {
+            ProjectStageName = string.Empty,
+            ProjectStageDescription = string.Empty,
+            Sequence = 0
+        };
+    }
+}

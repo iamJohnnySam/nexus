@@ -14,11 +14,15 @@ public class Project
     public required string ProjectName { get; set; }
     public int CustomerId { get; set; }
     public string? DesignCode { get; set; }
+    public string? ProjectCode { get; set; }
     public ProjectPriority Priority { get; set; } = ProjectPriority.Normal;
     public SalesStatus POStatus { get; set; }
     public int ProductId { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsTrackedProject { get; set; } = true;
+    public int PrimaryDesignerId { get; set; }
 
     public Customer? Customer { get; set; }
     public Product? Product { get; set; }
+    public Employee? PrimaryDesigner { get; set; }
 }

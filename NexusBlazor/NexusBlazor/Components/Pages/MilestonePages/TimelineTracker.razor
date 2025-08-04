@@ -1,0 +1,147 @@
+﻿@using System.Globalization
+@using System.Linq
+@inject Manager manager
+@inject IJSRuntime JS
+
+<div class="row" style="padding-top: 20px; width: 100vw;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">Timeline for @CurrentProject.DesignCode | @CurrentProject.ProjectName (@CurrentProject.ProjectCode)</h2>
+    </div>
+    <div class="col-3">
+        <SelectActiveProject OnProjectChange="HandleProjectChange" />
+    </div>
+    <div class="col-2">
+        <button class="btn btn-primary" @onclick="NewMilestone">
+            Add New Milestone
+        </button>
+    </div>
+</div>
+
+
+<div style="display:grid; grid-template-columns: repeat(@(ChartDays.Count()), 1fr)">
+    @foreach (var day in ChartDays)
+    {
+        <div style="text-align: center; font-weight: 700; writing-mode: vertical-rl; text-orientation: sideways;">@day.ToString("dd MMM")</div>
+    }
+
+    @foreach (var milestone in Milestones)
+    {
+        manager.AddMilestoneEndDate(milestone);
+        var left = (milestone.StartDate - ChartStart).Days + 1;
+        var endDate = ((milestone.EndDate ?? milestone.StartDate) - ChartStart).Days + 1;
+        var color = milestone.IsCompleted ? "#3e6a40" : "#2B77BA";
+
+        <div style="background: @color; grid-row: @currentRow; grid-column: @left / @endDate; margin-top:3px;" @onclick="() => MilestoneSelected(milestone)">
+            @milestone.Name <span style="font-size:8pt">(@milestone.Engineer?.EmployeeName)</span>
+        </div>
+
+        if (BlockingMilestones.ContainsKey(milestone.MilestoneId))
+        {
+                currentRow++;
+                <div style="background: @color; grid-row: @currentRow; grid-column: @left / @endDate; font-size:9pt;">
+                    @foreach(Milestone milestone1 in BlockingMilestones[milestone.MilestoneId])
+                    {
+                        <div style="color: white; padding: 2px;">
+                        Block @milestone1.Project.DesignCode @milestone1.Name <span style="font-size:8pt">(@milestone1.StartDate.ToString("yyyy-MM,dd") - @(milestone.EndDate ?? milestone.StartDate).ToString("yyyy-MM,dd"))</span>
+                        </div>
+                }
+                </div>
+        }
+        
+        currentRow++;
+    }
+</div>
+
+@if (PanelVisible)
+{
+    <div class="fixed-bottom" style="padding: 10px 0px 10px 30px; background-color: #272B2F;">
+        <hr style="border-top: 1px solid white" />
+        <TimelineMilestoneEdit SelectedMilestone="@SelectedMilestone" OnMilestoneChange="HandleProjectChange" />
+    </div>
+}
+
+
+@code {
+    public List<Milestone> Milestones { get; set; } = new();
+    public Project CurrentProject { get; set; }
+    public Milestone SelectedMilestone { get; set; }
+    public Dictionary<int, List<Milestone>> BlockingMilestones { get; set; } = [];
+
+    public bool PanelVisible { get; set; }
+
+    private int DayWidth = 20; // pixels per day
+    private DateTime ChartStart;
+    private DateTime ChartEnd;
+    private IEnumerable<DateTime> ChartDays = [];
+
+    private int currentRow = 2;
+
+    protected override void OnInitialized()
+    {
+        SelectedMilestone = new Milestone()
+        {
+            ProjectId = 0,
+            Name = "New"
+        };
+        GetAllMilestones();
+        base.OnInitialized();
+    }
+
+    private void GetAllMilestones()
+    {
+        CurrentProject = manager.CurrentProject;
+        manager.FixMilestoneStartDates(CurrentProject.ProjectId).Wait();
+        Milestones = manager.GetAllMilestonesByProjectId(CurrentProject.ProjectId).Result;
+
+        BlockingMilestones = [];
+        foreach(Milestone m in Milestones)
+        {
+            if(m.EngineerId != 0)
+            {
+                List<Milestone> blockedMilestones = manager.GetAllMilestonesOfBlockingEngineers(m.EngineerId, m.StartDate, m.EndDate ?? m.StartDate, m.ProjectId).Result;
+                if (blockedMilestones.Count > 0)
+                {
+                    BlockingMilestones.Add(m.MilestoneId, blockedMilestones);
+                }
+            }
+        }
+
+        if (Milestones.Count == 0)
+        {
+            ChartStart = DateTime.Today;
+            ChartEnd = DateTime.Today.AddDays(30);
+        }
+        else
+        {
+            ChartStart = Milestones.Min(m => m.StartDate).Date;
+            ChartEnd = Milestones.Max(m => m.StartDate.AddDays(m.RequiredDays)).Date;
+        }
+        ChartDays = Enumerable.Range(0, (ChartEnd - ChartStart).Days + 1).Select(offset => ChartStart.AddDays(offset));
+        StateHasChanged();
+    }
+
+    private void HandleProjectChange()
+    {
+        GetAllMilestones();
+        PanelVisible = false;
+    }
+
+    private void MilestoneSelected(Milestone milestone)
+    {
+        PanelVisible = true;
+        SelectedMilestone = milestone;
+    }
+
+    private void NewMilestone()
+    {
+        Milestone newMilestone = new Milestone()
+        {
+            ProjectId = CurrentProject.ProjectId,
+            Name = "New Milestone",
+            StartDate = DateTime.Today,
+            RequiredDays = 1
+        };
+        SelectedMilestone = newMilestone;
+        PanelVisible = true;
+    }
+}
