@@ -79,6 +79,11 @@
             </InputSelect>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Link to Requirement Document</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.RequirementDocumentLink" />
+        </div>
+
         <div class="form-check mb-2">
             <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
             <label class="form-check-label">Is Active</label>
@@ -177,7 +182,8 @@
             ProductId = p.ProductId,
             IsActive = p.IsActive,
             IsTrackedProject = p.IsTrackedProject,
-            PrimaryDesignerId = p.PrimaryDesignerId
+            PrimaryDesignerId = p.PrimaryDesignerId,
+            RequirementDocumentLink = p.RequirementDocumentLink
         };
     }
 

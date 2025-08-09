@@ -1,0 +1,103 @@
+﻿@using ProjectManager.Tools
+@inject Manager manager
+
+<table style="width: 100%; ">
+    <tr style="border-bottom: 1px solid red;">
+        <th>Design</th>
+        <th>P Code</th>
+        <th>Project Name</th>
+        @for (int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
+        {
+            <th style=@cellStyle>
+                Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
+            </th>
+        }
+    </tr>
+    @foreach (Project project in Projects)
+    {
+        <tr style="border-bottom: 1px solid darkgray;">
+            <td>@project.DesignCode</td>
+            <td>@project.ProjectCode</td>
+            <td>@project.ProjectName</td>
+
+            @for(int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
+            {
+                items = [];
+                <td style="padding: 5px 0px 5px 0px">
+                    @for (int j = 0; j < Allocation[project.ProjectId][i].Count; j++)
+                    {
+                        var milestone = Allocation[project.ProjectId][i][j];
+                        string val = $"{milestone.Engineer?.EmployeeName}{milestone.ProjectStage?.ProjectStageName}";
+                        if (milestone.EngineerId == 0 || items.Contains(val))
+                        {
+                            continue;
+                        }
+                        <span>@milestone.Engineer?.EmployeeName</span><span style="font-size:8pt; color:yellow"> | @milestone.ProjectStage?.ProjectStageName</span>
+                        items.Add(val);
+                        @if (j < Allocation[project.ProjectId][i].Count - 1)
+                        {
+                            <br />
+                        }
+                    }
+                </td>
+            }
+
+        </tr>
+    }
+</table>
+
+@code {
+    List<Project> Projects { get; set; } = [];
+    Dictionary<int, Dictionary<int, List<Milestone>>> Allocation { get; set; } = [];
+    List<string> items = [];
+
+    int CurrentWeek { get; set; }
+    int nWeeks = 4;
+    string cellStyle = "width: 85px;";
+
+    protected override void OnInitialized()
+    {
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        int cellWidth = (90 * 16) / nWeeks;
+        cellStyle = $"width: {cellWidth}px; ";
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        Projects = manager.GetAllActiveTrackedProjects().Result
+            .OrderBy(p =>
+                {
+                    if (p.ProjectCode == null) return 3;
+                    if (p.ProjectCode.StartsWith("P")) return 0;
+                    if (p.ProjectCode.StartsWith("TSS")) return 1;
+                    return 2;
+                })
+            .ThenByDescending(p =>
+                {
+                    if (p.ProjectCode == null) return "";
+                    if (p.ProjectCode.StartsWith("P") || p.ProjectCode.StartsWith("TSS"))
+                        return p.ProjectCode;
+                    return "";
+                })
+            .ThenBy(p => p.ProjectCode)
+            .ToList();
+
+        foreach (Project project in Projects)
+        {
+            Allocation.Add(project.ProjectId, []);
+            for(int i = CurrentWeek; i < CurrentWeek + nWeeks; i++)
+            {
+                DateTime weekStart = CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52);
+                DateTime weekEnd = weekStart.AddDays(6);
+
+                List<Milestone> milestones = manager.GetMilestonesForProjectBetweenDates(project.ProjectId, weekStart, weekEnd).Result;
+                Allocation[project.ProjectId].Add(i, milestones);
+            }
+        }
+    }
+
+
+
+
+}

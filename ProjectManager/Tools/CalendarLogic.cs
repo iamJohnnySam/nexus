@@ -4,6 +4,7 @@ namespace ProjectManager.Tools;
 
 public static class CalendarLogic
 {
+    public static HashSet<DateTime> Holidays = [];
     public static int WeekOfYear(DateTime time)
     {
         DayOfWeek day = CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(time);
@@ -29,13 +30,8 @@ public static class CalendarLogic
         return result;
     }
 
-    public static int GetWorkDays(DateTime start, DateTime end, HashSet<DateTime>? holidays)
+    public static int GetWorkDays(DateTime start, DateTime end)
     {
-        if (holidays is null)
-        {
-            holidays = [];
-        }
-
         if (end < start)
             throw new ArgumentException("End date must be after start date");
 
@@ -46,7 +42,7 @@ public static class CalendarLogic
         {
             if (current.DayOfWeek != DayOfWeek.Saturday &&
                 current.DayOfWeek != DayOfWeek.Sunday &&
-                !holidays.Contains(current.Date))
+                !Holidays.Contains(current.Date))
             {
                 workDays++;
             }
@@ -56,12 +52,8 @@ public static class CalendarLogic
         return workDays;
     }
 
-    public static DateTime AddWorkDays(DateTime startDate, int workDays, HashSet<DateTime>? holidays)
+    public static DateTime AddWorkDays(DateTime startDate, int workDays)
     {
-        if (holidays is null)
-        {
-            holidays = [];
-        }
 
         if (workDays < 0)
             throw new ArgumentException("Work days cannot be negative");
@@ -74,7 +66,7 @@ public static class CalendarLogic
             current = current.AddDays(1);
             if (current.DayOfWeek != DayOfWeek.Saturday &&
                 current.DayOfWeek != DayOfWeek.Sunday &&
-                !holidays.Contains(current.Date))
+                !Holidays.Contains(current.Date))
             {
                 addedDays++;
             }

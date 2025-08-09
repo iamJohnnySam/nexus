@@ -21,6 +21,7 @@ public class Project
     public bool IsActive { get; set; } = true;
     public bool IsTrackedProject { get; set; } = true;
     public int PrimaryDesignerId { get; set; }
+    public string RequirementDocumentLink { get; set; } = string.Empty;
 
     public Customer? Customer { get; set; }
     public Product? Product { get; set; }

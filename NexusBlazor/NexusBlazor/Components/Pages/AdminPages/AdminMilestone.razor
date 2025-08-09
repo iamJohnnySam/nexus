@@ -40,7 +40,7 @@
         <div class="mb-3">
             <label class="form-label">Dependent Milestone</label>
             <InputSelect class="form-control" @bind-Value="SelectedMilestone.DependentMilestoneId">
-                <option value="0">-- None --</option>
+                <option value=0>-- None --</option>
                 @foreach (var m in FilteredMilestones)
                 {
                     <option value="@m.MilestoneId">@m.Name</option>
@@ -69,6 +69,16 @@
             </InputSelect>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Project Stage</label>
+            <InputSelect class="form-control" @bind-Value="SelectedMilestone.ProjectStageId">
+                @foreach (var des in ProjectStages)
+                {
+                    <option value="@des.ProjectStageId">@des.ProjectStageName</option>
+                }
+            </InputSelect>
+        </div>
+
         <div class="form-check mb-3">
             <InputCheckbox class="form-check-input" @bind-Value="SelectedMilestone.IsCompleted" />
             <label class="form-check-label">Completed</label>
@@ -93,6 +103,7 @@
                 <th>Dependency</th>
                 <th>Type</th>
                 <th>Engineer</th>
+                <th>Stage</th>
                 <th>Done</th>
                 <th>Actions</th>
             </tr>
@@ -109,6 +120,7 @@
                     <td style="color: white">@Milestones.FirstOrDefault(dep => dep.MilestoneId == m.DependentMilestoneId)?.Name</td>
                     <td style="color: white">@m.DependencyType</td>
                     <td style="color: white">@Engineers.FirstOrDefault(e => e.EmployeeId == m.EngineerId)?.EmployeeName</td>
+                    <td style="color: white">@ProjectStages.FirstOrDefault(e => e.ProjectStageId == m.ProjectStageId)?.ProjectStageName</td>
                     <td style="color: white">@m.IsCompleted</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(m)">Edit</button>
@@ -124,6 +136,7 @@
     private List<Milestone> Milestones = [];
     private List<Project> Projects = [];
     private List<Employee> Engineers = [];
+    private List<ProjectStage> ProjectStages = [];
     private List<Milestone> FilteredMilestones = [];
 
     private int currentProjectId;
@@ -133,6 +146,7 @@
         get { return currentProjectId; }
         set { currentProjectId = value;
             SelectedMilestone.ProjectId = value;
+            Milestones = manager.GetAllMilestones().Result;
             FilteredMilestones = Milestones
                 .Where(m => m.ProjectId == value && m.MilestoneId != SelectedMilestone.MilestoneId)
                 .ToList();
@@ -140,9 +154,9 @@
             SelectedMilestone.DependentMilestoneId = 0; // Reset dependency on project change
         }
     }
-    
 
-    private Milestone SelectedMilestone = new()
+
+    private Milestone SelectedMilestone { get; set; } = new()
     {
         ProjectId = 0,
         Name = string.Empty,
@@ -160,6 +174,7 @@
         Milestones = await manager.GetAllMilestones();
         Projects = await manager.GetAllProjects();
         Engineers = await manager.GetAllEmployees();
+        ProjectStages = await manager.GetAllProjectStages();
     }
 
     private void Edit(Milestone m)
@@ -174,8 +189,11 @@
             DependentMilestoneId = m.DependentMilestoneId,
             DependencyType = m.DependencyType,
             EngineerId = m.EngineerId,
-            IsCompleted = m.IsCompleted
+            IsCompleted = m.IsCompleted,
+            ProjectStage = m.ProjectStage
         };
+        CurrentProjectId = m.ProjectId;
+        StateHasChanged();
     }
 
     private async Task Delete(Milestone m)

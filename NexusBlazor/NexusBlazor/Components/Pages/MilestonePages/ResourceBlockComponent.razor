@@ -1,5 +1,6 @@
 ﻿<div style="font-size: small;">
     <InputSelect class="form-control" @bind-Value="ProjectId">
+        <option value=0></option>
         @foreach (var des in Projects)
         {
             <option value="@des.ProjectId">@des.DesignCode</option>

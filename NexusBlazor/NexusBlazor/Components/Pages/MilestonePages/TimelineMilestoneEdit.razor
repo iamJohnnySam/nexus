@@ -18,15 +18,32 @@
         <div class="mb-3">
             <div class="row">
                 <div class="col">
-                    <label class="form-label">Start Date</label>
+                    <label class="form-label">Planned Start Date</label>
+                    <InputDate class="form-control" @bind-Value="SelectedMilestone.PlannedStartDate" />
+                </div>
+                <div class="col">
+                    <label class="form-label">Planned Required Days</label>
+                    <InputNumber class="form-control" @bind-Value="SelectedMilestone.PlannedRequiredDays" />
+                </div>
+                <div class="col">
+                    <label class="form-label">Planned End Date (Optional)</label>
+                    <InputDate class="form-control" @bind-Value="PlannedEndDate" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Actual Start Date</label>
                     <InputDate class="form-control" @bind-Value="SelectedMilestone.StartDate" />
                 </div>
                 <div class="col">
-                    <label class="form-label">Required Days</label>
+                    <label class="form-label">Actual Required Days</label>
                     <InputNumber class="form-control" @bind-Value="SelectedMilestone.RequiredDays" />
                 </div>
                 <div class="col">
-                    <label class="form-label">End Date (Optional)</label>
+                    <label class="form-label">Actual End Date (Optional)</label>
                     <InputDate class="form-control" @bind-Value="EndDate" />
                 </div>
             </div>
@@ -37,7 +54,7 @@
                 <div class="col">
                     <label class="form-label">Dependent Milestone</label>
                     <InputSelect class="form-control" @bind-Value="DependencyId">
-                        <option value="0">-- None --</option>
+                        <option value=0>-- None --</option>
                         @foreach (var m in FilteredMilestones)
                         {
                             <option value="@m.MilestoneId">@m.Name</option>
@@ -78,11 +95,19 @@
                     <InputCheckbox class="form-check-input" @bind-Value="SelectedMilestone.IsCompleted" />
                     <label class="form-check-label">Completed</label>
                 </div>
+                <div class="col">
+                    <label class="form-label">Project Stage</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedMilestone.ProjectStageId">
+                        @foreach (ProjectStage d in ProjectStages)
+                        {
+                            <option value="@d.ProjectStageId">@d.ProjectStageName</option>
+                        }
+                    </InputSelect>
+                </div>
             </div>
         </div>
 
        
-
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-secondary" @onclick="DeleteMilestone">Delete</button>
@@ -94,6 +119,7 @@
 @code {
     private List<Employee> Engineers = [];
     private List<Milestone> FilteredMilestones = [];
+    private List<ProjectStage> ProjectStages = [];
 
     [Parameter]
     public required Milestone SelectedMilestone { get; set; }
@@ -102,14 +128,17 @@
     public EventCallback OnMilestoneChange { get; set; }
 
     private DateTime endDate = DateTime.Today;
-
     public DateTime EndDate
     {
-        get { return endDate; }
-        set { 
+        get 
+        { 
+            return endDate; 
+        }
+        set 
+        { 
             endDate = value;
             try{
-                SelectedMilestone.RequiredDays = CalendarLogic.GetWorkDays(SelectedMilestone.StartDate, value, []);
+                SelectedMilestone.RequiredDays = CalendarLogic.GetWorkDays(SelectedMilestone.StartDate, value);
             }
             catch (ArgumentException)
             {
@@ -119,8 +148,28 @@
         }
     }
 
-    private int dependencyId;
+    private DateTime plannedEndDate = DateTime.Today;
+    public DateTime PlannedEndDate
+    {
+        get 
+        { 
+            return plannedEndDate; 
+        }
+        set
+        {
+            plannedEndDate = value;
+            try{
+                SelectedMilestone.PlannedRequiredDays = CalendarLogic.GetWorkDays(SelectedMilestone.PlannedStartDate, value);
+            }
+            catch (ArgumentException)
+            {
+                SelectedMilestone.PlannedRequiredDays = 1;
+            }
 
+        }
+    }
+
+    private int dependencyId;
     public int DependencyId
     {
         get { return dependencyId; }
@@ -128,9 +177,15 @@
             dependencyId = value;
             SelectedMilestone.DependentMilestoneId = value;
             Milestone temp = manager.GetMilestoneById(value).Result;
-            SelectedMilestone.StartDate = CalendarLogic.AddWorkDays(temp.StartDate, temp.RequiredDays, []);
+            if(temp is not null)
+            {
+                SelectedMilestone.StartDate = CalendarLogic.AddWorkDays(temp.StartDate, temp.RequiredDays);
+                SelectedMilestone.PlannedStartDate = CalendarLogic.AddWorkDays(temp.PlannedStartDate, temp.PlannedRequiredDays);
+            }
         }
     }
+
+    bool syncPlanActual = false;
 
 
     protected override async Task OnInitializedAsync()
@@ -142,6 +197,17 @@
     {
         dependencyId = SelectedMilestone.DependentMilestoneId;
         endDate = SelectedMilestone.EndDate ?? SelectedMilestone.StartDate;
+        plannedEndDate = SelectedMilestone.PlannedEndDate ?? SelectedMilestone.PlannedStartDate;
+
+        if ((SelectedMilestone.PlannedStartDate == SelectedMilestone.StartDate) && (SelectedMilestone.PlannedRequiredDays == SelectedMilestone.RequiredDays) && (SelectedMilestone.PlannedStartDate > DateTime.Now))
+        {
+            syncPlanActual = true;
+        }
+        else
+        {
+            syncPlanActual = false;
+        }
+
         List<Milestone> Milestones = await manager.GetAllMilestones();
         FilteredMilestones = Milestones
             .Where(m => m.ProjectId == SelectedMilestone.ProjectId && m.MilestoneId != SelectedMilestone.MilestoneId)
@@ -166,6 +232,7 @@
     private async Task LoadData()
     {
         Engineers = await manager.GetAllEmployees();
+        ProjectStages = await manager.GetAllProjectStages();
     }
 
     private async void DeleteMilestone()
@@ -199,6 +266,7 @@
             ProjectId = manager.CurrentProject.ProjectId,
             Name = string.Empty,
             StartDate = DateTime.Today,
+            PlannedStartDate = DateTime.Today,
             RequiredDays = 1,
             DependencyType = DependencyType.FinishToStart
         };

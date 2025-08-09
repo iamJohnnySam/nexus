@@ -1,0 +1,178 @@
+﻿@page "/trackers"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>@menuSelected Tracker</PageTitle>
+
+<div class="row" style="padding-top: 20px; width: 100vw">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-left: 30px;">
+            @menuSelected Tracker
+            @if(comboBoxSelected == "Project")
+            {
+                <span>(@currentProject.DesignCode | @currentProject.ProjectCode | @currentProject.ProjectName)</span>
+            }
+            else if (comboBoxSelected == "Designation")
+            {
+                if(currentDesignationId == 0)
+                {
+                    <span>(All Designations)</span>
+                }
+                else
+                {
+                    var designation = Designations.FirstOrDefault(d => d.DesignationId == currentDesignationId);
+                    if (designation != null)
+                    {
+                        <span>(@designation.DesignationName)</span>
+                    }
+                }
+            }
+        </h2>
+    </div>
+    <div class="col-3">
+        
+    </div>
+    <div class="col-2">
+        
+    </div>
+</div>
+
+<div class="row" style="width: 100vw; padding-left: 30px" >
+    <div class="col-1" style="@GetMenuStyle("Timeline");" @onclick="selectMenuTimeline">
+        Timeline
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Project");" @onclick="selectMenuProject">
+        Project
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Utilization");" @onclick="selectMenuUtilization">
+        Utilization
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Allocation");" @onclick="selectMenuAllocation">
+        Allocation
+    </div>
+    <div class="col-1" style="@GetMenuStyle("Resources")" @onclick="selectMenuResources">
+        Resources (M)
+    </div>
+    <div class="col"></div>
+    <div class="col-3">
+        @if(comboBoxSelected == "Designation")
+        {
+            <InputSelect class="form-control" @bind-Value="currentDesignationId">
+                <option value=0>All</option>
+                @foreach (var des in Designations)
+                {
+                    <option value="@des.DesignationId">@des.DesignationName</option>
+                }
+            </InputSelect>
+        }
+        else if(comboBoxSelected == "Project")
+        {
+            <SelectActiveTrackedProject OnProjectChange="HandleProjectChange" />
+        }
+    </div>
+    <div class="col-1">
+        @if (isButtonVisible)
+        {
+            <button class="btn btn-primary" @onclick="NewMilestone">
+                Add
+            </button>
+        }
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+@if (menuSelected == "Project")
+{
+    <ProjectTracker />
+}
+else if (menuSelected == "Timeline")
+{
+    <TimelineTracker CurrentProject="currentProject" NewMilestoneButtonClicked="buttonClickEvent" />
+}
+else if (menuSelected == "Utilization")
+{
+    <ResourceUtilizationTracker CurrentDesignationId="currentDesignationId" />
+}
+else if (menuSelected == "Resources")
+{
+    <ResourceTracker CurrentDesignationId="currentDesignationId" />
+}
+else if (menuSelected == "Allocation")
+{
+    <AllocationTracker  />
+}
+
+@code{
+    private Project currentProject { get; set; }
+    private int currentDesignationId { get; set; } = 0;
+    private List<Designation> Designations { get; set; } = [];
+    private string menuSelected = "Timeline";
+    private string comboBoxSelected = "Project";
+    private bool isButtonVisible = true;
+    private bool buttonClickEvent { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        currentProject = manager.CurrentProject;
+        Designations = manager.GetAllDesignations().Result;
+        base.OnInitialized();
+    }
+
+    private void selectMenuProject()
+    {
+        menuSelected = "Project";
+        comboBoxSelected = "None";
+        isButtonVisible = false;
+    }
+
+    private void selectMenuUtilization()
+    {
+        menuSelected = "Utilization";
+        comboBoxSelected = "Designation";
+        isButtonVisible = false;
+    }
+
+    private void selectMenuResources()
+    {
+        menuSelected = "Resources";
+        comboBoxSelected = "Designation";
+        isButtonVisible = false;
+    }
+
+    private void selectMenuTimeline()
+    {
+        menuSelected = "Timeline";
+        comboBoxSelected = "Project";
+        isButtonVisible = true;
+    }
+
+    private void selectMenuAllocation()
+    {
+        menuSelected = "Allocation";
+        comboBoxSelected = "None";
+        isButtonVisible = false;
+    }
+
+    private string GetMenuStyle(string selectedItem)
+    {
+        if(selectedItem == menuSelected)
+        {
+            return "align-items: center; display: flex; justify-content: center; background-color: darkred; border:solid 1pt gray;";
+        }
+        else
+        {
+            return "align-items: center; display: flex; justify-content: center; border:solid 1pt gray;";
+        }
+    }
+
+    private void HandleProjectChange(string projectName)
+    {
+        currentProject = manager.CurrentProject;
+    }
+
+    private void NewMilestone()
+    {
+        buttonClickEvent = !buttonClickEvent;
+    }
+
+}

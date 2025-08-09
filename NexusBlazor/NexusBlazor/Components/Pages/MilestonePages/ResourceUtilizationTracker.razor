@@ -1,0 +1,115 @@
+﻿@using System.Globalization
+@using System.Linq
+@inject Manager manager
+@inject IJSRuntime JS
+
+
+<div style="display:grid; grid-template-columns: 250px 200px repeat(@(ChartDays.Count()), 1fr);">
+    <div style="text-align: center; font-weight: 700;">Incumbent</div>
+    <div style="text-align: center; font-weight: 700;">Designation</div>
+    @foreach (var day in ChartDays)
+    {
+        var color = day == DateTime.Today ? "red" : "transparent";
+        <div style="align-items: center; display: flex; justify-content: center; font-weight: 700; writing-mode: vertical-rl; text-orientation: sideways; background-color:@color;">@day.ToString("dd MMM")</div>
+    }
+
+    @foreach(Employee employee in Employees)
+    {
+        <div style="grid-row: @currentRow; grid-column: 1;">
+            @employee.EmployeeName
+        </div>
+        <div style="grid-row: @currentRow; grid-column: 2; font-size:8pt;">
+            @employee.EmployeeDesignation.DesignationName
+        </div>
+        @foreach (var milestone in EmployeeMilestones[employee.EmployeeId])
+        {
+            var left = milestone.StartDate < ChartStart ? 3 : (milestone.StartDate - ChartStart).Days + 3;
+            var endDate = ((milestone.EndDate ?? milestone.StartDate) - ChartStart).Days + 3;
+            var color = milestone.IsCompleted ? "#3e6a40" : "#2B77BA";
+
+            <div style="background: @color; grid-row: @currentRow; grid-column: @left / @endDate; margin-top: 3px; overflow: hidden; white-space: nowrap;">
+                @milestone.Project?.DesignCode | @milestone.ProjectStage?.ProjectStageName
+            </div>
+
+        }
+        currentRow++;
+        <div style="grid-row: @currentRow; grid-column: 1/@ChartDays.Count(); font-size:9pt; background-color:dimgrey; height:2px">
+        </div>
+        currentRow++;
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public required int CurrentDesignationId { get; set; }
+
+    public List<Employee> Employees { get; set; } = [];
+    public Dictionary<int, List<Milestone>> EmployeeMilestones { get; set; } = [];
+
+    public bool PanelVisible { get; set; }
+
+    private int DayWidth = 20;
+    private DateTime ChartStart = DateTime.Today;
+    private DateTime ChartEnd;
+    private IEnumerable<DateTime> ChartDays = [];
+
+    private int currentRow = 2;
+
+    protected override void OnInitialized()
+    {
+        Employees = manager.GetAllActiveEmployees().Result;
+        GetAllMilestones();
+        base.OnInitialized();
+    }
+    protected override void OnParametersSet()
+    {
+        if (CurrentDesignationId == 0)
+        {
+            Employees = manager.GetAllActiveEmployees().Result;
+        }
+        else
+        {
+            Employees = manager.GetAllActiveEmployeesByDesignationId(CurrentDesignationId).Result;
+        }
+        GetAllMilestones();
+        base.OnParametersSet();
+    }
+
+    private void GetAllMilestones()
+    {
+        List<int> fixedProjectStarts = [];
+        int count = 0;
+        foreach (Employee e in Employees)
+        {
+            EmployeeMilestones[e.EmployeeId] = manager.GetActiveMilestonesForEngineer(e.EmployeeId).Result;
+            foreach (Milestone m in EmployeeMilestones[e.EmployeeId])
+            {
+                count++;
+                manager.AddMilestoneMissingDates(m);
+                if (!fixedProjectStarts.Contains(m.ProjectId))
+                {
+                    manager.FixMilestoneStartDates(m.ProjectId).Wait();
+                    fixedProjectStarts.Add(m.ProjectId);
+                }
+                if (m.EndDate > ChartEnd || ChartEnd == default)
+                {
+                    ChartEnd = m.EndDate?.Date ?? m.StartDate.Date;
+                }
+            }
+        }
+
+        if (count == 0)
+        {
+            ChartEnd = DateTime.Today.AddDays(30);
+        }
+        ChartDays = Enumerable.Range(0, (ChartEnd - ChartStart).Days + 1).Select(offset => ChartStart.AddDays(offset));
+        StateHasChanged();
+    }
+
+    private void HandleProjectChange()
+    {
+        GetAllMilestones();
+        PanelVisible = false;
+    }
+}

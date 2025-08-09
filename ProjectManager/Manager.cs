@@ -203,7 +203,8 @@ namespace ProjectManager
                             ProductId INTEGER,
                             IsActive INTEGER,
                             IsTrackedProject INTEGER,
-                            PrimaryDesignerId INTEGER);";
+                            PrimaryDesignerId INTEGER,
+                            RequirementDocumentLink, TEXT);";
         public Project GetNewProject()
         {
             return new Project { ProjectName = "Untitled Project" };
@@ -213,8 +214,8 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
-            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, ProjectCode, Priority, POStatus, ProductId, IsActive, IsTrackedProject, PrimaryDesignerId)
-                       VALUES (@ProjectName, @CustomerId, @DesignCode, @ProjectCode, @Priority, @POStatus, @ProductId, @IsActive, @IsTrackedProject, @PrimaryDesignerId);";
+            string sql = @"INSERT INTO Project (ProjectName, CustomerId, DesignCode, ProjectCode, Priority, POStatus, ProductId, IsActive, IsTrackedProject, PrimaryDesignerId, RequirementDocumentLink)
+                       VALUES (@ProjectName, @CustomerId, @DesignCode, @ProjectCode, @Priority, @POStatus, @ProductId, @IsActive, @IsTrackedProject, @PrimaryDesignerId, @RequirementDocumentLink);";
             await conn.ExecuteAsync(sql, p);
             p.ProjectId = (int)conn.LastInsertRowId;
         }
@@ -353,7 +354,8 @@ namespace ProjectManager
                             ProductId = @ProductId,
                             IsActive = @IsActive,
                             IsTrackedProject = @IsTrackedProject,
-                            PrimaryDesignerId = @PrimaryDesignerId
+                            PrimaryDesignerId = @PrimaryDesignerId,
+                            RequirementDocumentLink = @RequirementDocumentLink
                        WHERE ProjectId = @ProjectId;";
             await conn.ExecuteAsync(sql, p);
         }
@@ -690,6 +692,7 @@ namespace ProjectManager
         }
         public async Task<List<Employee>> GetAllActiveEmployees()
         {
+            FixActiveEmployees().Wait();
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
@@ -701,7 +704,35 @@ namespace ProjectManager
                 emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
             }
 
-            return employees;
+            List<Employee> groupedAndSorted = employees
+                .OrderBy(e => e.EmployeeDesignation.DesignationName)
+                .ThenByDescending(e => e.EmployeeGrade.GradeScore)
+                .ToList();
+
+            return groupedAndSorted;
+        }
+        public async Task FixActiveEmployees()
+        {
+            List<Employee> employees = await GetAllEmployees();
+            var today = DateTime.Today;
+
+            foreach (var emp in employees)
+            {
+                bool status = false;
+                if (emp.JoinDate > today || (emp.LeaveDate.HasValue && emp.LeaveDate.Value < today))
+                {
+                    status = false;
+                }
+                else
+                {
+                    status = true;
+                }
+                if (status != emp.IsActive)
+                {
+                    emp.IsActive = status;
+                    await UpdateEmployee(emp);
+                }
+            }
         }
         public async Task<Employee?> GetEmployeeById(int id)
         {
@@ -1328,20 +1359,23 @@ namespace ProjectManager
                 ProjectId INTEGER,
                 Name TEXT NOT NULL,
                 StartDate TEXT,
+                PlannedStartDate TEXT,
                 RequiredDays INTEGER,
+                PlannedRequiredDays INTEGER,
                 DependentMilestoneId INTEGER,
                 DependencyType INTEGER DEFAULT 0,
                 EngineerId INTEGER,
-                IsCompleted INTEGER DEFAULT 0);";
+                IsCompleted INTEGER DEFAULT 0,
+                ProjectStageId INTEGER);";
         public async Task InsertMilestone(Milestone milestone)
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
             var sql = @"INSERT INTO Milestone 
-        (ProjectId, Name, StartDate, RequiredDays, DependentMilestoneId, DependencyType, EngineerId, IsCompleted)
+        (ProjectId, Name, StartDate, PlannedStartDate, RequiredDays, PlannedRequiredDays, DependentMilestoneId, DependencyType, EngineerId, IsCompleted, ProjectStageId)
         VALUES 
-        (@ProjectId, @Name, @StartDate, @RequiredDays, @DependentMilestoneId, @DependencyType, @EngineerId, @IsCompleted);
+        (@ProjectId, @Name, @StartDate, @PlannedStartDate, @RequiredDays, @PlannedRequiredDays, @DependentMilestoneId, @DependencyType, @EngineerId, @IsCompleted, @ProjectStageId);
         SELECT last_insert_rowid();";
 
             var id = await conn.ExecuteScalarAsync<long>(sql, milestone);
@@ -1378,6 +1412,37 @@ namespace ProjectManager
                 .ThenBy(m => m.StartDate.AddDays(m.RequiredDays))
                 .ToList();
         }
+        public async Task<List<Milestone>> GetActiveMilestonesForEngineer(int engineerId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"
+        SELECT * FROM Milestone
+        WHERE EngineerId = @EngineerId
+          AND DATE(StartDate) IS NOT NULL
+          AND DATE(StartDate, '+' || RequiredDays || ' days') > DATE('now');";
+
+            var milestones = await conn.QueryAsync<Milestone>(sql, new
+            {
+                EngineerId = engineerId
+            });
+
+            foreach (Milestone m in milestones)
+            {
+                if (m.EngineerId != 0)
+                {
+                    m.Project = await GetProjectById(m.ProjectId);
+                    m.Engineer = await GetEmployeeById(m.EngineerId);
+                    m.ProjectStage = await GetProjectStageById(m.ProjectStageId);
+                }
+            }
+
+            return milestones
+                .OrderBy(m => m.StartDate)
+                .ThenBy(m => m.StartDate.AddDays(m.RequiredDays))
+                .ToList();
+        }
         public async Task FixMilestoneStartDates(int id)
         {
             List<Milestone> milestones = await GetAllMilestonesByProjectId(id);
@@ -1391,7 +1456,7 @@ namespace ProjectManager
 
             foreach (Milestone milestone in milestones.Where(m => m.DependentMilestoneId == 0))
             {
-                AddMilestoneEndDate(milestone);
+                AddMilestoneMissingDates(milestone);
                 resolved.Add(milestone.MilestoneId);
                 queue.Enqueue(milestone);
             }
@@ -1409,23 +1474,27 @@ namespace ProjectManager
                     switch (dependent.DependencyType)
                     {
                         case DependencyType.FinishToStart:
-                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays, []);
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays);
+                            dependent.PlannedStartDate = CalendarLogic.AddWorkDays(current.PlannedStartDate, current.PlannedRequiredDays);
                             break;
 
                         case DependencyType.StartToStart:
                             dependent.StartDate = current.StartDate;
+                            dependent.PlannedStartDate = current.PlannedStartDate;
                             break;
 
                         case DependencyType.FinishToFinish:
-                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays - dependent.RequiredDays, []);
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, current.RequiredDays - dependent.RequiredDays);
+                            dependent.PlannedStartDate = CalendarLogic.AddWorkDays(current.PlannedStartDate, current.PlannedRequiredDays - dependent.PlannedRequiredDays);
                             break;
 
                         case DependencyType.StartToFinish:
-                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, -dependent.RequiredDays, []);
+                            dependent.StartDate = CalendarLogic.AddWorkDays(current.StartDate, -dependent.RequiredDays);
+                            dependent.PlannedStartDate = CalendarLogic.AddWorkDays(current.PlannedStartDate, -dependent.PlannedRequiredDays);
                             break;
                     }
 
-                    AddMilestoneEndDate(dependent);
+                    AddMilestoneMissingDates(dependent);
                     _ = UpdateMilestone(dependent);
 
                     resolved.Add(dependent.MilestoneId);
@@ -1433,9 +1502,56 @@ namespace ProjectManager
                 }
             }
         }
-        public void AddMilestoneEndDate(Milestone milestone)
+        public void AddMilestoneMissingDates(Milestone milestone)
         {
-            milestone.EndDate = CalendarLogic.AddWorkDays(milestone.StartDate, milestone.RequiredDays, []);
+            milestone.EndDate = CalendarLogic.AddWorkDays(milestone.StartDate, milestone.RequiredDays);
+            milestone.PlannedEndDate = CalendarLogic.AddWorkDays(milestone.PlannedStartDate, milestone.PlannedRequiredDays);
+        }
+        public async Task<List<Milestone>> GetMilestonesForProjectBetweenDates(int projectId,DateTime windowStart,DateTime windowEnd)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"
+                SELECT * FROM Milestone
+                WHERE ProjectId = @ProjectId
+                AND DATE(StartDate) IS NOT NULL;";
+
+            var milestones = await conn.QueryAsync<Milestone>(sql, new
+            {
+                ProjectId = projectId,
+                StartDate = windowStart.ToString("yyyy-MM-dd"),
+                EndDate = windowEnd.ToString("yyyy-MM-dd"),
+            });
+
+            List<Milestone> RelaventMilestones = [];
+
+            foreach(Milestone milestone in milestones)
+            {
+                DateTime milestoneStart = milestone.StartDate;
+                DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, milestone.RequiredDays);
+
+                bool sceneA = milestoneStart >= windowStart && milestoneStart < windowEnd;
+                bool sceneB = milestoneEnd >= windowStart && milestoneEnd < windowEnd;
+                bool sceneC = windowStart >= milestoneStart && windowStart <= milestoneEnd;
+
+                if (sceneA || sceneB || sceneC)
+                {
+                    milestone.Project = await GetProjectById(milestone.ProjectId);
+                    if (milestone.EngineerId != 0)
+                    {
+                        milestone.Engineer = await GetEmployeeById(milestone.EngineerId);
+                    }
+                    if (milestone.ProjectStageId != 0)
+                    {
+                        milestone.ProjectStage = await GetProjectStageById(milestone.ProjectStageId);
+                    }
+                    RelaventMilestones.Add(milestone);
+                }
+
+            }
+
+            return RelaventMilestones;
         }
         public async Task<List<Milestone>> GetAllMilestonesOfBlockingEngineers(int engineerId, DateTime startDate, DateTime endDate, int excludeProjectId)
         {
@@ -1446,27 +1562,7 @@ namespace ProjectManager
         SELECT * FROM Milestone
         WHERE EngineerId = @EngineerId
           AND ProjectId != @ExcludeProjectId
-          AND DATE(StartDate) IS NOT NULL
-          AND (
-              -- New start is within existing task
-              DATE(@StartDate) >= DATE(StartDate)
-              AND DATE(@StartDate) < DATE(StartDate, '+' || RequiredDays || ' days')
-              
-              OR
-              -- New end is within existing task
-              DATE(@EndDate) > DATE(StartDate)
-              AND DATE(@EndDate) <= DATE(StartDate, '+' || RequiredDays || ' days')
-              
-              OR
-              -- Existing task starts within new task window
-              DATE(StartDate) >= DATE(@StartDate)
-              AND DATE(StartDate) < DATE(@EndDate)
-
-              OR
-              -- Existing task ends within new task window
-              DATE(StartDate, '+' || RequiredDays || ' days') > DATE(@StartDate)
-              AND DATE(StartDate, '+' || RequiredDays || ' days') <= DATE(@EndDate)
-          );";
+          AND DATE(StartDate) IS NOT NULL;";
 
             var milestones = await conn.QueryAsync<Milestone>(sql, new
             {
@@ -1476,16 +1572,34 @@ namespace ProjectManager
                 EndDate = endDate.ToString("yyyy-MM-dd")
             });
 
-            foreach (var milestone in milestones)
+            List<Milestone> RelaventMilestones = [];
+
+            foreach (Milestone milestone in milestones)
             {
-                milestone.Project = await GetProjectById(milestone.ProjectId);
-                if (milestone.EngineerId != 0)
+                DateTime milestoneStart = milestone.StartDate;
+                DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, milestone.RequiredDays);
+
+                bool sceneA = milestoneStart >= startDate && milestoneStart < endDate;
+                bool sceneB = milestoneEnd >= startDate && milestoneEnd < endDate;
+                bool sceneC = startDate >= milestoneStart && startDate <= milestoneEnd;
+
+                if (sceneA || sceneB || sceneC)
                 {
-                    milestone.Engineer = await GetEmployeeById(milestone.EngineerId);
+                    milestone.Project = await GetProjectById(milestone.ProjectId);
+                    if (milestone.EngineerId != 0)
+                    {
+                        milestone.Engineer = await GetEmployeeById(milestone.EngineerId);
+                    }
+                    if (milestone.ProjectStageId != 0)
+                    {
+                        milestone.ProjectStage = await GetProjectStageById(milestone.ProjectStageId);
+                    }
+                    RelaventMilestones.Add(milestone);
                 }
+
             }
 
-            return milestones.ToList();
+            return RelaventMilestones;
         }
         public async Task<Milestone?> GetMilestoneById(int id)
         {
@@ -1504,11 +1618,14 @@ namespace ProjectManager
         ProjectId = @ProjectId,
         Name = @Name,
         StartDate = @StartDate,
+        PlannedStartDate = @PlannedStartDate,
         RequiredDays = @RequiredDays,
+        PlannedRequiredDays = @PlannedRequiredDays,
         DependentMilestoneId = @DependentMilestoneId,
         DependencyType = @DependencyType,
         EngineerId = @EngineerId,
-        IsCompleted = @IsCompleted
+        IsCompleted = @IsCompleted,
+        ProjectStageId = @ProjectStageId
         WHERE MilestoneId = @MilestoneId";
 
             await conn.ExecuteAsync(sql, milestone);

@@ -1,25 +1,6 @@
 ﻿@using ProjectManager.Tools
 @inject Manager manager
 
-<div class="row" style="padding-top: 20px;">
-    <div class="col">
-        <h3>Resource Tracker</h3>
-    </div>
-    <div class="col">
-    </div>
-    <div class="col-2">
-        <InputSelect class="form-control" @bind-Value="CurrentDesignationId">
-            @foreach (var des in Designations)
-            {
-                <option value="@des.DesignationId">@des.DesignationName</option>
-            }
-        </InputSelect>
-    </div>
-    <div class="col">
-    </div>
-</div>
-
-
 <table style="width: 100%; ">
     <tr style="border-bottom: 1px solid red;">
         <th>Incumbent</th>
@@ -50,17 +31,9 @@
     string cellStyle = "width: 85px;";
 
     Designation CurrentDesignation { get; set; }
-    private int currentDesignationId = 0;
 
-    public int CurrentDesignationId
-    {
-        get { return currentDesignationId; }
-        set 
-        { 
-            currentDesignationId = value;
-            GetEmployees();
-        }
-    }
+    [Parameter]
+    public required int CurrentDesignationId { get; set; }
 
     protected override void OnInitialized()
     {
@@ -72,15 +45,20 @@
         cellStyle = $"width: {cellWidth}px; ";
     }
 
+    protected override void OnParametersSet()
+    {
+        GetEmployees();
+    }
+
     private void GetEmployees()
     {
-        if(currentDesignationId == 0)
+        if(CurrentDesignationId == 0)
         {
             Employees = manager.GetAllActiveEmployees().Result;
         }
         else
         {
-            Employees = manager.GetAllActiveEmployeesByDesignationId(currentDesignationId).Result;
+            Employees = manager.GetAllActiveEmployeesByDesignationId(CurrentDesignationId).Result;
         }
         
     }
