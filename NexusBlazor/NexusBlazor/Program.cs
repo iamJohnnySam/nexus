@@ -1,4 +1,5 @@
 using CommunicationManager;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using NexusBlazor.Client.Pages;
 using NexusBlazor.Components;
 using ProjectManager;
@@ -9,6 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout";
+        options.Cookie.MaxAge = TimeSpan.FromHours(4);
+        options.AccessDeniedPath = "/accessdenied";
+        options.Cookie.Name = "Nexus.AuthCookie";
+        options.Cookie.SameSite = SameSiteMode.Lax;
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddSingleton<Manager>();
 builder.Services.AddSingleton<CommManager>();
@@ -31,6 +46,8 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

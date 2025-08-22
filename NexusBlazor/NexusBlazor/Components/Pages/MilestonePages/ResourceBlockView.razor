@@ -1,14 +1,24 @@
-﻿@inject Manager manager
+﻿@using ProjectManager.Tools
+@inject Manager manager
 
 <tr>
     <td>@SelectedEmployee.EmployeeName</td>
     <td>@string.Join("", SelectedEmployee.EmployeeGrade.GradeName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]))</td>
     <td>@SelectedEmployee.EmployeeDesignation.DesignationName</td>
+    @{
+        thisWeek = CurrentWeek;
+    }
     @foreach(KeyValuePair<int, ResourceBlock> kvp in EmployeeBlocks)
     {
+        DateTime weekStart = CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, thisWeek % 52);
         <td>
-            <ResourceBlockComponent ThisRB="kvp.Value" Projects="Projects" OnResourceBlockUpdated="UpdateResourceBlock" />
+           
+            @if(SelectedEmployee.JoinDate < weekStart && (SelectedEmployee.LeaveDate is null || weekStart < SelectedEmployee.LeaveDate))
+            {
+                <ResourceBlockComponent ThisRB="kvp.Value" Projects="Projects" OnResourceBlockUpdated="UpdateResourceBlock" />
+            }
         </td>
+        thisWeek++;
     }
 </tr>
 
@@ -40,12 +50,15 @@
     [Parameter]
     public int NumberWeeks { get; set; } = 16;
 
+    int thisWeek = 0;
+
     public Dictionary<int, ResourceBlock> EmployeeBlocks { get; set; }
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
+        thisWeek = CurrentWeek;
         UpdateEmployeeBlocks();
-        base.OnInitialized();
+        base.OnParametersSet();
     }
 
     private void UpdateEmployeeBlocks()

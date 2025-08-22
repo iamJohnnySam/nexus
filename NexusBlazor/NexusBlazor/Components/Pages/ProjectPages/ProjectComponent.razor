@@ -1,9 +1,16 @@
-﻿<div class="project-card border border-white rounded-4 p-3 mb-3 text-white"
-     style="background-color: rgba(255, 255, 255, 0.05); cursor: pointer;"
-     @onclick="HandleClick">
-    <h5 class="mb-2">@project.ProjectName</h5>
-    <p class="mb-1"><strong>Design Code:</strong> @project.DesignCode</p>
-    <p class="mb-0"><strong>Status:</strong> @project.POStatus</p>
+﻿<div class="project-card border border-white rounded-4 p-3 mb-3 text-white" style="background-color: rgba(255, 255, 255, 0.05); cursor: pointer;" @onclick="HandleClick">
+    <div class="row">
+        <div class="col-2">
+            @project.DesignCode
+        </div>
+        <div class="col">
+            @project.ProjectName
+        </div>
+        
+        <div class="col-2">
+             @project.POStatus
+        </div>
+    </div>
 </div>
 
 @code {

@@ -1,0 +1,242 @@
+/* _content/NexusBlazor/Components/Layout/MainLayout.razor.rz.scp.css */
+.page[b-zm939mpaxw] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: 60px;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    color: #f0f0f0;
+}
+
+main[b-zm939mpaxw] {
+    flex: 1;
+}
+
+.sidebar[b-zm939mpaxw] {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.top-row[b-zm939mpaxw] {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+    .top-row[b-zm939mpaxw]  a, .top-row[b-zm939mpaxw]  .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+    .top-row[b-zm939mpaxw]  a:hover, .top-row[b-zm939mpaxw]  .btn-link:hover {
+        text-decoration: underline;
+    }
+
+    .top-row[b-zm939mpaxw]  a:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+@media (max-width: 640.98px) {
+    .top-row[b-zm939mpaxw] {
+        justify-content: space-between;
+    }
+
+    .top-row[b-zm939mpaxw]  a, .top-row[b-zm939mpaxw]  .btn-link {
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 641px) {
+    .page[b-zm939mpaxw] {
+        flex-direction: row;
+    }
+
+    .sidebar[b-zm939mpaxw] {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .top-row[b-zm939mpaxw] {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .top-row.auth[b-zm939mpaxw]  a:first-child {
+        flex: 1;
+        text-align: right;
+        width: 0;
+    }
+
+    .top-row[b-zm939mpaxw], article[b-zm939mpaxw] {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+
+#blazor-error-ui[b-zm939mpaxw] {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss[b-zm939mpaxw] {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+/* _content/NexusBlazor/Components/Layout/NavMenu.razor.rz.scp.css */
+/* Navbar */
+.navbar[b-uori1fzzxx] {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #2c2c2c;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.navbar .logo[b-uori1fzzxx] {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00adb5;
+}
+
+.navbar nav a[b-uori1fzzxx] {
+    color: #f0f0f0;
+    text-decoration: none;
+    margin-left: 2rem;
+    transition: color 0.3s;
+}
+
+.navbar nav a:hover[b-uori1fzzxx] {
+    color: #00adb5;
+}
+/* _content/NexusBlazor/Components/Pages/Home.razor.rz.scp.css */
+.hero[b-l3a2a05ihr] {
+    height: 100vh;
+    background-image: url("home_page.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Project Section */
+.projects[b-l3a2a05ihr] {
+    padding: 4rem 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.project-card[b-l3a2a05ihr] {
+    background-color: #2c2c2c;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .project-card:hover[b-l3a2a05ihr] {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+    }
+
+.project-title[b-l3a2a05ihr] {
+    font-size: 1.2rem;
+    color: #00adb5;
+    margin-bottom: 0.5rem;
+}
+
+.project-desc[b-l3a2a05ihr] {
+    font-size: 0.95rem;
+    color: #d0d0d0;
+}
+/* _content/NexusBlazor/Components/Pages/MilestonePages/ResourceTracker.razor.rz.scp.css */
+/* Tooltip container */
+.tooltip[b-xliq57hlmi] {
+    position: relative;
+}
+
+    /* Tooltip text */
+    .tooltip .tooltiptext[b-xliq57hlmi] {
+        visibility: hidden;
+        width: 120px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+        /* Position the tooltip text */
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        /* Fade in tooltip */
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+        /* Tooltip arrow */
+        .tooltip .tooltiptext[b-xliq57hlmi]::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltip:hover .tooltiptext[b-xliq57hlmi] {
+        visibility: visible;
+        opacity: 1;
+    }
+/* _content/NexusBlazor/Components/Pages/TaskPages/TaskRow.razor.rz.scp.css */
+[b-0me4fvzd1b] .simple-dropdown .simple-dropdown-button {
+    color: white;
+    background-color: transparent;
+    text-align: left;
+    font-size: 10px;
+}
+
+[b-0me4fvzd1b] .simple-dropdown .dropdown-menu-container {
+    z-index: 1000;
+    background-color: white;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+[b-0me4fvzd1b] .simple-dropdown .dropdown-item {
+    background-color: white;
+    cursor: pointer;
+    font-size: 10px;
+    user-select: none;
+    color: black;
+}
+/* _content/NexusBlazor/Components/Pages/TaskPages/Tasks.razor.rz.scp.css */

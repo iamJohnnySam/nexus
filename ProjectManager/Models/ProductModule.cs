@@ -12,4 +12,5 @@ public class ProductModule
     [Key]
     public int ModuleId { get; set; }
     public required string ModuleName { get; set; }
+    public int Rank { get; set; }
 }

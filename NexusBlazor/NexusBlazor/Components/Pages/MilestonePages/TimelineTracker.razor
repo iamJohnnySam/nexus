@@ -164,7 +164,9 @@
             ProjectId = CurrentProject.ProjectId,
             Name = "New Milestone",
             StartDate = DateTime.Today,
-            RequiredDays = 1
+            RequiredDays = 1,
+            PlannedStartDate = DateTime.Today,
+            PlannedRequiredDays = 1
         };
         SelectedMilestone = newMilestone;
         PanelVisible = true;

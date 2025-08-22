@@ -53,12 +53,17 @@ namespace ProjectManager
             connection.Execute(CustomerTableCreationString);
             connection.Execute(ProjectTableCreationString);
             connection.Execute(TaskItemTableCreationString);
+            connection.Execute(ProductModuleTableCreationString);
+            connection.Execute(EmployeeTableCreationString);
             connection.Execute(SimulationScenarioTableCreationString);
             connection.Execute(ResourceBlockTableCreationString);
             connection.Execute(FunctionalKPITableCreationString);
             connection.Execute(ProjectStageTableCreationString);
             connection.Execute(ProjectBlockTableCreationString);
             connection.Execute(MilestoneTableCreationString);
+            connection.Execute(SpecificationTableCreationString);
+            connection.Execute(ConfigurationTableCreationString);
+            connection.Execute(ConfigDetailTableCreationString);
 
             connection.Execute(tableCreationString);
 
@@ -649,6 +654,18 @@ namespace ProjectManager
 
 
         // ---- EMPLOYEE DB
+        string EmployeeTableCreationString = @"
+                CREATE TABLE IF NOT EXISTS Employee(
+                EmployeeId INTEGER PRIMARY KEY,
+                EmployeeNumber TEXT,
+                EmployeeName TEXT NOT NULL,
+                GradeId INTEGER,
+                DesignationId INTEGER,
+                JoinDate TEXT,
+                LeaveDate TEXT,
+                IsActive INTEGER,
+                ReplacedEmployeeId INTEGER);
+";
         public async Task InsertEmployee(Employee emp)
         {
             using var conn = new SQLiteConnection(_connectionString);
@@ -656,9 +673,9 @@ namespace ProjectManager
 
             const string sql = @"
         INSERT INTO Employee (
-            EmployeeName, GradeId, DesignationId, JoinDate, LeaveDate, IsActive, ReplacedEmployeeId
+            EmployeeNumber, EmployeeName, GradeId, DesignationId, JoinDate, LeaveDate, IsActive, ReplacedEmployeeId
         ) VALUES (
-            @EmployeeName, @GradeId, @DesignationId, @JoinDate, @LeaveDate, @IsActive, @ReplacedEmployeeId
+            @EmployeeNumber, @EmployeeName, @GradeId, @DesignationId, @JoinDate, @LeaveDate, @IsActive, @ReplacedEmployeeId
         );
         SELECT last_insert_rowid();";
 
@@ -763,7 +780,12 @@ namespace ProjectManager
                 emp.EmployeeDesignation = await GetDesignationById(emp.DesignationId);
             }
 
-            return employees;
+            List<Employee> groupedAndSorted = employees
+                .OrderBy(e => e.EmployeeDesignation.DesignationName)
+                .ThenByDescending(e => e.EmployeeGrade.GradeScore)
+                .ToList();
+
+            return groupedAndSorted;
         }
         public async Task UpdateEmployee(Employee emp)
         {
@@ -773,6 +795,7 @@ namespace ProjectManager
             const string sql = @"
         UPDATE Employee SET
             EmployeeName = @EmployeeName,
+            EmployeeNumber = @EmployeeNumber,
             GradeId = @GradeId,
             DesignationId = @DesignationId,
             JoinDate = @JoinDate,
@@ -781,17 +804,7 @@ namespace ProjectManager
             ReplacedEmployeeId = @ReplacedEmployeeId
         WHERE EmployeeId = @EmployeeId";
 
-            await conn.ExecuteAsync(sql, new
-            {
-                emp.EmployeeName,
-                emp.GradeId,
-                emp.DesignationId,
-                emp.JoinDate,
-                emp.LeaveDate,
-                emp.IsActive,
-                emp.ReplacedEmployeeId,
-                emp.EmployeeId
-            });
+            await conn.ExecuteAsync(sql, emp);
         }
         public async Task DeleteEmployee(Employee emp)
         {
@@ -803,13 +816,17 @@ namespace ProjectManager
 
 
         // ---- PRODUCT MODULE DB
+        string ProductModuleTableCreationString = @"CREATE TABLE IF NOT EXISTS ProductModule(
+                ModuleId INTEGER PRIMARY KEY,
+                ModuleName TEXT NOT NULL,
+                Rank INTEGER);";
         public async Task InsertProductModule(ProductModule module)
         {
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = @"INSERT INTO ProductModule (ModuleName)
-                VALUES (@ModuleName);
+            var sql = @"INSERT INTO ProductModule (ModuleName, Rank)
+                VALUES (@ModuleName, @Rank);
                 SELECT last_insert_rowid();";
 
             var id = await conn.ExecuteScalarAsync<long>(sql, module);
@@ -820,7 +837,7 @@ namespace ProjectManager
             using var conn = new SQLiteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var sql = "SELECT * FROM ProductModule";
+            var sql = "SELECT * FROM ProductModule ORDER BY Rank";
             var result = await conn.QueryAsync<ProductModule>(sql);
             return result.ToList();
         }
@@ -838,7 +855,8 @@ namespace ProjectManager
             await conn.OpenAsync();
 
             var sql = @"UPDATE ProductModule
-                SET ModuleName = @ModuleName
+                SET ModuleName = @ModuleName,
+                Rank = @Rank
                 WHERE ModuleId = @ModuleId";
 
             await conn.ExecuteAsync(sql, module);
@@ -1640,6 +1658,327 @@ namespace ProjectManager
         }
 
 
+        string SpecificationTableCreationString = @"
+                CREATE TABLE IF NOT EXISTS Specification(
+                    SpecificationId INTEGER PRIMARY KEY,
+                    SpecificationName TEXT NOT NULL,
+                    SpecificationDescription TEXT,
+                    ProductModuleId INTEGER,
+                    ConfigurationOptions TEXT
+                );";
+        public async Task InsertSpecification(Specification spec)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO Specification 
+        (SpecificationName, SpecificationDescription, ProductModuleId, ConfigurationOptions)
+        VALUES (@SpecificationName, @SpecificationDescription, @ProductModuleId, @ConfigurationOptions);
+        SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, spec);
+            spec.SpecificationId = (int)id;
+        }
+        public async Task<List<Specification>> GetAllSpecifications()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT * FROM Specification";
+            var result = (await conn.QueryAsync<Specification>(sql)).ToList();
+
+            foreach (Specification specification in result)
+            {
+                specification.ProductModule = await GetProductModuleById(specification.ProductModuleId);
+            }
+            return result.OrderBy(module => module.ProductModule?.Rank).ToList();
+        }
+        public async Task<Specification?> GetSpecificationById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT s.*, pm.*
+                FROM Specification s
+                LEFT JOIN ProductModule pm ON s.ProductModuleId = pm.ModuleId
+                WHERE s.SpecificationId = @id";
+
+            var result = await conn.QueryAsync<Specification, ProductModule, Specification>(
+                sql,
+                (spec, module) =>
+                {
+                    spec.ProductModule = module;
+                    return spec;
+                },
+                new { id }
+            );
+
+            return result.FirstOrDefault();
+        }
+        public async Task<List<Specification>> GetSpecificationsByProductModuleId(int productModuleId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+            var sql = @"SELECT * FROM Specification WHERE ProductModuleId = @productModuleId";
+            var result = await conn.QueryAsync<Specification>(sql, new { productModuleId });
+            foreach (Specification specification in result)
+            {
+                specification.ProductModule = await GetProductModuleById(specification.ProductModuleId);
+            }
+            return result.ToList();
+        }
+        public async Task UpdateSpecification(Specification spec)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE Specification SET
+        SpecificationName = @SpecificationName,
+        SpecificationDescription = @SpecificationDescription,
+        ProductModuleId = @ProductModuleId,
+        ConfigurationOptions = @ConfigurationOptions
+        WHERE SpecificationId = @SpecificationId";
+
+            await conn.ExecuteAsync(sql, spec);
+        }
+        public async Task DeleteSpecification(Specification spec)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM Specification WHERE SpecificationId = @SpecificationId";
+            await conn.ExecuteAsync(sql, spec);
+        }
+
+
+        string ConfigurationTableCreationString = @"
+            CREATE TABLE IF NOT EXISTS Configuration(
+                ConfigurationId INTEGER PRIMARY KEY,
+                ConfigurationName TEXT NOT NULL,
+                ConfigurationDescription TEXT,
+                ProjectId INTEGER,
+                ProductModuleId INTEGER,
+                Quantity INTEGER DEFAULT 1,
+                IsAddOn INTEGER DEFAULT 0,
+                IsRequired INTEGER DEFAULT 1
+            );";
+        public async Task InsertConfiguration(Configuration config)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO Configuration 
+        (ConfigurationName, ConfigurationDescription, ProjectId, ProductModuleId, Quantity, IsAddOn, IsRequired)
+        VALUES (@ConfigurationName, @ConfigurationDescription, @ProjectId, @ProductModuleId, @Quantity, @IsAddOn, @IsRequired);
+        SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, config);
+            config.ConfigurationId = (int)id;
+        }
+        public async Task<List<Configuration>> GetAllConfigurations()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT * FROM Configuration";
+
+            var result = await conn.QueryAsync<Configuration>(sql);
+
+            foreach(Configuration configuration in result)
+            {
+                configuration.Project = await GetProjectById(configuration.ProjectId);
+                configuration.ProductModule = await GetProductModuleById(configuration.ProductModuleId);
+            }
+            return result.ToList().OrderBy(rank => rank.ProductModule!.Rank).ToList();
+        }
+        public async Task<Configuration?> GetConfigurationById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT c.*, p.*
+                FROM Configuration c
+                LEFT JOIN Project p ON c.ProjectId = p.ProjectId
+                WHERE c.ConfigurationId = @id";
+
+            var result = await conn.QueryAsync<Configuration, Project, Configuration>(
+                sql,
+                (config, project) =>
+                {
+                    config.Project = project;
+                    return config;
+                },
+                new { id }
+            );
+
+            return result.FirstOrDefault();
+        }
+        public async Task<List<Configuration>> GetConfigurationByProjectId(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"SELECT * FROM Configuration WHERE ProjectId = @id";
+            var result = await conn.QueryAsync<Configuration>(sql, new { id });
+
+            foreach (Configuration configuration in result)
+            {
+                configuration.Project = await GetProjectById(configuration.ProjectId);
+                configuration.ProductModule = await GetProductModuleById(configuration.ProductModuleId);
+            }
+            return result.ToList().OrderBy(rank => rank.ProductModule!.Rank).ToList();
+        }
+        public async Task UpdateConfiguration(Configuration config)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE Configuration SET
+                    ConfigurationName = @ConfigurationName,
+                    ConfigurationDescription = @ConfigurationDescription,
+                    ProjectId = @ProjectId,
+                    ProductModuleId = @ProductModuleId,
+                    Quantity = @Quantity,
+                    IsAddOn = @IsAddOn,
+                    IsRequired = @IsRequired
+                    WHERE ConfigurationId = @ConfigurationId";
+
+            await conn.ExecuteAsync(sql, config);
+        }
+        public async Task DeleteConfiguration(Configuration config)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM Configuration WHERE ConfigurationId = @ConfigurationId";
+            await conn.ExecuteAsync(sql, config);
+        }
+
+
+        string ConfigDetailTableCreationString = @"
+            CREATE TABLE IF NOT EXISTS ConfigDetail(
+                ConfigDetailId INTEGER PRIMARY KEY,
+                ConfigurationId INTEGER,
+                SpecificationId INTEGER,
+                SpecificationDetail TEXT NOT NULL,
+                Comments TEXT,
+                Revision INTEGER,
+                FirstAdded TEXT,
+                LastUpdated TEXT
+            );";
+        public async Task InsertConfigDetail(ConfigDetail detail)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO ConfigDetail 
+                (ConfigurationId, SpecificationId, SpecificationDetail, Comments, Revision, FirstAdded, LastUpdated)
+                VALUES (@ConfigurationId, @SpecificationId, @SpecificationDetail, @Comments, @Revision, @FirstAdded, @LastUpdated);
+                SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, detail);
+            detail.ConfigDetailId = (int)id;
+        }
+        public async Task<List<ConfigDetail>> GetAllConfigDetails()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ConfigDetail";
+            var result = await conn.QueryAsync<ConfigDetail>(sql);
+            foreach (ConfigDetail configDetail in result)
+            {
+                configDetail.Configuration = await GetConfigurationById(configDetail.ConfigDetailId);
+                configDetail.Specification = await GetSpecificationById(configDetail.SpecificationId);
+            }
+            return result.ToList();
+        }
+        public async Task<List<ConfigDetail>> GetAllConfigDetailsLatestRev()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"
+        SELECT cd.*
+        FROM ConfigDetail cd
+        INNER JOIN (
+            SELECT ConfigurationId, SpecificationId, MAX(Revision) AS MaxRev
+            FROM ConfigDetail
+            GROUP BY ConfigurationId, SpecificationId
+        ) latest
+        ON cd.ConfigurationId = latest.ConfigurationId
+        AND cd.SpecificationId = latest.SpecificationId
+        AND cd.Revision = latest.MaxRev;";
+
+            var result = await conn.QueryAsync<ConfigDetail>(sql);
+
+            foreach (ConfigDetail configDetail in result)
+            {
+                configDetail.Configuration = await GetConfigurationById(configDetail.ConfigurationId);
+                configDetail.Specification = await GetSpecificationById(configDetail.SpecificationId);
+            }
+            return result.ToList();
+        }
+        public async Task<ConfigDetail?> GetConfigDetailById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM ConfigDetail WHERE ConfigDetailId = @id";
+            return await conn.QueryFirstOrDefaultAsync<ConfigDetail>(sql, new { id });
+        }
+        public async Task<ConfigDetail?> GetConfigDetailBySpecificationId(int configurationId, int specificationId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+            var sql = "SELECT * FROM ConfigDetail WHERE SpecificationId = @specificationId AND ConfigurationId = @configurationId";
+            return await conn.QueryFirstOrDefaultAsync<ConfigDetail>(sql, new { specificationId, configurationId });
+        }
+        public async Task<ConfigDetail?> GetConfigDetailBySpecificationIdLatestRev(int configurationId, int specificationId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"
+        SELECT *
+        FROM ConfigDetail
+        WHERE ConfigurationId = @configurationId
+          AND SpecificationId = @specificationId
+        ORDER BY Revision DESC
+        LIMIT 1;";
+
+            return await conn.QueryFirstOrDefaultAsync<ConfigDetail>(sql, new { specificationId, configurationId });
+        }
+        public async Task UpdateConfigDetail(ConfigDetail detail)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE ConfigDetail SET
+                ConfigurationId = @ConfigurationId,
+                SpecificationId = @SpecificationId,
+                SpecificationDetail = @SpecificationDetail,
+                Comments = @Comments,
+                Revision = @Revision,
+                FirstAdded = @FirstAdded,
+                LastUpdated = @LastUpdated
+                WHERE ConfigDetailId = @ConfigDetailId";
+
+            await conn.ExecuteAsync(sql, detail);
+        }
+        public async Task DeleteConfigDetail(ConfigDetail detail)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM ConfigDetail WHERE ConfigDetailId = @ConfigDetailId";
+            await conn.ExecuteAsync(sql, detail);
+        }
+
+
+
+
+
 
 
 
@@ -1657,9 +1996,7 @@ namespace ProjectManager
 
             
             
-            CREATE TABLE IF NOT EXISTS ProductModule(
-                ModuleId INTEGER PRIMARY KEY,
-                ModuleName TEXT NOT NULL);
+            
 
             CREATE TABLE IF NOT EXISTS Grade(
                 GradeId INTEGER PRIMARY KEY,
@@ -1671,16 +2008,7 @@ namespace ProjectManager
                 DesignationName TEXT NOT NULL,
                 Department TEXT);
 
-            CREATE TABLE IF NOT EXISTS Employee(
-                EmployeeId INTEGER PRIMARY KEY,
-                EmployeeName TEXT NOT NULL,
-                GradeId INTEGER,
-                DesignationId INTEGER,
-                JoinDate TEXT,
-                LeaveDate TEXT,
-                IsActive INTEGER,
-                ReplacedEmployeeId INTEGER);
-
+            
             CREATE TABLE IF NOT EXISTS ReviewPoint(
                 ReviewPointId INTEGER PRIMARY KEY,
                 ModuleId INTEGER,

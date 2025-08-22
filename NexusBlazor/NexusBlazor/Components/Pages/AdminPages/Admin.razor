@@ -73,6 +73,14 @@
             {
                 <AdminMilestone />
             }
+            else if (SelectedTable == "Configuration")
+            {
+                <AdminConfiguration />
+            }
+            else if (SelectedTable == "Specification")
+            {
+                <AdminSpecification />
+            }
             else
             {
                 <p class="text-gray-500">Please select a table to view.</p>
@@ -88,7 +96,9 @@
         "Project", 
         "Customer", 
         "Product", 
-        "Module", 
+        "Module",
+        "Configuration",
+        "Specification",
         "Grade", 
         "Designation", 
         "Employee", 

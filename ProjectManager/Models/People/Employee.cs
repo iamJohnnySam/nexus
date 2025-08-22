@@ -11,6 +11,7 @@ public class Employee
 {
     [Key]
     public int EmployeeId { get; set; }
+    public string EmployeeNumber { get; set; } = string.Empty;
     public required string EmployeeName { get; set; }
     public Grade EmployeeGrade { get; set; }
     public int GradeId { get; set; }

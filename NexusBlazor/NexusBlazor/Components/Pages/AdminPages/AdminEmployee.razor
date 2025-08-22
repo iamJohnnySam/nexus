@@ -12,6 +12,11 @@
         <ValidationSummary />
 
         <div class="mb-3">
+            <label class="form-label">Number</label>
+            <InputText class="form-control" @bind-Value="SelectedEmployee.EmployeeNumber" />
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Name</label>
             <InputText class="form-control" @bind-Value="SelectedEmployee.EmployeeName" />
         </div>
@@ -76,6 +81,7 @@
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
+                <th>Number</th>
                 <th>Name</th>
                 <th>Grade</th>
                 <th>Designation</th>
@@ -91,6 +97,7 @@
             {
                 <tr class="@((SelectedEmployee?.EmployeeId == e.EmployeeId) ? "table-primary" : "")">
                     <td style="color: white">@e.EmployeeId</td>
+                    <td style="color: white">@e.EmployeeNumber</td>
                     <td style="color: white">@e.EmployeeName</td>
                     <td style="color: white">@Grades.FirstOrDefault(g => g.GradeId == e.GradeId)?.GradeName</td>
                     <td style="color: white">@Designations.FirstOrDefault(d => d.DesignationId == e.DesignationId)?.DesignationName</td>
@@ -138,6 +145,7 @@
         SelectedEmployee = new Employee
         {
             EmployeeId = e.EmployeeId,
+            EmployeeNumber = e.EmployeeNumber,
             EmployeeName = e.EmployeeName,
             GradeId = e.GradeId,
             DesignationId = e.DesignationId,

@@ -18,7 +18,6 @@ public class OEMItem
     public required string OEMName { get; set; }
     public required string OEMPartNumber { get; set; }
     public string OEMDescription { get; set; } = string.Empty;
-    public double OEMPrice { get; set; }
     public string InternalPartNumber { get; set; } = string.Empty;
     public string KitItems { get; set; } = string.Empty;
 }

@@ -32,8 +32,27 @@
             </div>
 
         }
+        @if(employee.LeaveDate is not null && employee.LeaveDate > DateTime.Today)
+        {
+            DateTime leaveDate = employee.LeaveDate ?? DateTime.Today;
+            var left = leaveDate < ChartStart ? 3 : (leaveDate - ChartStart).Days + 3;
+            var end = (ChartEnd - ChartStart).Days + 3;
+
+            <div style="background: gray; grid-row: @currentRow; grid-column: @left / @end; margin-top: 3px; overflow: hidden; white-space: nowrap;">
+                Inactive from @employee.LeaveDate?.ToString("yyyy-MM-dd")
+            </div>
+        }
+        @if (employee.JoinDate > DateTime.Today)
+        {
+            var end = employee.JoinDate < ChartStart ? 3 : (employee.JoinDate - ChartStart).Days + 3;
+
+            <div style="background: gray; grid-row: @currentRow; grid-column: 3 / @end; margin-top: 3px; overflow: hidden; white-space: nowrap;">
+                Inactive from @employee.LeaveDate?.ToString("yyyy-MM-dd")
+            </div>
+        }
         currentRow++;
-        <div style="grid-row: @currentRow; grid-column: 1/@ChartDays.Count(); font-size:9pt; background-color:dimgrey; height:2px">
+        <div style="grid-row: @currentRow; grid-column: 1/@(ChartDays.Count()+3); font-size:9pt; background-color:dimgrey; height:2px">
+
         </div>
         currentRow++;
     }
