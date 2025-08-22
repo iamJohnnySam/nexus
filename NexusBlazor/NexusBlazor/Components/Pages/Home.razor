@@ -8,32 +8,39 @@
     <h1>Welcome to Your Project Hub</h1>
 </section>
 
-<section class="projects" id="projects">
-    @if (projects == null)
-    {
-        <div class="project-card">
-            <div class="project-title">Loading Projects...</div>
-            <div class="project-desc">...</div>
-        </div>
-    }
-    else if (projects.Count == 0)
-    {
-        <div class="project-card">
-            <div class="project-title">NO PROJECTS AVAILABLE</div>
-            <div class="project-desc">...</div>
-        </div>
-    }
-    else
-    {
-        @foreach (var project in projects)
+@if(manager.LoggedInEmployee != 0)
+{
+    <section class="projects" id="projects">
+        @if (projects == null)
         {
             <div class="project-card">
-                <div class="project-title">@project.ProjectName</div>
-                <div class="project-desc">Design Code: @project.DesignCode | Priority: @project.Priority</div>
+                <div class="project-title">Loading Projects...</div>
+                <div class="project-desc">...</div>
             </div>
         }
-    }
-</section>
+        else if (projects.Count == 0)
+        {
+            <div class="project-card">
+                <div class="project-title">NO PROJECTS AVAILABLE</div>
+                <div class="project-desc">...</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var project in projects)
+            {
+                <div class="project-card">
+                    <div class="project-title">@project.ProjectName</div>
+                    <div class="project-desc">Design Code: @project.DesignCode | Priority: @project.Priority</div>
+                </div>
+            }
+        }
+    </section>
+}
+else
+{
+    <LoginPage />
+}
 
 @code {
     private List<Project> projects = [];
@@ -42,4 +49,5 @@
     {
         projects = manager.Projects;
     }
+
 }

@@ -1,5 +1,7 @@
 using CommunicationManager;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using NexusBlazor.Client.Pages;
 using NexusBlazor.Components;
 using ProjectManager;
@@ -11,19 +13,20 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
     {
-        options.LoginPath = "/login";
+        options.LoginPath = "/";
         options.LogoutPath = "/logout";
-        options.Cookie.MaxAge = TimeSpan.FromHours(4);
-        options.AccessDeniedPath = "/accessdenied";
+        options.AccessDeniedPath = "/";
         options.Cookie.Name = "Nexus.AuthCookie";
-        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.MaxAge = TimeSpan.FromHours(4);
     });
 
-builder.Services.AddAuthorization();
-builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+builder.Services.AddHttpContextAccessor();
+
 
 builder.Services.AddSingleton<Manager>();
 builder.Services.AddSingleton<CommManager>();
@@ -46,6 +49,7 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

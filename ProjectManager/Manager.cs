@@ -15,6 +15,8 @@ namespace ProjectManager
         private readonly string dbPath = "NexusDB.sqlite";
         private readonly string _connectionString;
 
+        public int LoggedInEmployee { get; set; } = 0;
+
         public SQLiteConnection Connection
         {
             get { return new SQLiteConnection(_connectionString); }
@@ -57,6 +59,7 @@ namespace ProjectManager
             connection.Execute(EmployeeTableCreationString);
             connection.Execute(SimulationScenarioTableCreationString);
             connection.Execute(ResourceBlockTableCreationString);
+            connection.Execute(LoginTableCreationString);
             connection.Execute(FunctionalKPITableCreationString);
             connection.Execute(ProjectStageTableCreationString);
             connection.Execute(ProjectBlockTableCreationString);
@@ -813,6 +816,91 @@ namespace ProjectManager
 
             await conn.ExecuteAsync("DELETE FROM Employee WHERE EmployeeId = @EmployeeId", new { emp.EmployeeId });
         }
+
+
+        // ---- LOGIN DB
+        string LoginTableCreationString = @"
+                    CREATE TABLE IF NOT EXISTS Login(
+                        LoginId INTEGER PRIMARY KEY,
+                        EmployeeId INTEGER NOT NULL,
+                        Password TEXT NOT NULL,
+                        LoginCreated TEXT NOT NULL,
+                        LastLogin TEXT NOT NULL,
+                        IsActive INTEGER NOT NULL,
+                        Administrator INTEGER NOT NULL
+                    );";
+        public async Task InsertLogin(Login login)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"INSERT INTO Login 
+                (EmployeeId, Password, LoginCreated, LastLogin, IsActive, Administrator)
+                VALUES (@EmployeeId, @Password, @LoginCreated, @LastLogin, @IsActive, @Administrator);
+                SELECT last_insert_rowid();";
+
+            var id = await conn.ExecuteScalarAsync<long>(sql, login);
+            login.LoginId = (int)id;
+        }
+        public async Task<List<Login>> GetAllLogins()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Login";
+            var result = await conn.QueryAsync<Login>(sql);
+            return result.ToList();
+        }
+        public async Task<List<Login>> GetAllActiveLogins()
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Login WHERE IsActive = 1";
+            var result = await conn.QueryAsync<Login>(sql);
+            return result.ToList();
+        }
+        public async Task<Login?> GetLoginById(int id)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Login WHERE LoginId = @id";
+            return await conn.QueryFirstOrDefaultAsync<Login>(sql, new { id });
+        }
+        public async Task<Login?> GetLoginByEmployeeId(int employeeId)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "SELECT * FROM Login WHERE EmployeeId = @employeeId";
+            return await conn.QueryFirstOrDefaultAsync<Login>(sql, new { employeeId });
+        }
+        public async Task UpdateLogin(Login login)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"UPDATE Login SET
+                EmployeeId = @EmployeeId,
+                Password = @Password,
+                LoginCreated = @LoginCreated,
+                LastLogin = @LastLogin,
+                IsActive = @IsActive,
+                Administrator = @Administrator
+                WHERE LoginId = @LoginId";
+
+            await conn.ExecuteAsync(sql, login);
+        }
+        public async Task DeleteLogin(Login login)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = "DELETE FROM Login WHERE LoginId = @LoginId";
+            await conn.ExecuteAsync(sql, login);
+        }
+
 
 
         // ---- PRODUCT MODULE DB

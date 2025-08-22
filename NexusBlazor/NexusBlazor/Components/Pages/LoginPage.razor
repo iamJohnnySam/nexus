@@ -1,0 +1,99 @@
+﻿@inject Manager manager
+
+@using System.Security.Claims;
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using ProjectManager.Tools
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<div>
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <p class="text-danger">@ErrorMessage</p>
+    }
+
+    <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>Employee Name</label>
+            <InputSelect class="form-control" @bind-Value="SelectedEmployeeId">
+                <option value=0>-- None --</option>
+                @foreach (var emp in Employees)
+                {
+                    <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Login</button>
+
+    </EditForm>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? ErrorMessage;
+    private List<Employee> Employees { get; set; } = [];
+
+    private int selectedEmployeeId = 0;
+    public int SelectedEmployeeId {
+        get
+        {
+            return selectedEmployeeId;
+        }
+        set
+        {
+            selectedEmployeeId = value;
+            loginModel.EmployeeId = value;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Employees = manager.GetAllActiveEmployees().Result;
+        base.OnInitialized();
+    }
+
+    private async Task HandleLogin()
+    {
+        var userService = new UserService();
+
+        Login userDetails = await manager.GetLoginByEmployeeId(loginModel.EmployeeId) ?? new();
+
+        if (userService.VerifyPassword(userDetails.EmployeeId.ToString(), userDetails.Password, loginModel.Password))
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, loginModel.EmployeeId.ToString()),
+                new Claim(ClaimTypes.Role, userDetails.Administrator ? "Admin" : "User")
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContextAccessor.HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal);
+
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            ErrorMessage = "Invalid username or password";
+        }
+    }
+
+    public class LoginModel
+    {
+        public int EmployeeId { get; set; } = 0;
+        public string Password { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,172 @@
+﻿@using ProjectManager.Tools
+@inject Manager manager
+@inject IJSRuntime JS
+
+<h3>Login Manager</h3>
+
+<div class="card p-3" style="background-color: transparent;">
+    <h5>@(SelectedLogin?.LoginId == 0 ? "Add New Login" : "Edit Login")</h5>
+
+    <EditForm Model="@SelectedLogin" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Employee</label>
+            <InputSelect class="form-control" @bind-Value="SelectedLogin.EmployeeId">
+                <option value=0>-- None --</option>
+                @foreach (var emp in Employees)
+                {
+                    <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <InputText class="form-control" @bind-Value="SelectedLogin.Password" type="password" />
+            <ValidationMessage For="@(() => SelectedLogin.Password)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Is Active</label>
+            <InputCheckbox class="form-check-input ms-2" @bind-Value="SelectedLogin.IsActive" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Administrator</label>
+            <InputCheckbox class="form-check-input ms-2" @bind-Value="SelectedLogin.Administrator" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Hash This Password</label>
+            <InputCheckbox class="form-check-input ms-2" @bind-Value="HashThisPassword" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Last Login</label>
+            <InputDate class="form-control" @bind-Value="SelectedLogin.LastLogin" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+<div class="mb-4 mt-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Employee ID</th>
+                <th>Password</th>
+                <th>Created</th>
+                <th>Last Login</th>
+                <th>Active</th>
+                <th>Admin</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var login in Logins)
+            {
+                <tr class="@((SelectedLogin?.LoginId == login.LoginId) ? "table-primary" : "")">
+                    <td style="color: white">@login.LoginId</td>
+                    <td style="color: white">@login.EmployeeId</td>
+                    <td style="color: white">@login.Password</td>
+                    <td style="color: white">@login.LoginCreated.ToString("yyyy-MM-dd")</td>
+                    <td style="color: white">@login.LastLogin.ToString("yyyy-MM-dd")</td>
+                    <td style="color: white">@(login.IsActive ? "Yes" : "No")</td>
+                    <td style="color: white">@(login.Administrator ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(login)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(login)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Login> Logins = [];
+    private bool HashThisPassword { get; set; } = false;
+    private List<Employee> Employees { get; set; } = [];
+    private Login SelectedLogin = new()
+    {
+        EmployeeId = 0,
+        Password = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Logins = await manager.GetAllLogins();
+        Employees = await manager.GetAllEmployees();
+    }
+
+    private void Edit(Login login)
+    {
+        SelectedLogin = new Login
+        {
+            LoginId = login.LoginId,
+            EmployeeId = login.EmployeeId,
+            Password = login.Password,
+            LoginCreated = login.LoginCreated,
+            LastLogin = login.LastLogin,
+            IsActive = login.IsActive,
+            Administrator = login.Administrator
+        };
+    }
+
+    private async Task Delete(Login login)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this login?");
+        if (!confirmed) return;
+
+        await manager.DeleteLogin(login);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (HashThisPassword)
+        {
+            var userService = new UserService();
+            SelectedLogin.Password = userService.HashPassword(SelectedLogin.EmployeeId.ToString(), SelectedLogin.Password);
+            HashThisPassword = false;
+        }
+        if (SelectedLogin.LoginId == 0)
+        {
+            SelectedLogin.LoginCreated = DateTime.Now;
+            await manager.InsertLogin(SelectedLogin);
+        }
+        else
+        {
+            await manager.UpdateLogin(SelectedLogin);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedLogin = new Login
+        {
+            EmployeeId = 0,
+            Password = string.Empty,
+            LoginCreated = DateTime.Now,
+            LastLogin = DateTime.Now,
+            IsActive = true,
+            Administrator = false
+        };
+    }
+}
