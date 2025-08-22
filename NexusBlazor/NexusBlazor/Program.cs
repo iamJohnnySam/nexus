@@ -27,6 +27,8 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddHttpContextAccessor();
 
+builder.WebHost.UseUrls("http://0.0.0.0:5001", "https://0.0.0.0:5002");
+
 
 builder.Services.AddSingleton<Manager>();
 builder.Services.AddSingleton<CommManager>();
