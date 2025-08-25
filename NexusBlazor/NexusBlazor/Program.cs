@@ -29,7 +29,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddHttpContextAccessor();
 
 
-builder.WebHost.UseUrls("https://0.0.0.0:5000");
+builder.WebHost.UseUrls("https://0.0.0.0:5000", "http://0.0.0.0:5001");
 
 builder.Services.AddSingleton<Manager>();
 builder.Services.AddSingleton<CommManager>();
