@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "NexusBlazor.Client",
   "resources": {
-    "hash": "sha256-CsvBdGcnPTlWXvWPzdGarlc6K38YgJN1eEUvtMrLkn8=",
+    "hash": "sha256-tCrfuOGcpDJXUrDzKw+6MnF6u71Yb624zuXCC8spFJs=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-O/NCYcAN9uPocD7ns7AzF/cqx7f5vL1PTJCQs0vEXyk="
     },
@@ -18,11 +18,11 @@
     },
     "coreAssembly": {},
     "assembly": {
-      "DatabaseManagers.wasm": "sha256-asdTTyGPZWiOkuvVrtuD4h9+M8cZ6xz04m6CK+vaAtc=",
+      "DatabaseManagers.wasm": "sha256-uAi38C5oXWD7fXLCWb6fvO+25+ObuX4R1E3X48fjTgc=",
       "Google.Protobuf.wasm": "sha256-d8nmJEYM1+5U/VS43G/S5S0I0FQvnkPnbg36QXWYOuE=",
       "Grpc.Core.Api.wasm": "sha256-gh6CStdvr19cDOnZhYQEipbmZSCIw2yl9PwCTSeP93I=",
-      "LayoutModels.wasm": "sha256-zYtQs2w6Qq7NIRghy8+e6Vo8SQwOkLNR/XaJecY+tWg=",
-      "Logger.wasm": "sha256-CLMs/fyfF3FFpnJxmFM9uQjfDXMo7bGEhNP2ahlwjOM=",
+      "LayoutModels.wasm": "sha256-MVWpE2J809d8BtslFz1AgF0VzPJkCqrJD2Bm+XGjpjQ=",
+      "Logger.wasm": "sha256-qrh2te827b3NTQ9aXKzuyczXfGrwCheBDxpY6CxLLtY=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-y80FdYShnw3uCM1TWEuil1JuLDlrUKesEvvi/mtPzmM=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-ExHgklioP5WY5oVzCXNRlS84yjPU5sZZg+rtgqTXxMs=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-2nwjPeWXilOg13g67Ae3wVa56ICgm8wdpLyJlmcpwY4=",
@@ -46,8 +46,8 @@
       "Microsoft.JSInterop.WebAssembly.wasm": "sha256-pxQrpyIGR8ydiGCRM/BLfK2cr7JFQ63au9iaQGFh4hs=",
       "MySqlConnector.wasm": "sha256-o9lFAinzq0mV6ctTYzKO6gMPPKqqK3l4KsuVkI2vkNI=",
       "netstandard.wasm": "sha256-xGQZHFXrYsB+rNIM4puRLtig9FQVbUBJ/+HUHmjSH9c=",
-      "NexusBlazor.Client.wasm": "sha256-KynPEQad42XDywnsfUJDIUY1o7ZTBdUJ8u3gEVsegdI=",
-      "SequenceSimulator.wasm": "sha256-GDwqPPIJvp6EEf+qIWJbUmqej3gPLPXiwW20ZfxYdMI=",
+      "NexusBlazor.Client.wasm": "sha256-AWi/j5/qIU2KNUBG4gc4an96utPu7iaxEDZafHyOrqo=",
+      "SequenceSimulator.wasm": "sha256-FRQ/r2Lz1sDl97Po4fj16etWOYG4h8/5/86bdMutjUk=",
       "SQLitePCLRaw.batteries_v2.wasm": "sha256-r5pUQvWwdp1MxZ7qFfD4+L+mh0WmE7DrApFw8tLgXLA=",
       "SQLitePCLRaw.core.wasm": "sha256-aT9iJxIXrYsk8FoIIsd6aHViCVRd9BN56E6BlayaAI4=",
       "SQLitePCLRaw.provider.e_sqlite3.wasm": "sha256-IqWf9GZE+hQv57kMpvhKmc8Uuo5cD4NOnTGLYFaOhL0=",
@@ -94,7 +94,7 @@
       "System.wasm": "sha256-/Ib2sECJIp5OmAw2FVP/3jA36Bh6yA6fac798DlmOd8=",
       "System.Xml.Linq.wasm": "sha256-knp9wXfNx/4r6RRhv1PACERRpAUjmHOn6zajqA/+ubo=",
       "System.Xml.XDocument.wasm": "sha256-Jko0vukE6+krICixdxcj4vyrVsPz+KCYLvj/0hUb9mI=",
-      "UIUtilities.wasm": "sha256-R6xVOXFpShYp8OKGwS0O4Nrdm0hfKkUxSr9ZjQlfKE0="
+      "UIUtilities.wasm": "sha256-TyhGH7Gvj9/7zXy8t+Z2yl+2/Vz2E+vAXCaQVhRKHwo="
     }
   },
   "cacheBootResources": true,

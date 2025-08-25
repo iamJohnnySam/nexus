@@ -61,7 +61,6 @@
             <tr>
                 <th>ID</th>
                 <th>Employee ID</th>
-                <th>Password</th>
                 <th>Created</th>
                 <th>Last Login</th>
                 <th>Active</th>
@@ -75,7 +74,6 @@
                 <tr class="@((SelectedLogin?.LoginId == login.LoginId) ? "table-primary" : "")">
                     <td style="color: white">@login.LoginId</td>
                     <td style="color: white">@login.EmployeeId</td>
-                    <td style="color: white">@login.Password</td>
                     <td style="color: white">@login.LoginCreated.ToString("yyyy-MM-dd")</td>
                     <td style="color: white">@login.LastLogin.ToString("yyyy-MM-dd")</td>
                     <td style="color: white">@(login.IsActive ? "Yes" : "No")</td>
@@ -152,7 +150,6 @@
         {
             await manager.UpdateLogin(SelectedLogin);
         }
-
         await LoadData();
         ResetForm();
     }

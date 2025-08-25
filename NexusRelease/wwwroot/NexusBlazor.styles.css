@@ -130,8 +130,8 @@ main[b-zm939mpaxw] {
 .navbar nav a:hover[b-uori1fzzxx] {
     color: #00adb5;
 }
-/* _content/NexusBlazor/Components/Pages/Home.razor.rz.scp.css */
-.hero[b-l3a2a05ihr] {
+/* _content/NexusBlazor/Components/Pages/HomePages/Home.razor.rz.scp.css */
+.hero[b-12jjnla6sy] {
     height: 100vh;
     background-image: url("home_page.png");
     background-repeat: no-repeat;
@@ -144,14 +144,14 @@ main[b-zm939mpaxw] {
 }
 
 /* Project Section */
-.projects[b-l3a2a05ihr] {
+.projects[b-12jjnla6sy] {
     padding: 4rem 2rem;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
 }
 
-.project-card[b-l3a2a05ihr] {
+.project-card[b-12jjnla6sy] {
     background-color: #2c2c2c;
     padding: 1.5rem;
     border-radius: 10px;
@@ -159,18 +159,18 @@ main[b-zm939mpaxw] {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-    .project-card:hover[b-l3a2a05ihr] {
+    .project-card:hover[b-12jjnla6sy] {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0,0,0,0.6);
     }
 
-.project-title[b-l3a2a05ihr] {
+.project-title[b-12jjnla6sy] {
     font-size: 1.2rem;
     color: #00adb5;
     margin-bottom: 0.5rem;
 }
 
-.project-desc[b-l3a2a05ihr] {
+.project-desc[b-12jjnla6sy] {
     font-size: 0.95rem;
     color: #d0d0d0;
 }

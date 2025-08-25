@@ -1,0 +1,91 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using NexusBlazor.Logic
+@using ProjectManager.Tools
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject Manager manager
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Login to nɛxus</h3>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p class="text-danger">@ErrorMessage</p>
+}
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Name</label>
+        <InputSelect class="form-control" @bind-Value="SelectedEmployeeId">
+            <option value=0>-- None --</option>
+            @foreach (var emp in Employees)
+            {
+                <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new();
+    private string ErrorMessage = string.Empty;
+    private List<Employee> Employees { get; set; } = [];
+
+    private int selectedEmployeeId = 39;
+    public int SelectedEmployeeId
+    {
+        get
+        {
+            return selectedEmployeeId;
+        }
+        set
+        {
+            selectedEmployeeId = value;
+            loginModel.EmployeeId = value.ToString();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Employees = manager.GetAllActiveEmployees().Result;
+        base.OnInitialized();
+    }
+
+    private async Task HandleLogin()
+    {
+        var userService = new UserService();
+        Login userDetails = await manager.GetLoginByEmployeeId(SelectedEmployeeId) ?? new();
+
+        if (userService.VerifyPassword(loginModel.EmployeeId, userDetails.Password, loginModel.Password))
+        {
+            manager.LoggedInEmployee = userDetails.EmployeeId;
+            
+            string role = userDetails.Administrator ? "Admin" : "User";
+            ((AuthStateProvider)AuthStateProvider).SignIn(loginModel.EmployeeId, role);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            ErrorMessage = "Invalid username or password";
+        }
+    }
+
+    public class LoginModel
+    {
+        public string EmployeeId { get; set; } = "39";
+        public string Password { get; set; } = string.Empty;
+    }
+}

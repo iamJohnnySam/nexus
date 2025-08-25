@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ProjectManager.Tools;
 
-
-
 public class UserService
 {
     private readonly PasswordHasher<string> _passwordHasher = new();
