@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataModels.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace DataModels.Administration;
 
 public class LoginInstance
 {
-    public Project CurrentProject { get; set; }
-    public Employee CurrentEmployee { get; set; }
+    public required Project CurrentProject { get; set; }
+    public Employee? CurrentEmployee { get; set; }
+    public bool LoggedIn { get; set; } = false;
 }

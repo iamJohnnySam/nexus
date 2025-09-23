@@ -1,4 +1,5 @@
 ﻿using DataModels.Tools;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataModels.Data;
 
@@ -23,22 +24,22 @@ public class Project
     public Employee? PrimaryDesigner { get; set; }
 
     public static TableMetadata Metadata => new(
-            typeof(Project).Name,
-            new Dictionary<string, EDataType>
-            {
-                { nameof(ProjectId), EDataType.Key },
-                { nameof(ProjectName), EDataType.Text },
-                { nameof(CustomerId), EDataType.Integer },
-                { nameof(DesignCode), EDataType.Text },
-                { nameof(ProjectCode), EDataType.Text },
-                { nameof(Priority), EDataType.Integer },
-                { nameof(POStatus), EDataType.Integer },
-                { nameof(ProductId), EDataType.Integer },
-                { nameof(IsActive), EDataType.Integer },
-                { nameof(IsTrackedProject), EDataType.Integer },
-                { nameof(PrimaryDesignerId), EDataType.Integer },
-                { nameof(RequirementDocumentLink), EDataType.Text }
-            },
-            nameof(ProjectName)
-            );
+        typeof(Project).Name,
+        new Dictionary<string, EDataType>
+        {
+            { nameof(ProjectId), EDataType.Key },
+            { nameof(ProjectName), EDataType.Text },
+            { nameof(CustomerId), EDataType.Integer },
+            { nameof(DesignCode), EDataType.Text },
+            { nameof(ProjectCode), EDataType.Text },
+            { nameof(Priority), EDataType.Integer },
+            { nameof(POStatus), EDataType.Integer },
+            { nameof(ProductId), EDataType.Integer },
+            { nameof(IsActive), EDataType.Integer },
+            { nameof(IsTrackedProject), EDataType.Integer },
+            { nameof(PrimaryDesignerId), EDataType.Integer },
+            { nameof(RequirementDocumentLink), EDataType.Text }
+        },
+        nameof(ProjectName)
+    );
 }
