@@ -1,0 +1,26 @@
+﻿
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold" style="padding-left: 30px; align-content:center;">@Title</h2>
+    </div>
+    <div class="col-1" style="text-align:right; align-content:center;">Active Project:</div>
+    <div class="col-3" style="align-content:center;">
+        <ProjectSelectionDropdownComponent ActiveOnly=true OnProjectChange="HandleProjectChange" />
+    </div>
+    <div class="col-1">
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnProjectChange { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Tacker";
+
+    public void HandleProjectChange(string projectName)
+    {
+        OnProjectChange.InvokeAsync(projectName);
+    }
+}

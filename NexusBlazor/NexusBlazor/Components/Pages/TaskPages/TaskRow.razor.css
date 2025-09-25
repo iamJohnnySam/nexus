@@ -1,0 +1,21 @@
+﻿::deep .simple-dropdown .simple-dropdown-button {
+    color: white;
+    background-color: transparent;
+    text-align: left;
+    font-size: 10px;
+}
+
+::deep .simple-dropdown .dropdown-menu-container {
+    z-index: 1000;
+    background-color: white;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+::deep .simple-dropdown .dropdown-item {
+    background-color: white;
+    cursor: pointer;
+    font-size: 10px;
+    user-select: none;
+    color: black;
+}

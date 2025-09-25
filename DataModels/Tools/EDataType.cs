@@ -13,6 +13,7 @@ public enum EDataType
     Text,
     LongText,
     Integer,
+    Real,
     Float,
     Double,
     Date,

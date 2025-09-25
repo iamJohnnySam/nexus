@@ -25,7 +25,7 @@ public class SimulationScenario
                 { nameof(SimulationName), EDataType.Text },
                 { nameof(ProjectId), EDataType.Integer },
                 { nameof(XMLFile), EDataType.LongText },
-                { nameof(LastThroughput), EDataType.Float }
+                { nameof(LastThroughput), EDataType.Real }
         },
         nameof(SimulationName)
     );

@@ -54,6 +54,7 @@ public class Manager
         ProductDB = new(_connectionString);
 
         ProjectDB = new(_connectionString, CustomerDB, ProductDB, EmployeeDB);
+        ProjectDB.CurrentProjectChanged += ProjectDB_CurrentProjectChanged;
 
 
         if (dbJustCreated)
@@ -116,7 +117,7 @@ public class Manager
         Product newProduct = new() { ProductName = "None" };
         ProductDB.InsertAsync(newProduct).Wait();
 
-        Project newProject = new Project
+        Project newProject = new()
         {
             ProjectName = "General",
             CustomerId = newCustomer.CustomerId,
@@ -126,5 +127,10 @@ public class Manager
             ProductId = newProduct.ProductId,
         };
         ProjectDB.InsertAsync(newProject).Wait();
+    }
+
+    private void ProjectDB_CurrentProjectChanged(object? sender, Project e)
+    {
+        LoginInfo.CurrentProject = e;
     }
 }

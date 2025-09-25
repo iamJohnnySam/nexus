@@ -1,0 +1,9 @@
+﻿<div class="project-card">
+    <div class="project-title">@ThisProject.ProjectName</div>
+    <div class="project-desc">Design Code: @ThisProject.DesignCode | Priority: @ThisProject.Priority</div>
+</div>
+
+@code {
+    [Parameter]
+    public required Project ThisProject { get; set; }
+}

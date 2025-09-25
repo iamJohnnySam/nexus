@@ -1,0 +1,78 @@
+﻿@page "/tasks"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>Tasks for @CurrentProject</PageTitle>
+
+<ProjectSelectionRowComponent Title="Project Task Manager" OnProjectChange="HandleProjectChange" />
+
+<div class="fixed-bottom" style="padding: 10px 0px 10px 30px; background-color: #222529;">
+    <hr style="border-top: 1px solid white" />
+    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" AllActiveEmployees="Employees" />
+</div>
+
+<div style="padding: 10px 10px 10px 30px;">
+    
+    <div class="row">
+        <div class="col">
+            <TaskList CurrentProject="CurrentProject" OnTaskSelected="OnTaskSelected" />
+        </div>
+        <div class="col-4">
+            @if(SelectedTask != null)
+            {
+                <TaskEditor Employees="Employees" EditableTask="SelectedTask" OnTaskDeleted="OnTaskDelete" OnTaskEdit="OnTaskEdit" />
+            }
+        </div>
+    </div>
+
+</div>
+<br />
+<br />
+<br />
+
+
+
+@code {
+    public List<Employee> Employees { get; set; } = [];
+    public Project CurrentProject { get; set; }
+    private TaskItem? SelectedTask = null;
+
+    protected override void OnInitialized()
+    {
+        Employees = manager.EmployeeDB.GetAllActiveEmployees().Result;
+        CurrentProject = manager.LoginInfo.CurrentProject;
+        base.OnInitialized();
+    }
+
+    async void OnTaskDelete()
+    {
+        SelectedTask = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void OnTaskEdit()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleProjectChange(string projectName)
+    {
+        CurrentProject = manager.LoginInfo.CurrentProject;
+    }
+
+    async void OnTaskSelected(TaskItem task)
+    {
+        SelectedTask = task;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void HandleTaskAdded(TaskItem task)
+    {
+        task.ProjectId = CurrentProject.ProjectId;
+        await manager.TaskItemDB.InsertAsync(task);
+        SelectedTask = null;
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+}

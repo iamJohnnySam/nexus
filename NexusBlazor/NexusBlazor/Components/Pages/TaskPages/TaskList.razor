@@ -1,0 +1,116 @@
+﻿@inject Manager manager
+@rendermode InteractiveServer
+
+<div>
+    @foreach (TaskItem taskItem in ParentTaskItems)
+    {
+        <div @onclick="() => onParentTaskSelected(taskItem)">
+            <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" IsBold="@SubTaskItems.ContainsKey(taskItem.TaskId)" OnTaskSelected="onTaskSelected" />
+            <div style="padding: 10px 0px 20px 0px;">
+
+                @if (SubTaskItems.ContainsKey(taskItem.TaskId))
+                {
+                    <div>
+                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId])
+                        {
+                            <div>
+                                <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="onTaskSelected" />
+                            </div>
+                        }
+                    </div>
+                }
+                @if (SelectedParentTaskId == taskItem.TaskId)
+                {
+                    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<TaskItem> OnTaskSelected { get; set; }
+
+    [Parameter]
+    public required Project CurrentProject { get; set; }
+
+    [Parameter]
+    public bool ShowIncompleteOnly { get; set; } = true;
+
+    private List<TaskItem> ParentTaskItems { get; set; } = [];
+    private Dictionary<int, List<TaskItem>> SubTaskItems { get; set; } = [];
+    private List<Employee> AllEmployees { get; set; } = [];
+    int SelectedParentTaskId = 0;
+
+
+    protected override void OnParametersSet()
+    {
+        SelectedParentTaskId = 0;
+        AllEmployees = manager.EmployeeDB.GetAllActiveEmployees().Result;
+        RefreshTasks();
+        base.OnParametersSet();
+    }
+
+    private async void onParentTaskSelected(TaskItem task)
+    {
+        SelectedParentTaskId = task.TaskId;
+    }
+
+    async void onTaskSelected(TaskItem task)
+    {
+        await OnTaskSelected.InvokeAsync(task);
+    }
+
+    private void RefreshTasks()
+    {
+        List<TaskItem> IncompleteParentTaskItems;
+        List<TaskItem> CompleteParentTaskItems;
+
+        IncompleteParentTaskItems = manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId).Result;
+
+        if (!ShowIncompleteOnly)
+        {
+            CompleteParentTaskItems = manager.TaskItemDB.GetAllCompleteParentTasks(CurrentProject.ProjectId).Result;
+            ParentTaskItems = IncompleteParentTaskItems.Concat(CompleteParentTaskItems).ToList();
+        }
+        else
+        {
+            ParentTaskItems = IncompleteParentTaskItems;
+        }
+
+        SubTaskItems = [];
+        Dictionary<int, List<TaskItem>> subTaskTemp = manager.TaskItemDB.GetAllSubTasks(CurrentProject.ProjectId).Result;
+        foreach (KeyValuePair<int, List<TaskItem>> subTask in subTaskTemp)
+        {
+            if (!SubTaskItems.ContainsKey(subTask.Key))
+            {
+                SubTaskItems[subTask.Key] = new List<TaskItem>();
+            }
+            SubTaskItems[subTask.Key].AddRange(subTask.Value);
+        }
+    }
+
+    private async void HandleTaskUpdate(TaskItem task)
+    {
+        await manager.TaskItemDB.UpdateAsync(task);
+        RefreshTasks();
+    }
+
+    private async void HandleTaskAdded(TaskItem task)
+    {
+        task.ProjectId = CurrentProject.ProjectId;
+        await manager.TaskItemDB.InsertAsync(task);
+        if (task.ParentTaskId == 0)
+        {
+            SelectedParentTaskId = 0;
+        }
+        RefreshTasks();
+    }
+
+    private void HandleToggleShowComplete(bool showIncomplete)
+    {
+        ShowIncompleteOnly = !showIncomplete;
+        RefreshTasks();
+    }
+}

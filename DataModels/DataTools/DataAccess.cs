@@ -94,17 +94,17 @@ public class DataAccess<T> where T : class
         using var connection = new SQLiteConnection(connectionString);
         return await connection.QueryFirstOrDefaultAsync<T>(sql, new { Value = value });
     }
-    public async Task UpdateAsync(T entity)
+    public virtual async Task UpdateAsync(T entity)
     {
         await using var connection = new SQLiteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(SqlFactory.BuildUpdate(Metadata), entity);
     }
-    public async Task DeleteAsync(object id)
+    public virtual async Task DeleteAsync(object id)
     {
         await using var connection = new SQLiteConnection(connectionString);
         await connection.OpenAsync();
-        await connection.ExecuteAsync(SqlFactory.BuildDelete(Metadata), new { Id = id });
+        await connection.ExecuteAsync(SqlFactory.BuildDelete(Metadata), id);
     }
     internal async Task<List<T>> QueryAsync(string sql, object? parameters = null)
     {
@@ -112,7 +112,7 @@ public class DataAccess<T> where T : class
         await connection.OpenAsync();
         return [.. (await connection.QueryAsync<T>(sql, parameters))];
     }
-    internal async Task ExecuteAsync(string sql, object? parameters = null)
+    internal virtual async Task ExecuteAsync(string sql, object? parameters = null)
     {
         await using var connection = new SQLiteConnection(connectionString);
         await connection.OpenAsync();

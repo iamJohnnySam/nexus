@@ -1,0 +1,93 @@
+﻿@using System.ComponentModel.DataAnnotations
+@inject Manager manager
+
+<EditForm Model="@NewTaskItem" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row align-items-start" style="font-size: 10px;">
+        <div class="col">
+            <label class="form-label">Task</label>
+        </div>
+        <div class="col-1">
+            <label class="form-label">Deadline</label>
+        </div>
+        <div class="col-2">
+            <label class="form-label">Responsible</label>
+        </div>
+        <div class="col-1">
+            <label class="invisible">Submit</label>
+        </div>
+    </div>
+
+    <div class="row align-items-end">
+        <div class="col">
+            <InputText class="form-control" @bind-Value="NewTaskItem.Title" />
+        </div>
+        
+        <div class="col-1">
+            <InputDate class="form-control" @bind-Value="NewTaskItem.Deadline" />
+        </div>
+        <div class="col-2">
+            <label class="form-label">Responsible</label>
+            <InputSelect class="form-control" @bind-Value="NewTaskItem.ResponsibleId">
+                <option value=0>-- Select Responsible --</option>
+                @foreach (var e in AllActiveEmployees)
+                {
+                    <option value="@e.EmployeeId">@e.EmployeeName</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="col-1">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2" 
+            style="font-size: 12px;"
+                    type="submit">
+                Add Task
+            </button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int ProjectId { get; set; }
+
+    [Parameter]
+    public int ParentTaskId { get; set; }
+
+    [Parameter]
+    public List<Employee> AllActiveEmployees { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<TaskItem> OnTaskAdded { get; set; }
+
+    private TaskItem NewTaskItem = new()
+    {
+        Title = "",
+        Deadline = DateTime.Today.AddDays(1)
+    };
+
+    private string ResponsibleInput = "";
+
+    private async Task HandleValidSubmit()
+    {
+        NewTaskItem.ProjectId = ProjectId;
+        NewTaskItem.ParentTaskId = ParentTaskId;
+        await OnTaskAdded.InvokeAsync(NewTaskItem);
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        int employeeId = manager.LoginInfo.CurrentEmployee == null ? 0 : manager.LoginInfo.CurrentEmployee.EmployeeId;
+        NewTaskItem = new TaskItem
+        {
+            ProjectId = ProjectId,
+            Title = "",
+            Description = "",
+            Deadline = DateTime.Today.AddDays(1),
+            ResponsibleId = employeeId
+        };
+        ResponsibleInput = "";
+    }
+}

@@ -1,0 +1,251 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+
+<h3>Project Manager</h3>
+
+<div class="card p-3" style="background-color: transparent;">
+    @if(ParentTaskItem == null)
+    {
+        <h5>Editing Parent Task: @EditableTask?.Title</h5>
+    }
+    else
+    {
+        <h5>Editing Sub Task of @ParentTaskItem.Title</h5>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">Task Title</label>
+        <InputTextArea class="form-control transparent-textbox"
+                       onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+                       oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="Title" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputTextArea class="form-control transparent-textbox"
+                       onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+                       oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' @bind-Value="Description" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Start Date</label>
+        <InputDate class="form-control" @bind-Value="StartedOn" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Deadline</label>
+        <InputDate class="form-control" @bind-Value="Deadline" />
+    </div>
+
+
+    <div class="mb-3">
+        <label class="form-label">Responsible</label>
+        <InputSelect class="form-control" @bind-Value="ResponsibleId">
+            <option value=0>-- Select Responsible --</option>
+            @foreach (var e in Employees)
+            {
+                <option value="@e.EmployeeId">@e.EmployeeName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox class="form-check-input" @bind-Value="IsCompleted" />
+        <label class="form-check-label">Completed Task</label>
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox class="form-check-input" @bind-Value="IsBlocking" />
+        <label class="form-check-label">Blocking Task</label>
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox class="form-check-input" @bind-Value="PriorityTask" />
+        <label class="form-check-label">Priority Task</label>
+    </div>
+
+    <button type="button" class="btn btn-secondary" @onclick="DeleteThis">Delete Task</button>
+
+</div>
+
+
+@code {
+    [Parameter]
+    public TaskItem? EditableTask { get; set; }
+
+    [Parameter]
+    public List<Employee> Employees { get; set; } = [];
+
+    [Parameter]
+    public EventCallback OnTaskEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnTaskDeleted { get; set; }
+
+    TaskItem? ParentTaskItem;
+
+    private string title;
+
+    public string Title
+    {
+        get { return title; }
+        set { 
+            title = value;
+            if(EditableTask != null)
+            {
+                EditableTask.Title = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private string description;
+
+    public string Description
+    {
+        get { return description; }
+        set
+        {
+            description = value;
+            if (EditableTask != null)
+            {
+                EditableTask.Description = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private DateTime deadline;
+
+    public DateTime Deadline
+    {
+        get { return deadline; }
+        set
+        {
+            deadline = value;
+            if (EditableTask != null)
+            {
+                EditableTask.Deadline = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private DateTime startedOn;
+
+    public DateTime StartedOn
+    {
+        get { return startedOn; }
+        set
+        {
+            startedOn = value;
+            if (EditableTask != null)
+            {
+                EditableTask.StartedOn = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private int responsibleId;
+
+    public int ResponsibleId
+    {
+        get { return responsibleId; }
+        set
+        {
+            responsibleId = value;
+            if (EditableTask != null)
+            {
+                EditableTask.ResponsibleId = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private bool isCompleted;
+
+    public bool IsCompleted
+    {
+        get { return isCompleted; }
+        set
+        {
+            isCompleted = value;
+            if (EditableTask != null)
+            {
+                EditableTask.IsCompleted = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private bool isBlocking;
+
+    public bool IsBlocking
+    {
+        get { return isBlocking; }
+        set
+        {
+            isBlocking = value;
+            if (EditableTask != null)
+            {
+                EditableTask.IsBlocking = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+    private bool priorityTask;
+
+    public bool PriorityTask
+    {
+        get { return priorityTask; }
+        set
+        {
+            priorityTask = value;
+            if (EditableTask != null)
+            {
+                EditableTask.PriorityTask = value;
+                manager.TaskItemDB.UpdateAsync(EditableTask).Wait();
+                OnTaskEdit.InvokeAsync();
+            }
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (EditableTask != null)
+        {
+            title = EditableTask.Title;
+            startedOn = EditableTask.StartedOn;
+            deadline = EditableTask.Deadline;
+            description = EditableTask.Description;
+            responsibleId = EditableTask.ResponsibleId;
+            isCompleted = EditableTask.IsCompleted;
+            isBlocking = EditableTask.IsBlocking;
+            priorityTask = EditableTask.PriorityTask;
+
+            if(EditableTask.ParentTaskId != null)
+            {
+                ParentTaskItem = manager.TaskItemDB.GetByIdAsync(EditableTask.ParentTaskId.Value).Result;
+            }
+            else
+            {
+                ParentTaskItem = null;
+            }
+        }
+        base.OnParametersSet();
+    }
+
+    private async Task DeleteThis()
+    {
+       if(EditableTask != null)
+       {
+            var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this Task?");
+            if (!confirm) return;
+
+            await manager.TaskItemDB.DeleteAsync(EditableTask);
+            await OnTaskDeleted.InvokeAsync();
+        }
+    }
+}

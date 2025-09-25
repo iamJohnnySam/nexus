@@ -1,0 +1,42 @@
+﻿@page "/"
+@inject Manager manager
+
+<PageTitle>nexus by iamJohnnySam</PageTitle>
+
+<section class="hero" id="home">
+    <h1>Welcome to nɛxus</h1>
+</section>
+
+<section class="projects" id="projects">
+    @if (projects == null)
+    {
+        <div class="project-card">
+            <div class="project-title">Loading Projects...</div>
+            <div class="project-desc">...</div>
+        </div>
+    }
+    else if (projects.Count == 0)
+    {
+        <div class="project-card">
+            <div class="project-title">NO PROJECTS AVAILABLE</div>
+            <div class="project-desc">...</div>
+        </div>
+    }
+    else
+    {
+        @foreach (var project in projects)
+        {
+            <ProjectCardComponent ThisProject=project />
+        }
+    }
+</section>
+
+@code {
+    private List<Project> projects = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        projects = manager.ProjectDB.GetAllActiveAsync().Result;
+    }
+
+}
