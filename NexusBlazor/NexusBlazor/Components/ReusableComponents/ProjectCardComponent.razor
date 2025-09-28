@@ -1,9 +1,17 @@
-﻿<div class="project-card">
+﻿<div class="project-card" @onclick="HandleClick">
     <div class="project-title">@ThisProject.ProjectName</div>
-    <div class="project-desc">Design Code: @ThisProject.DesignCode | Priority: @ThisProject.Priority</div>
+    <div class="project-desc">Project Code: @ThisProject.ProjectCode | Design Code: @ThisProject.DesignCode | Priority: @ThisProject.Priority</div>
 </div>
 
 @code {
     [Parameter]
     public required Project ThisProject { get; set; }
+
+    [Parameter]
+    public EventCallback<Project> OnProjectSelected { get; set; }
+
+    private async Task HandleClick()
+    {
+        await OnProjectSelected.InvokeAsync(ThisProject);
+    }
 }

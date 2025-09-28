@@ -1,0 +1,47 @@
+﻿@inject Manager manager
+
+@if (employeeExists)
+{
+    <DropdownComponent SelectedItemId="EmployeeId" OnItemUpdate="UpdateEmployee" Items="Items" />
+}
+else
+{
+    <label>@manager.EmployeeDB.GetByIdAsync(EmployeeId).Result.EmployeeShortName</label>
+}
+
+@code {
+    [Parameter]
+    public required List<Employee> Employees { get; set; }
+
+    [Parameter]
+    public int EmployeeId { get; set; } = 0;
+
+    [Parameter]
+    public EventCallback<int> OnEmployeeUpdate { get; set; }
+
+    public Dictionary<int, string> Items { get; set; } = [];
+
+    private bool employeeExists = false;
+
+    protected override void OnParametersSet()
+    {
+        employeeExists = Employees.Any(obj => obj.EmployeeId == EmployeeId) || EmployeeId == 0;
+        base.OnParametersSet();
+    }
+    protected override void OnInitialized()
+    {
+        Items = [];
+        foreach (var item in Employees)
+        {
+            Items[item.EmployeeId] = item.EmployeeShortName;
+        }
+        base.OnInitialized();
+    }
+
+    private void UpdateEmployee(int employeeId)
+    {
+        EmployeeId = employeeId;
+        OnEmployeeUpdate.InvokeAsync(employeeId);
+    }
+
+}

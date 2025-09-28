@@ -1,0 +1,36 @@
+﻿@using System.Linq;
+
+<select @onchange="OnSelectionChanged" class="form-select">
+    @foreach (var option in Options)
+    {
+        <option value="@option" selected="@(SelectedWeek == option)">
+            @option
+        </option>
+    }
+</select>
+
+@code {
+    [Parameter]
+    public EventCallback<int> OnWeekChange { get; set; }
+
+    [Parameter]
+    public required string SelectedWeek { get; set; }
+
+    private List<string> Options = [];
+
+    protected override void OnInitialized()
+    {
+        Options = Enumerable.Range(1, 52) // Generates integers from 1 to 52
+                                            .Select(i => i.ToString()) // Converts each integer to its string representation
+                                            .ToList();
+    }
+
+    private async void OnSelectionChanged(ChangeEventArgs e)
+    {
+        if (e.Value != null)
+        {
+            SelectedWeek = e.Value.ToString() ?? SelectedWeek;
+            await OnWeekChange.InvokeAsync(int.Parse(SelectedWeek));
+        }
+    }
+}

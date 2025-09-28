@@ -1,0 +1,157 @@
+﻿@using NexusBlazor.Components.Logic
+@inject IJSRuntime JS
+@inject Manager manager
+
+@foreach(ResourceBlock block in ResourceBlocks)
+{
+    <div class="row">
+        <div class="col">
+            @if(ResourceType == EManualResourceType.Employee)
+            {
+                <EmployeeDropdownComponent Employees="Employees" EmployeeId="block.EmployeeId" OnEmployeeUpdate="(employeeId) => EmployeeUpdate(block, employeeId)" />
+            }
+            else if (ResourceType == EManualResourceType.Project)
+            {
+                <ProjectDropdownComponent Projects="Projects" ProjectId="block.ProjectId" OnProjectUpdate="(projectId) => ProjectUpdate(block, projectId)" />
+            }
+        </div>
+        <div class="col-2">
+            <buttton class="add_button" @onclick="() => RemoveBlock(block)">-</buttton>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col">
+    </div>
+    <div class="col-3">
+        <buttton class="add_button" @onclick=AddBlock>+</buttton>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required EManualResourceType ResourceType { get; set; }
+
+    [Parameter]
+    public required int Id { get; set; }
+
+    [Parameter]
+    public required int Year { get; set; }
+
+    [Parameter]
+    public required int Week { get; set; }
+
+    public List<Employee> Employees { get; set; } = [];
+
+    [Parameter]
+    public List<Project> Projects { get; set; } = [];
+
+    [Parameter]
+    public EDesignation FilterDesignation { get; set; } = EDesignation.None;
+
+
+    public List<ResourceBlock> ResourceBlocks { get; set; } = [];
+
+    protected override void OnParametersSet()
+    {
+        if (Week > 52)
+        {
+            Year += 1;
+        }
+        GetItems();
+        base.OnParametersSet();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        if(ResourceType == EManualResourceType.Employee)
+        {
+            Employees = manager.EmployeeDB.GetAllEmployeesActiveWithin(Year, Week).Result.OrderBy(p => p.EmployeeName).ToList();
+        }
+        return base.OnInitializedAsync();
+    }
+
+    async void GetItems()
+    {
+        if (ResourceType == EManualResourceType.Employee)
+        {
+            switch (FilterDesignation)
+            {
+                case EDesignation.None:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetResourceBlockByProjectId(Id, Year, Week)).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+                case EDesignation.Mechanical:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Mechanical Design Engineer" })).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+                case EDesignation.Electrical:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Electrical Engineer" })).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+                case EDesignation.Automation:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Automation Engineer", "Product Development Engineer" })).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+                case EDesignation.Software:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Software Engineer" })).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+                case EDesignation.Product:
+                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Automation Engineer (Product)", "Mechanical Design Engineer (Product)" })).OrderBy(p => p.EmployeeId).ToList();
+                    break;
+            }
+        }
+        else if (ResourceType == EManualResourceType.Project)
+        {
+            ResourceBlocks = (await manager.ResourceBlockDB.GetResourceBlockByEmployeeId(Id, Year, Week)).OrderBy(p => p.ProjectId).ToList();
+        }
+    }
+
+    async void EmployeeUpdate(ResourceBlock block, int employeeId)
+    {
+        block.EmployeeId = employeeId;
+        await manager.ResourceBlockDB.UpdateAsync(block);
+        StateHasChanged();
+    }
+
+    async void ProjectUpdate(ResourceBlock block, int projectId)
+    {
+        block.ProjectId = projectId;
+        await manager.ResourceBlockDB.UpdateAsync(block);
+        StateHasChanged();
+    }
+
+    async void AddBlock()
+    {
+        ResourceBlock newBlock;
+        if(ResourceType == EManualResourceType.Employee)
+        {
+            newBlock = new ResourceBlock
+            {
+                EmployeeId = 0,
+                ProjectId = Id,
+                Year = Year,
+                Week = Week,
+            };
+        }
+        else
+        {
+            newBlock = new ResourceBlock
+            {
+                EmployeeId = Id,
+                ProjectId = 0,
+                Year = Year,
+                Week = Week,
+            };
+        }
+        await manager.ResourceBlockDB.InsertAsync(newBlock);
+        GetItems();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void RemoveBlock(ResourceBlock block)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this block?");
+        if (!confirm) return;
+        await manager.ResourceBlockDB.DeleteAsync(block);
+        GetItems();
+        await InvokeAsync(StateHasChanged);
+    }
+}

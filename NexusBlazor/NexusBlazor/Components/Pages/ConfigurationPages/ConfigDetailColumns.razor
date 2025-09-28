@@ -1,0 +1,138 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<td>
+    <InputText class="form-control transparent-textbox" @bind-Value="Detail"
+               onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+               oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' />
+</td>
+
+<td>
+    @if (NotDefined)
+    {
+        <span style="color: red;">Not Defined</span>
+    }
+    else
+    {
+        <InputText class="form-control transparent-textbox" @bind-Value="Comments"
+                   onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+                   oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' />
+    }
+</td>
+<td>
+    <span>@configDetail?.Revision</span>
+</td>
+
+
+
+@code {
+    private string detail = string.Empty;
+    public string Detail {
+        get
+        {
+            return detail;
+        }
+        set
+        {
+            detail = value;
+            UpRev();
+            configDetail!.LastUpdated = DateTime.Now;
+            configDetail!.SpecificationDetail = value;
+            SaveConfigDetail();
+        }
+    }
+    private string comments = string.Empty;
+    public string Comments { get
+        {
+            return comments;
+        } 
+        set
+        {
+            comments = value;
+            UpRev();
+            configDetail!.LastUpdated = DateTime.Now;
+            configDetail!.Comments = value;
+            SaveConfigDetail();
+        } 
+    }
+    public bool NotDefined { get; set; } = false;
+
+    public ConfigDetail? configDetail { get; set; }
+
+    [Parameter]
+    public int ConfigID { get; set; }
+
+    [Parameter]
+    public int SpecID { get; set; }
+
+    [Parameter]
+    public EventCallback<ConfigDetail> OnNewConfig { get; set; }
+
+    [Parameter]
+    public EventCallback<ConfigDetail> OnConfigUpdate { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task LoadData()
+    {
+        configDetail = await manager.ConfigDetailDB.GetBySpecificationIdLatestRevAsync(ConfigID, SpecID);
+
+        if (configDetail is null)
+        {
+            NotDefined = true;
+            configDetail = new ConfigDetail
+            {
+                ConfigurationId = ConfigID,
+                SpecificationId = SpecID,
+                SpecificationDetail = string.Empty,
+                Comments = string.Empty
+            };
+        }
+        else
+        {
+            NotDefined = false;
+        }
+        detail = configDetail.SpecificationDetail;
+        comments = configDetail.Comments;
+    }
+
+    private async Task UpRev()
+    {
+        if (NotDefined)
+        {
+            return;
+        }
+        int newRev = configDetail!.Revision + 1;
+        var upRev = await JS.InvokeAsync<bool>("showConfirm", $"Do you want to change the revision of this specification to {newRev}?");
+        if (upRev)
+        {
+            configDetail = new ConfigDetail
+            {
+                ConfigurationId = ConfigID,
+                SpecificationId = SpecID,
+                SpecificationDetail = Detail,
+                Comments = Comments,
+                Revision = newRev,
+            };
+            NotDefined = true;
+        }
+    }
+
+    private void SaveConfigDetail()
+    {
+        if (NotDefined)
+        {
+            OnNewConfig.InvokeAsync(configDetail);
+        }
+        else
+        {
+            OnConfigUpdate.InvokeAsync(configDetail);
+        }
+        LoadData();
+    }
+}

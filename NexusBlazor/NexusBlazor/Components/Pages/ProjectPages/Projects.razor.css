@@ -1,0 +1,6 @@
+﻿.scrollable-area {
+    height: 900px; /* Set a fixed height for the scrollable area */
+    overflow-y: scroll; /* Enable vertical scrolling */
+    border: None;
+    padding: 10px; /* Optional: Add padding inside the scrollable area */
+}

@@ -1,0 +1,75 @@
+﻿@page "/manual_resource_allocation_weekly"
+@using DataModels.Tools
+@using NexusBlazor.Components.Logic
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
+
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold" style="padding-left: 30px; align-content:center;">Manual Resource Allocation</h2>
+    </div>
+    <div class="col-1" style="text-align:right; align-content:center;">Week #:</div>
+    <div class="col-3" style="align-content:center;">
+        <WeekSelectionDropdownComponent OnWeekChange="ChangeWeek" SelectedWeek="@thisWeek" />
+    </div>
+    <div class="col-1">
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+<div style="padding: 10px 20px 10px 20px;">
+    <table style="width: 100%; ">
+        <tr style="border-bottom: 1px solid red;">
+            <th>Project</th>
+            <th>Project Code</th>
+            <th>Mechanical Design</th>
+            <th>Electrical</th>
+            <th>Automation</th>
+            <th>Product</th>
+            <th>Software</th>
+            <th>Comments</th>
+        </tr>
+
+        @foreach (Project project in ActiveProjects)
+        {
+            <tr>
+                <td>@project.ProjectName</td>
+                <td>@project.DesignCode</td>
+                <td><ManualResourceCell ResourceType=EManualResourceType.Employee Id="project.ProjectId" Week="CurrentWeek" Year="CurrentYear" FilterDesignation="EDesignation.Mechanical" /> </td>
+                <td><ManualResourceCell ResourceType=EManualResourceType.Employee Id="project.ProjectId" Week="CurrentWeek" Year="CurrentYear" FilterDesignation="EDesignation.Electrical" /> </td>
+                <td><ManualResourceCell ResourceType=EManualResourceType.Employee Id="project.ProjectId" Week="CurrentWeek" Year="CurrentYear" FilterDesignation="EDesignation.Automation" /> </td>
+                <td><ManualResourceCell ResourceType=EManualResourceType.Employee Id="project.ProjectId" Week="CurrentWeek" Year="CurrentYear" FilterDesignation="EDesignation.Product" /> </td>
+                <td><ManualResourceCell ResourceType=EManualResourceType.Employee Id="project.ProjectId" Week="CurrentWeek" Year="CurrentYear" FilterDesignation="EDesignation.Software" /> </td>
+                <td></td>
+            </tr>
+        }
+
+    </table>
+</div>
+
+@code {
+    private int CurrentYear { get; set; } = DateTime.Now.Year;
+    private int CurrentWeek { get; set; }
+    private string thisWeek = "52";
+    List<Project> ActiveProjects { get; set; } = [];
+
+
+    protected override void OnInitialized()
+    {
+        thisWeek = CurrentWeek.ToString();
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        base.OnInitialized();
+        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
+    }
+
+    private void ChangeWeek(int week)
+    {
+        CurrentWeek = week;
+        thisWeek = week.ToString();
+        StateHasChanged();
+    }
+
+
+}

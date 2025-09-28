@@ -1,0 +1,67 @@
+﻿@page "/manual_resource_allocation_by_project"
+@using DataModels.Tools
+@using NexusBlazor.Components.Logic
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
+
+<div style="padding: 10px 20px 10px 20px;">
+    <h1>Resource Allocations</h1>
+
+    <table style="width: 100%; ">
+        <tr style="border-bottom: 1px solid red;">
+            <th>Project</th>
+            <th>Project Code</th>
+            @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
+            {
+                <th style=@cellStyle>
+                    Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
+                </th>
+            }
+            <th>Comments</th>
+        </tr>
+
+
+        @foreach (Project project in ActiveProjects)
+        {
+            <tr>
+                <td>@project.ProjectName</td>
+                <td>@project.DesignCode</td>
+
+                @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
+                {
+                    <td>
+                        <ManualResourceCell ResourceType=ResourceType Id="project.ProjectId" Week="i" Year="DateTime.Now.Year" />
+                    </td>
+                }
+                <td>
+                </td>
+            </tr>
+        }
+
+    </table>
+</div>
+
+
+@code {
+    private int CurrentWeek { get; set; }
+    private int NumberOfWeeks { get; set; } = 12;
+    private EManualResourceType ResourceType = EManualResourceType.Employee;
+
+    List<Project> ActiveProjects { get; set; } = [];
+
+    int cellWidth = 85;
+    string cellStyle = "width: 85px;";
+
+    protected override void OnInitialized()
+    {
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        base.OnInitialized();
+        cellWidth = (95 * 16) / NumberOfWeeks;
+        cellStyle = $"width: {cellWidth}px; ";
+        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
+    }
+
+    
+}

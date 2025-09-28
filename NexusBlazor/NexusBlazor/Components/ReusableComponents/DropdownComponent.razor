@@ -1,0 +1,77 @@
+﻿<InputSelect class="custom_style form-control" @bind-Value="ThisId">
+    <option value=0> - </option>
+    @foreach (var des in Items)
+    {
+        <option value="@des.Key">@des.Value</option>
+    }
+</InputSelect>
+
+@code {
+    [Parameter]
+    public EventCallback<int> OnItemUpdate { get; set; }
+
+    [Parameter]
+    public required int SelectedItemId { get; set; } = 0;
+
+    [Parameter]
+    public required Dictionary<int, string> Items { get; set; } = [];
+
+    private bool IsMenuOpen { get; set; }
+    private string? SelectedName { get; set; } = "-";
+
+    private int thisId;
+
+    public int ThisId
+    {
+        get { return thisId; }
+        set { thisId = value;
+            SelectItem(value).Wait();
+        }
+    }
+
+
+    private void ToggleMenu()
+    {
+        IsMenuOpen = !IsMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        IsMenuOpen = false;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        thisId = SelectedItemId;
+        base.OnParametersSet();
+        UpdateSelectedName(SelectedItemId);
+    }
+
+    private void UpdateSelectedName(int currentId)
+    {
+        if(currentId == 0)
+        {
+            SelectedName = "-";
+        }
+        else
+        {
+            try
+            {
+                SelectedName = Items[currentId];
+            }
+            catch
+            {
+                SelectedName = "Unknown";
+            }
+    }
+    }
+
+    private async Task SelectItem(int newId)
+    {
+        SelectedItemId = newId;
+        UpdateSelectedName(newId);
+        await OnItemUpdate.InvokeAsync(newId);
+        IsMenuOpen = false;
+    }
+}

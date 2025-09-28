@@ -1,0 +1,116 @@
+﻿@using DataModels.Tools
+@typeparam TItem
+
+@if (Item != null)
+{
+    <div class="floating-window">
+        <div class="header">
+            <span>Edit @Metadata.TableName</span>
+            <button class="btn-close" @onclick="Close">X</button>
+        </div>
+
+        <div class="body">
+            @foreach (var col in Metadata.Columns)
+            {
+                <div class="form-group">
+                    <label>@col.Key</label>
+
+                    @if (col.Value == EDataType.Key)
+                    {
+                        <input class="form-control" value="@GetPropertyValue(Item, col.Key)" readonly />
+                    }
+                    else if (col.Value == EDataType.Text)
+                    {
+                        <input class="form-control"
+                               value="@GetPropertyValue(Item, col.Key)"
+                               @oninput="e => SetPropertyValue(Item, col.Key, e.Value?.ToString())" />
+                    }
+                    else if (col.Value == EDataType.Integer)
+                    {
+                        <input class="form-control"
+                               value="@GetPropertyValue(Item, col.Key)"
+                               @oninput="e => SetPropertyValue(Item, col.Key, e.Value?.ToString())" />
+                    }
+                    else if (col.Value == EDataType.Date)
+                    {
+                        <input type="date"
+                               class="form-control"
+                               value="@GetPropertyDate(Item, col.Key)"
+                               @oninput="e => SetPropertyDate(Item, col.Key, e.Value?.ToString())" />
+                    }
+                    else if (col.Value == EDataType.Boolean)
+                    {
+                        <input type="checkbox"
+                               class="form-check-input"
+                               checked="@GetPropertyBool(Item, col.Key)"
+                               @onchange="e => SetPropertyBool(Item, col.Key, (bool)e.Value)" />
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="footer">
+            <button class="btn btn-primary" @onclick="Update">Update</button>
+            <button class="btn btn-danger" @onclick="Delete">Delete</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public TableMetadata Metadata { get; set; } = default!;
+    [Parameter] public TItem? Item { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<TItem> OnUpdate { get; set; }
+    [Parameter] public EventCallback<TItem> OnDelete { get; set; }
+
+    private void Close() => OnClose.InvokeAsync();
+
+    private void Update() => OnUpdate.InvokeAsync(Item!);
+
+    private void Delete() => OnDelete.InvokeAsync(Item!);
+
+    private string? GetPropertyValue(TItem item, string property)
+    {
+        return typeof(TItem).GetProperty(property)?.GetValue(item)?.ToString();
+    }
+
+    private void SetPropertyValue(TItem item, string property, string? value)
+    {
+        if (item == null || value == null) return;
+        var prop = typeof(TItem).GetProperty(property);
+        if (prop == null) return;
+
+        if (prop.PropertyType == typeof(string))
+            prop.SetValue(item, value);
+        else if (prop.PropertyType == typeof(int) && int.TryParse(value, out var iv))
+            prop.SetValue(item, iv);
+    }
+
+    private string GetPropertyDate(TItem item, string property)
+    {
+        var prop = typeof(TItem).GetProperty(property);
+        if (prop?.GetValue(item) is DateTime dt)
+            return dt.ToString("yyyy-MM-dd");
+        return string.Empty;
+    }
+
+    private void SetPropertyDate(TItem item, string property, string? value)
+    {
+        if (value == null) return;
+        var prop = typeof(TItem).GetProperty(property);
+        if (prop == null || !DateTime.TryParse(value, out var dt)) return;
+        prop.SetValue(item, dt);
+    }
+
+    private bool GetPropertyBool(TItem item, string property)
+    {
+        var prop = typeof(TItem).GetProperty(property);
+        return prop?.GetValue(item) as bool? ?? false;
+    }
+
+    private void SetPropertyBool(TItem item, string property, bool value)
+    {
+        var prop = typeof(TItem).GetProperty(property);
+        prop?.SetValue(item, value);
+    }
+}

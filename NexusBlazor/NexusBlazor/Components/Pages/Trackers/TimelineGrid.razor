@@ -1,0 +1,65 @@
+﻿@using NexusBlazor.Components.Logic
+@rendermode InteractiveServer
+
+<div style="display:grid; grid-template-columns: repeat(@Days, 1fr)">
+    @for(int i = 0; i < Days; i++)
+    {
+        DateTime day = ChartStart.AddDays(i);
+        var color = day == DateTime.Today ? "red" : "transparent";
+        <div class="header_row" style="background-color:@color; ">@day.ToString("dd MMM")</div>
+    }
+
+    @foreach (var item in Items)
+    {
+
+        if((item.PlannedStartDate < ChartStart.AddDays(Days)) && (item.PlannedEndDate > ChartStart))
+        {
+            int _startDate = (item.PlannedStartDate - ChartStart).Days + 1;
+            int _endDate = (item.PlannedEndDate - ChartStart).Days + 1;
+
+            <div style="background: #9E923C; grid-row: @currentRow; grid-column: @_startDate / @_endDate; margin-top:5px;" @onclick="() => ItemSelected(item)">
+                @item.Title
+            </div>
+        }
+        currentRow++;
+
+        if ((item.ActualStartDate < ChartStart.AddDays(Days)) && (item.ActualEndDate > ChartStart))
+        {
+            int _startDate = (item.ActualStartDate - ChartStart).Days + 1;
+            int _endDate = (item.ActualEndDate - ChartStart).Days + 1;
+
+            <div style="background: #9E923C; grid-row: @currentRow; grid-column: @_startDate / @_endDate; margin-top:5px;" @onclick="() => ItemSelected(item)">
+                @item.Title
+            </div>
+        }
+        currentRow++;
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Days { get; set; }
+
+    [Parameter]
+    public DateTime ChartStart { get; set; }
+
+    [Parameter]
+    public required List<TimelineCell> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<TimelineCell> OnItemSelected { get; set; }
+
+    private int currentRow = 0;
+
+    protected override void OnParametersSet()
+    {
+        currentRow = 0;
+        base.OnParametersSet();
+    }
+
+    void ItemSelected(TimelineCell item)
+    {
+        OnItemSelected.InvokeAsync(item);
+    }
+
+}

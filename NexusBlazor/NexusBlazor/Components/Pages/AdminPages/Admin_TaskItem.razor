@@ -1,0 +1,44 @@
+﻿@page "/admin/taskitem"
+@rendermode InteractiveServer
+@using DataModels.Tools
+@inject Manager manager
+
+<div style="padding: 10px 20px 10px 20px;">
+    <h1>Admin Panel: Task Item</h1>
+    <AdminTable TItem="TaskItem" Metadata="Metadata" Items="Items" OnSelected="RowClicked" OnDelete="onDelete" />
+</div>
+@if (viewForm)
+{
+    <AdminForm TItem="TaskItem" Metadata="Metadata" OnClose="() => viewForm = false" OnDelete="onDelete" OnUpdate="onUpdate"
+        Item="Item"/>
+}
+
+@code {
+    private bool viewForm = false;
+    private List<TaskItem> Items = [];
+    private TaskItem Item;
+
+    private TableMetadata Metadata = TaskItem.Metadata;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items = await manager.TaskItemDB.GetAllAsync();
+    }
+
+    private void RowClicked(TaskItem item)
+    {
+        viewForm = true;
+        StateHasChanged();
+        Item = item;
+    }
+
+    private async void onUpdate(TaskItem item)
+    {
+        await manager.TaskItemDB.UpdateAsync(item);
+    }
+
+    private async void onDelete(TaskItem item)
+    {
+        await manager.TaskItemDB.DeleteAsync(item);
+    }
+}

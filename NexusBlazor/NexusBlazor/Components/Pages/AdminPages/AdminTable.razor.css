@@ -1,0 +1,25 @@
+﻿table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2px 0;
+    text-align: left;
+}
+
+th, td {
+    padding: 5px 5px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: darkslategray;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #222222;
+}
+
+tr:hover {
+    background-color: darkslategrey;
+    cursor: pointer; /* Pointer cursor on hover */
+}

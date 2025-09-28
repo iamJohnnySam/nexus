@@ -1,0 +1,81 @@
+﻿@page "/projects"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>Projects</PageTitle>
+
+<div class="row" style="padding: 0px 30px 0px 30px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold mb-4" style="padding-top: 20px; padding-left: 30px">Project Manager</h2>
+    </div>
+    <div class="col-2" style="padding-top: 20px;">
+        <div class="d-flex justify-content-center align-items-center p-4">
+            <button class="btn rounded-pill border border-white text-white px-4 py-2"
+                    style="background-color: transparent;"
+                    @onclick="HandleNewProject">
+                Add Project
+            </button>
+        </div>
+    </div>
+    <div class="col-1">
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-3 scrollable-area">
+        
+        @foreach (Project project in AllActiveProjects)
+        {
+            <div style="padding: 10px 10px 10px 10px;">
+                <ProjectCardComponent ThisProject=project OnProjectSelected="HandleProjectSelection" />
+            </div>
+        }
+    </div>
+    <div class="col">
+        <ProjectEdit SelectedProject="@currentProject" OnProjectUpdated="HandleProjectUpdate" />
+    </div>
+</div>
+
+@code {
+    private List<Project> AllActiveProjects = [];
+    private Project currentProject;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData();
+        currentProject = manager.LoginInfo.CurrentProject;
+        base.OnInitialized();
+    }
+
+    private async Task GetData()
+    {
+        AllActiveProjects = (await manager.ProjectDB.GetAllAsync())
+                           .OrderByDescending(p => p.IsTrackedProject)
+                           .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.ProjectCode)
+                           .ThenBy(p => p.DesignCode)
+                           .ToList();
+    }
+
+    private void HandleProjectSelection(Project p)
+    {
+        manager.LoginInfo.CurrentProject = p;
+        currentProject = p;
+    }
+
+    private async void HandleNewProject()
+    {
+        Project NewProject = ProjectDataAccess.GetNew();
+        await manager.ProjectDB.InsertAsync(NewProject);
+        await GetData();
+        manager.LoginInfo.CurrentProject = NewProject;
+        currentProject = NewProject;
+    }
+
+    private async void HandleProjectUpdate()
+    {
+        await GetData();
+        currentProject = manager.LoginInfo.CurrentProject;
+    }
+}

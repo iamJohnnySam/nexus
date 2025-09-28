@@ -66,9 +66,11 @@ public class Manager
             CurrentProject = ProjectDB.GetByIdAsync(1).Result! 
         };
 
-
-        ConfigDetailDB = new(_connectionString);
-        ConfigurationDB = new(_connectionString);
+        ProductModuleDB = new(_connectionString);
+        ConfigurationDB = new(_connectionString, ProjectDB, ProductModuleDB);
+        SpecificationDB = new(_connectionString, ProductModuleDB);
+        ConfigDetailDB = new(_connectionString, ConfigurationDB, SpecificationDB);
+        
 
         // Tasks
         TaskItemDB = new(_connectionString, LoginInfo, EmployeeDB);
@@ -85,14 +87,14 @@ public class Manager
         MilestoneDB = new(_connectionString, EmployeeDB, ProjectDB, ProjectStageDB);
         OEMItemDB = new(_connectionString);
         
-        ProductModuleDB = new(_connectionString);
+        
         ProjectBlockDB = new(_connectionString);
         
         ResourceBlockDB = new(_connectionString);
         ReviewItemDB = new(_connectionString);
         ReviewPointDB = new(_connectionString);
         SimulationScenarioDB = new(_connectionString);
-        SpecificationDB = new(_connectionString);
+        
         SupplierDB = new(_connectionString);
         
 

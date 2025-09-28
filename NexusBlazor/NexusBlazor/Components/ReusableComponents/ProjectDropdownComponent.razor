@@ -1,0 +1,53 @@
+﻿@inject Manager manager
+
+@if (projectExists)
+{
+    <DropdownComponent SelectedItemId="ProjectId" OnItemUpdate="UpdateProject" Items="Items" />
+}
+else
+{
+    <label>@manager.ProjectDB.GetByIdAsync(ProjectId).Result.DesignCode </label>
+}
+
+@code {
+    [Parameter]
+    public required List<Project> Projects { get; set; }
+
+    [Parameter]
+    public int ProjectId { get; set; } = 0;
+
+    [Parameter]
+    public EventCallback<int> OnProjectUpdate { get; set; }
+
+    public Dictionary<int, string> Items { get; set; } = [];
+
+    private bool projectExists = false;
+
+    protected override void OnParametersSet()
+    {
+        projectExists = Projects.Any(obj => obj.ProjectId == ProjectId) || ProjectId == 0;
+        base.OnParametersSet();
+    }
+    protected override void OnInitialized()
+    {
+        Items = [];
+        foreach (var item in Projects)
+        {
+            string name = string.IsNullOrWhiteSpace(item.DesignCode) ? item.ProjectName : item.DesignCode;
+            if (name == "0")
+            {
+                name = item.ProjectName;
+            }
+            Items[item.ProjectId] = name;
+        }
+        base.OnInitialized();
+    }
+
+    private void UpdateProject(int employeeId)
+    {
+        ProjectId = employeeId;
+        OnProjectUpdate.InvokeAsync(employeeId);
+    }
+
+}
+ 

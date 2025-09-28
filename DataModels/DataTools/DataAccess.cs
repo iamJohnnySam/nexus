@@ -112,6 +112,12 @@ public class DataAccess<T> where T : class
         await connection.OpenAsync();
         return [.. (await connection.QueryAsync<T>(sql, parameters))];
     }
+    internal async Task<T?> QueryFirstOrDefaultAsync(string sql, object? parameters = null)
+    {
+        await using var connection = new SQLiteConnection(connectionString);
+        await connection.OpenAsync();
+        return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+    }
     internal virtual async Task ExecuteAsync(string sql, object? parameters = null)
     {
         await using var connection = new SQLiteConnection(connectionString);

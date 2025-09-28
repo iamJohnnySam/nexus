@@ -1,0 +1,116 @@
+﻿@using DataModels.Tools
+@inject IJSRuntime JS
+@typeparam TItem
+
+<table>
+    <thead>
+        <tr>
+            @foreach (var col in Metadata.Columns.Keys)
+            {
+                <th @onclick="() => SortByColumn(col)" style="cursor:pointer">
+                    @col
+                    @if (SortColumn == col)
+                    {
+                        <span>@(SortDescending ? "▼" : "▲")</span>
+                    }
+                </th>
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in SortedItems)
+        {
+            <tr @onclick="() => RowClicked(item)" style="cursor:pointer">
+                @foreach (var col in Metadata.Columns.Keys)
+                {
+                    <td>@FormatValue(item, col)</td>
+                }
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => RowClicked(item)">Select</button>
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => onDelete(item)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public TableMetadata Metadata { get; set; } = default!;
+
+    [Parameter]
+    public List<TItem> Items { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<TItem> OnSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> OnDelete { get; set; }
+
+    private string SortColumn { get; set; } = string.Empty;
+    private bool SortDescending { get; set; } = false;
+
+    private IEnumerable<TItem> SortedItems
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(SortColumn)) return Items;
+
+            var prop = typeof(TItem).GetProperty(SortColumn);
+            if (prop == null) return Items;
+
+            return SortDescending
+                ? Items.OrderByDescending(x => prop.GetValue(x, null))
+                : Items.OrderBy(x => prop.GetValue(x, null));
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        SortColumn = Metadata.SortColumn;
+        SortDescending = Metadata.SortDescending;
+    }
+
+    private void SortByColumn(string column)
+    {
+        if (SortColumn == column)
+        {
+            SortDescending = !SortDescending;
+        }
+        else
+        {
+            SortColumn = column;
+            SortDescending = false;
+        }
+    }
+
+    private object? FormatValue(TItem item, string column)
+    {
+        var prop = typeof(TItem).GetProperty(column);
+        if (prop == null) return null;
+
+        var value = prop.GetValue(item, null);
+        var type = Metadata.Columns[column];
+
+        return type switch
+        {
+            EDataType.Date => value is DateTime dt ? dt.ToString("yyyy-MM-dd") : value,
+            EDataType.Boolean => value is bool b ? (b ? "Yes" : "No") : value,
+            _ => value
+        };
+    }
+
+    private async Task RowClicked(TItem item)
+    {
+        await OnSelected.InvokeAsync(item);
+    }
+
+    private async Task onDelete(TItem item)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this Item?");
+        if (!confirm) return;
+
+        await OnDelete.InvokeAsync(item);
+    }
+}

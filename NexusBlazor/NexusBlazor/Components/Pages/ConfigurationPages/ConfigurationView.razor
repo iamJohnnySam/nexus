@@ -1,0 +1,82 @@
+﻿@page "/configuration"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>Configuration for @CurrentProject</PageTitle>
+<ProjectSelectionRowComponent Title="Project Configuration" OnProjectChange="HandleProjectChange" />
+
+<table width="100%" class="modern-table">
+    <thead>
+        <tr>
+            <th>Module</th>
+            <th>Count</th>
+            <th>Specification</th>
+            <th>Value</th>
+            <th>Comments</th>
+            <th>Rev</th>
+            <th>Controls</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(Configuration configuration in Configurations)
+        {
+            <ConfigurationRows ThisConfiguration=configuration OnConfigUpdate=LoadData  />
+        }
+    </tbody>
+</table>
+<br />
+<br />
+<h4>Add More Modules</h4>
+<div class="row">
+    @foreach(ProductModule productModule in OtherModules)
+    {
+        <div class="col-1" style="margin:5px; align-content:center; justify-content:center;">
+            <button class="modern-button" @onclick="() => AddConfig(productModule)">
+                Add @productModule.ModuleName
+            </button>
+        </div>
+    }
+</div>
+
+@code{
+    
+    private Project CurrentProject { get; set; }
+    private List<Configuration> Configurations { get; set; } = [];
+    private string EditorToShow { get; set; } = "None";
+    private List<ProductModule> OtherModules { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await base.OnInitializedAsync();
+    }   
+
+
+    private async Task LoadData()
+    {
+        CurrentProject = manager.LoginInfo.CurrentProject;
+        Configurations = await manager.ConfigurationDB.GetByProjectId(CurrentProject.ProjectId);
+        OtherModules = await manager.ProductModuleDB.GetAllAsync();
+        OtherModules.RemoveAll(module => Configurations.Any(cfg => cfg.ProductModuleId == module.ModuleId));
+        StateHasChanged();
+    }
+
+    private async Task HandleProjectChange(string projectName)
+    {
+        await manager.ProjectDB.SelectProjectFromName(projectName);
+        await LoadData();
+    }
+
+    private async Task AddConfig(ProductModule productModule)
+    {
+        await manager.ConfigurationDB.InsertAsync(new Configuration()
+            {
+                ConfigurationName = productModule.ModuleName,
+                ProjectId = manager.LoginInfo.CurrentProject.ProjectId,
+                ProductModuleId = productModule.ModuleId,
+                Quantity = 1,
+                IsRequired = true
+            });
+        await LoadData();
+    }
+}

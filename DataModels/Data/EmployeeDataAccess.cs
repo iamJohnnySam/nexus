@@ -1,4 +1,5 @@
 ﻿using DataModels.DataTools;
+using DataModels.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -10,6 +11,7 @@ namespace DataModels.Data;
 
 public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB, DesignationDataAccess designationDB) : DataAccess<Employee>(connectionString, Employee.Metadata)
 {
+    public  bool ActiveEmployeesFixed { get; set; }
     private GradeDataAccess GradeDB { get; } = gradeDB;
     private DesignationDataAccess DesignationDB { get; } = designationDB;
 
@@ -24,7 +26,7 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
 
     public async Task<List<Employee>> GetAllActiveEmployees()
     {
-        await FixActiveEmployees();
+        await FixActiveEmployees(true);
         var employees = await GetByColumnAsync(nameof(Employee.IsActive), true);
 
         foreach (var emp in employees)
@@ -38,26 +40,39 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
 
         return groupedAndSorted;
     }
-    public async Task FixActiveEmployees()
-    {
-        List<Employee> employees = await GetAllAsync();
-        var today = DateTime.Today;
 
-        foreach (var emp in employees)
+    public async Task<List<Employee>> GetAllEmployeesActiveWithin(int year, int WeekNumber)
+    {
+        await FixActiveEmployees();
+        DateTime startOfTheWeek = CalendarLogic.GetFirstMondayOfWeek(year, WeekNumber);
+
+        string sqlQ = "SELECT * FROM Employee WHERE @startOfTheWeek BETWEEN JoinDate AND LeaveDate OR (LeaveDate IS NULL AND @startOfTheWeek >= JoinDate);";
+        return await QueryAsync(sqlQ, new { startOfTheWeek });
+    }
+
+    public async Task FixActiveEmployees(bool byPass = false)
+    {
+        if (!ActiveEmployeesFixed || byPass)
         {
-            bool status;
-            if (emp.JoinDate > today || (emp.LeaveDate.HasValue && emp.LeaveDate.Value < today))
+            List<Employee> employees = await GetAllAsync();
+            var today = DateTime.Today;
+
+            foreach (var emp in employees)
             {
-                status = false;
-            }
-            else
-            {
-                status = true;
-            }
-            if (status != emp.IsActive)
-            {
-                emp.IsActive = status;
-                await UpdateAsync(emp);
+                bool status;
+                if (emp.JoinDate > today || (emp.LeaveDate.HasValue && emp.LeaveDate.Value < today))
+                {
+                    status = false;
+                }
+                else
+                {
+                    status = true;
+                }
+                if (status != emp.IsActive)
+                {
+                    emp.IsActive = status;
+                    await UpdateAsync(emp);
+                }
             }
         }
     }

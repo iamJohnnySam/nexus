@@ -1,0 +1,33 @@
+﻿.floating-window {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+    .floating-window .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .floating-window .body {
+        max-height: 60vh;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+    }
+
+    .floating-window .footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }

@@ -1,0 +1,20 @@
+﻿.custom_style {
+    background-color: #222529 !important;
+    color: white !important;
+    border: none !important;
+    appearance: none; /* Remove browser default arrow style */
+    -webkit-appearance: none; /* For Safari/Chrome */
+    -moz-appearance: none; /* For Firefox */
+    padding: 6px 12px; /* Adjust spacing */
+    border-radius: 4px; /* Optional: Rounded corners */
+}
+
+    .custom_style option {
+        background-color: #222529;
+        color: white;
+    }
+
+    .custom_style:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.3); /* Add light glow when focused */
+    }

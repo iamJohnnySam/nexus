@@ -11,7 +11,7 @@ public class ResourceBlock
 {
     public int ResourceBlockId { get; set; }
     public int EmployeeId { get; set; }
-    public int ProjectIdProjectId { get; set; }
+    public int ProjectId { get; set; }
     public int Year { get; set; }
     public int Week { get; set; }
 
@@ -21,7 +21,7 @@ public class ResourceBlock
         {
                 { nameof(ResourceBlockId), EDataType.Key },
                 { nameof(EmployeeId), EDataType.Integer },
-                { nameof(ProjectIdProjectId), EDataType.Integer },
+                { nameof(ProjectId), EDataType.Integer },
                 { nameof(Year), EDataType.Integer },
                 { nameof(Week), EDataType.Integer }
         },

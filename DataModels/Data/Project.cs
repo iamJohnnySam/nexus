@@ -35,8 +35,8 @@ public class Project
             { nameof(Priority), EDataType.Integer },
             { nameof(POStatus), EDataType.Integer },
             { nameof(ProductId), EDataType.Integer },
-            { nameof(IsActive), EDataType.Integer },
-            { nameof(IsTrackedProject), EDataType.Integer },
+            { nameof(IsActive), EDataType.Boolean },
+            { nameof(IsTrackedProject), EDataType.Boolean },
             { nameof(PrimaryDesignerId), EDataType.Integer },
             { nameof(RequirementDocumentLink), EDataType.Text }
         },

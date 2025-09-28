@@ -1,0 +1,182 @@
+﻿@using DataModels.Tools
+@inject Manager manager
+@inject IJSRuntime JS
+
+<div class="card p-3" style="background-color: transparent; border: none;">
+
+    <EditForm Model="@SelectedProject" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Project Name</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.ProjectName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Customer</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.CustomerId">
+                <option value="">-- Select Customer --</option>
+                @foreach (var customer in Customers)
+                {
+                    <option value="@customer.CustomerId">@customer.CustomerName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Product</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.ProductId">
+                <option value="">-- Select Product --</option>
+                @foreach (var product in Products)
+                {
+                    <option value="@product.ProductId">@product.ProductName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Design Code</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.DesignCode" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Project Code</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.ProjectCode" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
+                @foreach (var priority in Enum.GetValues(typeof(EProjectPriority)))
+                {
+                    <option value="@priority">@priority</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">PO Status</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
+                @foreach (var status in Enum.GetValues(typeof(ESalesStatus)))
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
+            <label class="form-check-label">Is Active</label>
+        </div>
+
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsTrackedProject" />
+            <label class="form-check-label">Is Tracked</label>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Primary Designer</label>
+            <InputSelect class="form-control" @bind-Value="SelectedProject.PrimaryDesignerId">
+                <option value=0>-- No Designer --</option>
+                @foreach (var employee in Employees)
+                {
+                    <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Requirement Document Link</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.RequirementDocumentLink" />
+        </div>
+
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private List<Customer> Customers = [];
+    private List<Product> Products = [];
+    private List<Employee> Employees = [];
+
+    [Parameter]
+    public EventCallback<Project> OnProjectUpdated { get; set; }
+
+    [Parameter]
+    public Project SelectedProject { get; set;  } = new()
+    {
+        ProjectName = string.Empty,
+        Priority = EProjectPriority.Normal
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Customers = await manager.CustomerDB.GetAllAsync();
+        Products = await manager.ProductDB.GetAllAsync();
+        Employees = (await manager.EmployeeDB.GetAllAsync()).OrderBy(p => p.EmployeeName).ToList();
+    }
+
+    private void Edit(Project p)
+    {
+        SelectedProject = new Project
+        {
+            ProjectId = p.ProjectId,
+            ProjectName = p.ProjectName,
+            CustomerId = p.CustomerId,
+            ProductId = p.ProductId,
+            DesignCode = p.DesignCode,
+            ProjectCode = p.ProjectCode,
+            Priority = p.Priority,
+            POStatus = p.POStatus,
+            IsActive = p.IsActive,
+            IsTrackedProject = p.IsTrackedProject,
+            PrimaryDesignerId = p.PrimaryDesignerId,
+            RequirementDocumentLink = p.RequirementDocumentLink
+        };
+    }
+
+    private async Task Delete(Project p)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete project '{p.ProjectName}'?");
+        if (!confirmed) return;
+
+        await manager.ProjectDB.DeleteAsync(p);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedProject.ProjectId == 0)
+        {
+            await manager.ProjectDB.InsertAsync(SelectedProject);
+        }
+        else
+        {
+            await manager.ProjectDB.UpdateAsync(SelectedProject);
+        }
+
+        await OnProjectUpdated.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedProject = new Project
+        {
+            ProjectName = string.Empty,
+            Priority = EProjectPriority.Normal
+        };
+    }
+}

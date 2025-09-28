@@ -14,6 +14,13 @@ public class Employee
     public int EmployeeId { get; set; }
     public string EmployeeNumber { get; set; } = string.Empty;
     public required string EmployeeName { get; set; }
+    public string EmployeeShortName
+    {
+        get
+        {
+            return $"{EmployeeName.Split(' ')[0]} {EmployeeName.Split(' ').Last()[0]}.";
+        }
+    }
     public Grade? EmployeeGrade { get; set; }
     public int GradeId { get; set; }
     public Designation? EmployeeDesignation { get; set; }

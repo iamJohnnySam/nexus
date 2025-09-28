@@ -1,0 +1,49 @@
+﻿@page "/admin/project"
+@using DataModels.Tools
+@inject Manager manager
+@rendermode InteractiveServer
+
+<div style="padding: 10px 20px 10px 20px;">
+    <h1>Admin Panel: Project</h1>
+    <AdminTable TItem="Project" Metadata="Metadata" Items="Items" OnSelected="RowClicked" />
+</div>
+@if (viewForm)
+{
+    <AdminForm TItem="Project" Metadata="Metadata" OnClose="() => viewForm = false" OnDelete="onDelete" OnUpdate="onUpdate"
+        Item="Item"/>
+}
+
+@code {
+    private bool viewForm = false;
+    private List<Project> Items = [];
+    private Project Item;
+
+    private TableMetadata Metadata = Project.Metadata;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items = await manager.ProjectDB.GetAllAsync();
+    }
+
+    private async void onInsert(Project item)
+    {
+        await manager.ProjectDB.InsertAsync(item);
+    }
+
+    private async void onUpdate(Project item)
+    {
+        await manager.ProjectDB.UpdateAsync(item);
+    }
+
+    private async void onDelete(Project item)
+    {
+        await manager.ProjectDB.DeleteAsync(item);
+    }
+
+    private void RowClicked(Project item)
+    {
+        viewForm = true;
+        StateHasChanged();
+        Item = item;
+    }
+}

@@ -1,0 +1,13 @@
+﻿.add_button {
+    border: none;
+    color: white;
+    padding: 2px 2px;
+    text-align: center;
+    text-decoration: none;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    background-color: transparent;
+}
+    .add_button:hover {
+        background-color: #04AA6D;
+    }

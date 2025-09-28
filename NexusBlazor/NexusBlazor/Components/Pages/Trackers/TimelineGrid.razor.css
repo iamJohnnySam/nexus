@@ -1,0 +1,10 @@
+﻿header_row {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    font-weight: 700;
+    writing-mode: vertical-rl;
+    text-orientation: sideways;
+    position: sticky;
+    top: 0;
+}
