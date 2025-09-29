@@ -1,33 +1,36 @@
-﻿@using NexusBlazor.Components.Logic
+﻿@using DataModels.Tools
+@using NexusBlazor.Components.Logic
 @inject IJSRuntime JS
 @inject Manager manager
 
-@foreach(ResourceBlock block in ResourceBlocks)
+@if (itemExists)
 {
+    @foreach (ResourceBlock block in ResourceBlocks)
+    {
+        <div class="row">
+            <div class="col">
+                @if (ResourceType == EManualResourceType.Employee)
+                {
+                    <EmployeeDropdownComponent Employees="Employees" EmployeeId="block.EmployeeId" OnEmployeeUpdate="(employeeId) => EmployeeUpdate(block, employeeId)" />
+                }
+                else if (ResourceType == EManualResourceType.Project)
+                {
+                    <ProjectDropdownComponent Projects="Projects" ProjectId="block.ProjectId" OnProjectUpdate="(projectId) => ProjectUpdate(block, projectId)" />
+                }
+            </div>
+            <div class="col-2">
+                <buttton class="add_button" @onclick="() => RemoveBlock(block)">-</buttton>
+            </div>
+        </div>
+    }
     <div class="row">
         <div class="col">
-            @if(ResourceType == EManualResourceType.Employee)
-            {
-                <EmployeeDropdownComponent Employees="Employees" EmployeeId="block.EmployeeId" OnEmployeeUpdate="(employeeId) => EmployeeUpdate(block, employeeId)" />
-            }
-            else if (ResourceType == EManualResourceType.Project)
-            {
-                <ProjectDropdownComponent Projects="Projects" ProjectId="block.ProjectId" OnProjectUpdate="(projectId) => ProjectUpdate(block, projectId)" />
-            }
         </div>
-        <div class="col-2">
-            <buttton class="add_button" @onclick="() => RemoveBlock(block)">-</buttton>
+        <div class="col-3">
+            <buttton class="add_button" @onclick=AddBlock>+</buttton>
         </div>
     </div>
 }
-
-<div class="row">
-    <div class="col">
-    </div>
-    <div class="col-3">
-        <buttton class="add_button" @onclick=AddBlock>+</buttton>
-    </div>
-</div>
 
 @code {
     [Parameter]
@@ -53,14 +56,20 @@
 
     public List<ResourceBlock> ResourceBlocks { get; set; } = [];
 
-    protected override void OnParametersSet()
+    bool itemExists = false;
+
+    protected override async Task OnParametersSetAsync()
     {
         if (Week > 52)
         {
             Year += 1;
         }
-        GetItems();
-        base.OnParametersSet();
+        await CheckItemExists();
+        if (itemExists)
+        {
+            await GetItems();
+        }
+        await base.OnParametersSetAsync();
     }
 
     protected override Task OnInitializedAsync()
@@ -72,7 +81,32 @@
         return base.OnInitializedAsync();
     }
 
-    async void GetItems()
+    async Task CheckItemExists()
+    {
+        if (ResourceType == EManualResourceType.Project)
+        {
+            itemExists = true;
+            return;
+        }
+
+        Employee? employee = await manager.EmployeeDB.GetByIdAsync(Id);
+        if (employee != null)
+        {
+            DateTime weekStart = CalendarLogic.GetFirstMondayOfWeek(Year, Week);
+            DateTime weekend = weekStart.AddDays(5);
+            if(employee.JoinDate > weekend)
+            {
+                if(employee.LeaveDate == null || employee.LeaveDate < weekStart)
+                {
+                    itemExists = true;
+                    return;
+                }
+            }
+        }
+        itemExists = false;
+    }
+
+    async Task GetItems()
     {
         if (ResourceType == EManualResourceType.Employee)
         {

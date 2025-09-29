@@ -2,41 +2,45 @@
 @inject Manager manager
 @rendermode InteractiveServer
 
-<PageTitle>Configuration for @CurrentProject</PageTitle>
+<PageTitle>nexus | Configuration | @CurrentProject</PageTitle>
 <ProjectSelectionRowComponent Title="Project Configuration" OnProjectChange="HandleProjectChange" />
 
-<table width="100%" class="modern-table">
-    <thead>
-        <tr>
-            <th>Module</th>
-            <th>Count</th>
-            <th>Specification</th>
-            <th>Value</th>
-            <th>Comments</th>
-            <th>Rev</th>
-            <th>Controls</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach(Configuration configuration in Configurations)
+<div style="padding: 10px 20px 10px 30px;">
+    <table width="100%" class="modern-table">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>Count</th>
+                <th>Specification</th>
+                <th>Value</th>
+                <th>Comments</th>
+                <th>Rev</th>
+                <th>Controls</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Configuration configuration in Configurations)
+            {
+                <ConfigurationRows ThisConfiguration=configuration OnConfigUpdate=LoadData />
+            }
+        </tbody>
+    </table>
+    <br />
+    <br />
+    <h4>Add More Modules</h4>
+    <div class="row">
+        @foreach (ProductModule productModule in OtherModules)
         {
-            <ConfigurationRows ThisConfiguration=configuration OnConfigUpdate=LoadData  />
+            <div class="col-1" style="margin:5px; align-content:center; justify-content:center;">
+                <button class="modern-button" @onclick="() => AddConfig(productModule)">
+                    Add @productModule.ModuleName
+                </button>
+            </div>
         }
-    </tbody>
-</table>
-<br />
-<br />
-<h4>Add More Modules</h4>
-<div class="row">
-    @foreach(ProductModule productModule in OtherModules)
-    {
-        <div class="col-1" style="margin:5px; align-content:center; justify-content:center;">
-            <button class="modern-button" @onclick="() => AddConfig(productModule)">
-                Add @productModule.ModuleName
-            </button>
-        </div>
-    }
+    </div>
 </div>
+
+
 
 @code{
     

@@ -1,0 +1,118 @@
+﻿@page "/department/designation"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Designation</PageTitle>
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Designation Manager</h3>
+    <div class="card p-3" style="background-color: transparent;">
+        <h5>@(SelectedDesignation?.DesignationId == 0 ? "Add New Designation" : "Edit Designation")</h5>
+
+        <EditForm Model="@SelectedDesignation" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Designation Name</label>
+                <InputText class="form-control" @bind-Value="SelectedDesignation.DesignationName" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Department</label>
+                <InputText class="form-control" @bind-Value="SelectedDesignation.Department" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="mb-4">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Designation Name</th>
+                    <th>Department</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Designations)
+                {
+                    <tr class="@((SelectedDesignation?.DesignationId == d.DesignationId) ? "table-primary" : "")">
+                        <td style="color: white">@d.DesignationId</td>
+                        <td style="color: white">@d.DesignationName</td>
+                        <td style="color: white">@d.Department</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(d)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(d)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Designation> Designations = [];
+    private Designation SelectedDesignation = new Designation
+    {
+        DesignationName = ""
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDesignations();
+    }
+
+    private async Task LoadDesignations()
+    {
+        Designations = await manager.DesignationDB.GetAllAsync();
+    }
+
+    private void Edit(Designation d)
+    {
+        SelectedDesignation = new Designation
+        {
+            DesignationId = d.DesignationId,
+            DesignationName = d.DesignationName,
+            Department = d.Department
+        };
+    }
+
+    private async Task Delete(Designation d)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this designation?");
+        if (!confirmed) return;
+
+        await manager.DesignationDB.DeleteAsync(d);
+        await LoadDesignations();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedDesignation.DesignationId == 0)
+        {
+            await manager.DesignationDB.InsertAsync(SelectedDesignation);
+        }
+        else
+        {
+            await manager.DesignationDB.UpdateAsync(SelectedDesignation);
+        }
+        await LoadDesignations();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedDesignation = new Designation
+        {
+            DesignationName = ""
+        };
+    }
+}

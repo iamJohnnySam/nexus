@@ -36,7 +36,7 @@ public class Manager
     public SpecificationDataAccess SpecificationDB { get; }
     public SupplierDataAccess SupplierDB { get; }
     public TaskItemDataAccess TaskItemDB { get; }
-   
+    public FlowElementDataAccess FlowElementDB { get; }
 
     public Manager()
     {
@@ -96,9 +96,10 @@ public class Manager
         SimulationScenarioDB = new(_connectionString);
         
         SupplierDB = new(_connectionString);
-        
+        FlowElementDB = new(_connectionString);
 
-        
+
+
     }
 
     private bool EnsureDatabaseExists()

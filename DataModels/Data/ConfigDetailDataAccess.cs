@@ -79,6 +79,7 @@ public class ConfigDetailDataAccess(string connectionString, ConfigurationDataAc
         LIMIT 1;";
 
         ConfigDetail? result = await QueryFirstOrDefaultAsync(sql, new { specificationId, configurationId });
+
         if (result != null)
             await GetItems(result);            
         return result;

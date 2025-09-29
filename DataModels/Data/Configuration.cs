@@ -23,7 +23,7 @@ public class Configuration
     public bool IsRequired { get; set; }
 
     public static TableMetadata Metadata => new(
-        typeof(Customer).Name,
+        typeof(Configuration).Name,
         new Dictionary<string, EDataType>
         {
                 { nameof(ConfigurationId), EDataType.Key },

@@ -1,0 +1,198 @@
+﻿@page "/department/employee"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Employee</PageTitle>
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Employee Manager</h3>
+
+    <!-- Top Section: Table -->
+    <div class="card p-3" style="background-color: transparent;">
+        <h5>@(SelectedEmployee?.EmployeeId == 0 ? "Add New Employee" : "Edit Employee")</h5>
+
+        <EditForm Model="@SelectedEmployee" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Number</label>
+                <InputText class="form-control" @bind-Value="SelectedEmployee.EmployeeNumber" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <InputText class="form-control" @bind-Value="SelectedEmployee.EmployeeName" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Grade</label>
+                <InputSelect class="form-control" @bind-Value="SelectedEmployee.GradeId">
+                    <option value="">-- Select Grade --</option>
+                    @foreach (var grade in Grades)
+                    {
+                        <option value="@grade.GradeId">@grade.GradeName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Designation</label>
+                <InputSelect class="form-control" @bind-Value="SelectedEmployee.DesignationId">
+                    <option value="">-- Select Designation --</option>
+                    @foreach (var des in Designations)
+                    {
+                        <option value="@des.DesignationId">@des.DesignationName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Join Date</label>
+                <InputDate class="form-control" @bind-Value="SelectedEmployee.JoinDate" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Leave Date (Optional)</label>
+                <InputDate class="form-control" @bind-Value="SelectedEmployee.LeaveDate" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Active</label>
+                <InputCheckbox class="form-check-input" @bind-Value="SelectedEmployee.IsActive" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Replaced Employee</label>
+                <InputSelect class="form-control" @bind-Value="SelectedEmployee.ReplacedEmployeeId">
+                    <option value="0">-- None --</option>
+                    @foreach (var emp in Employees.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
+                    {
+                        <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="mb-4">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Number</th>
+                    <th>Name</th>
+                    <th>Grade</th>
+                    <th>Designation</th>
+                    <th>Join Date</th>
+                    <th>Leave Date</th>
+                    <th>Active</th>
+                    <th>Replaced</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Employees)
+                {
+                    <tr class="@((SelectedEmployee?.EmployeeId == e.EmployeeId) ? "table-primary" : "")">
+                        <td style="color: white">@e.EmployeeId</td>
+                        <td style="color: white">@e.EmployeeNumber</td>
+                        <td style="color: white">@e.EmployeeName</td>
+                        <td style="color: white">@Grades.FirstOrDefault(g => g.GradeId == e.GradeId)?.GradeName</td>
+                        <td style="color: white">@Designations.FirstOrDefault(d => d.DesignationId == e.DesignationId)?.DesignationName</td>
+                        <td style="color: white">@e.JoinDate.ToShortDateString()</td>
+                        <td style="color: white">@e.LeaveDate?.ToShortDateString()</td>
+                        <td style="color: white">@e.IsActive</td>
+                        <td style="color: white">@Employees.FirstOrDefault(emp => emp.EmployeeId == e.ReplacedEmployeeId)?.EmployeeName</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(e)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(e)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Employee> Employees = [];
+    private List<Grade> Grades = [];
+    private List<Designation> Designations = [];
+    private Employee SelectedEmployee = new()
+    {
+        EmployeeName = string.Empty,
+        IsActive = true,
+        JoinDate = DateTime.Today
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Grades = await manager.GradeDB.GetAllAsync();
+        Designations = await manager.DesignationDB.GetAllAsync();
+        Employees = await manager.EmployeeDB.GetAllAsync();
+    }
+
+    private void Edit(Employee e)
+    {
+        SelectedEmployee = new Employee
+        {
+            EmployeeId = e.EmployeeId,
+            EmployeeNumber = e.EmployeeNumber,
+            EmployeeName = e.EmployeeName,
+            GradeId = e.GradeId,
+            DesignationId = e.DesignationId,
+            JoinDate = e.JoinDate,
+            LeaveDate = e.LeaveDate,
+            IsActive = e.IsActive,
+            ReplacedEmployeeId = e.ReplacedEmployeeId
+        };
+    }
+
+    private async Task Delete(Employee e)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {e.EmployeeName}?");
+        if (!confirmed) return;
+
+        await manager.EmployeeDB.DeleteAsync(e);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedEmployee.EmployeeId == 0)
+        {
+            await manager.EmployeeDB.InsertAsync(SelectedEmployee);
+        }
+        else
+        {
+            await manager.EmployeeDB.UpdateAsync(SelectedEmployee);
+        }
+
+        await LoadData();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedEmployee = new Employee
+        {
+            EmployeeName = string.Empty,
+            GradeId = Grades.FirstOrDefault()?.GradeId ?? 0,
+            IsActive = true,
+            JoinDate = DateTime.Today,
+            ReplacedEmployeeId = 0
+        };
+    }
+}

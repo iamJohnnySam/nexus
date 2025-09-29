@@ -1,0 +1,124 @@
+﻿@page "/department/grade"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Grade</PageTitle>
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Grade Manager</h3>
+
+    <div class="card p-3" style="background-color: transparent;">
+        <h5>@(SelectedGrade?.GradeId == 0 ? "Add New Grade" : "Edit Grade")</h5>
+
+        <EditForm Model="@SelectedGrade" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Grade Name</label>
+                <InputText class="form-control" @bind-Value="SelectedGrade.GradeName" />
+                <ValidationMessage For="@(() => SelectedGrade.GradeName)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Grade Score</label>
+                <InputNumber class="form-control" @bind-Value="SelectedGrade.GradeScore" />
+                <ValidationMessage For="@(() => SelectedGrade.GradeScore)" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+    <div class="mb-4">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Grade Name</th>
+                    <th>Grade Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Grades)
+                {
+                    <tr class="@((SelectedGrade?.GradeId == g.GradeId) ? "table-primary" : "")">
+                        <td style="color: white">@g.GradeId</td>
+                        <td style="color: white">@g.GradeName</td>
+                        <td style="color: white">@g.GradeScore</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(g)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(g)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    private List<Grade> Grades = [];
+    private Grade SelectedGrade = new()
+    {
+        GradeName = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGrades();
+    }
+
+    private async Task LoadGrades()
+    {
+        Grades = await manager.GradeDB.GetAllAsync();
+    }
+
+    private void Edit(Grade g)
+    {
+        SelectedGrade = new Grade
+        {
+            GradeId = g.GradeId,
+            GradeName = g.GradeName,
+            GradeScore = g.GradeScore
+        };
+    }
+
+    private async Task Delete(Grade g)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this grade?");
+        if (!confirmed) return;
+
+        await manager.GradeDB.DeleteAsync(g);
+        await LoadGrades();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedGrade.GradeId == 0)
+        {
+            await manager.GradeDB.InsertAsync(SelectedGrade);
+        }
+        else
+        {
+            await manager.GradeDB.UpdateAsync(SelectedGrade);
+        }
+
+        await LoadGrades();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedGrade = new Grade
+        {
+            GradeName = string.Empty,
+            GradeScore = 0
+        };
+    }
+}

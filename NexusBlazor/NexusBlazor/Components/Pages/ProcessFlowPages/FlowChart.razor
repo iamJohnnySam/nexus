@@ -1,0 +1,141 @@
+﻿@using System.Text.Json
+@inject IJSRuntime JS
+
+<div class="toolbar mb-2">
+    <button class="btn btn-success btn-sm" @onclick='() => AddNode(" Start")'>Add Start</button>
+    <button class="btn btn-primary btn-sm" @onclick='() =>AddNode("Process")'>AddProcess </button >
+    <button class="btn btn-warning btn-sm" @onclick='() => AddNode(" Decision")'>Add Decision</button>
+    <button class="btn btn-danger btn-sm" @onclick='() => AddNode(" End")'>Add End</button>
+    <button class="btn btn-secondary btn-sm" @onclick="Save">Save</button>
+    <button class="btn btn-dark btn-sm" @onclick="Load">Load</button>
+</div>
+
+<svg width="1500" height="900" style="background:#f8f9fa; border:1px solid #ccc;">
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="black" />
+        </marker>
+    </defs>
+
+    @foreach (var el in Elements)
+    {
+        var color = GetFillColor(el.ElementType);
+        <g class="flow-node" id="@($"node-{el.FlowElementId}")"
+           transform="translate(@el.X,@el.Y)"
+           @onmousedown="@(() => StartDrag(el.FlowElementId))"
+           @onmouseup="@StopDrag"
+           @onmousemove="@((e) => DragMove(e, el.FlowElementId))">
+
+            <rect width="150" height="60" rx="10" fill="@color" stroke="black"></rect>
+            <text x="75" y="35" text-anchor="middle" fill="black" font-size="14">@el.ElementName</text>
+        </g>
+    }
+
+    @foreach (var link in GetLinks())
+    {
+        <line x1="@link.X1" y1="@link.Y1" x2="@link.X2" y2="@link.Y2"
+              stroke="black" stroke-width="2" marker-end="url(#arrowhead)" />
+    }
+</svg>
+<script src="~/js/flowchart.js"></script>
+
+@code {
+    [Parameter] public List<FlowElement> Elements { get; set; } = new();
+
+    bool isDragging = false;
+    int? draggingId = null;
+    double offsetX, offsetY;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("flowchart.initDrag");
+        }
+    }
+
+    void AddNode(string type)
+    {
+        var newNode = new FlowElement
+        {
+            FlowElementId = Elements.Count > 0 ? Elements.Max(e => e.FlowElementId) + 1 : 1,
+            ElementName = type,
+            ElementType = type,
+            X = 100 + (Elements.Count * 50),
+            Y = 100 + (Elements.Count * 80)
+        };
+        Elements.Add(newNode);
+    }
+
+    void StartDrag(int id)
+    {
+        draggingId = id;
+        isDragging = true;
+    }
+
+    void StopDrag()
+    {
+        isDragging = false;
+        draggingId = null;
+    }
+
+    void DragMove(MouseEventArgs e, int id)
+    {
+        if (isDragging && draggingId == id)
+        {
+            var node = Elements.FirstOrDefault(x => x.FlowElementId == id);
+            if (node != null)
+            {
+                node.X = e.OffsetX - 75;
+                node.Y = e.OffsetY - 30;
+            }
+        }
+    }
+
+    string GetFillColor(string type) => type switch
+    {
+        "Start" => "#b3e6b3",
+        "Process" => "#cce5ff",
+        "Decision" => "#ffe6b3",
+        "End" => "#ffcccc",
+        _ => "#e0e0e0"
+    };
+
+    record Link(double X1, double Y1, double X2, double Y2);
+
+    List<Link> GetLinks()
+    {
+        var links = new List<Link>();
+        foreach (var el in Elements)
+        {
+            if (el.PrecedingId is int pid)
+            {
+                var prev = Elements.FirstOrDefault(x => x.FlowElementId == pid);
+                if (prev != null)
+                    links.Add(new Link(prev.X + 75, prev.Y + 60, el.X + 75, el.Y));
+            }
+            if (el.RevertId is int rid)
+            {
+                var rev = Elements.FirstOrDefault(x => x.FlowElementId == rid);
+                if (rev != null)
+                    links.Add(new Link(el.X + 150, el.Y + 30, rev.X + 150, rev.Y + 30));
+            }
+        }
+        return links;
+    }
+
+    void Save()
+    {
+        var json = JsonSerializer.Serialize(Elements);
+        JS.InvokeVoidAsync("flowchart.saveToFile", json);
+    }
+
+    async void Load()
+    {
+        var json = await JS.InvokeAsync<string>("flowchart.loadFromFile");
+        if (!string.IsNullOrEmpty(json))
+        {
+            Elements = JsonSerializer.Deserialize<List<FlowElement>>(json) ?? new();
+        }
+    }
+}

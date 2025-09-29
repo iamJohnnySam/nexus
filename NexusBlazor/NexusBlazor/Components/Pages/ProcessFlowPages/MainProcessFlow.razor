@@ -1,0 +1,14 @@
+﻿@page "/department/department_flow"
+
+<FlowChart Elements="@elements" />
+
+@code {
+    List<FlowElement> elements = new()
+    {
+        new() { FlowElementId = 1, ElementName = "Start", ElementType = "Start", X = 100, Y = 100 },
+        new() { FlowElementId = 2, ElementName = "Check Input", ElementType = "Decision", PrecedingId = 1, X = 100, Y = 250 },
+        new() { FlowElementId = 3, ElementName = "Process", ElementType = "Process", PrecedingId = 2, X = 100, Y = 400 },
+        new() { FlowElementId = 4, ElementName = "Re-enter Data", ElementType = "Process", RevertId = 2, X = 350, Y = 250 },
+        new() { FlowElementId = 5, ElementName = "End", ElementType = "End", PrecedingId = 3, X = 100, Y = 550 }
+    };
+}
