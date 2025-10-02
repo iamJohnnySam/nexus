@@ -28,7 +28,10 @@ public class Employee
     public DateTime JoinDate { get; set; }
     public DateTime? LeaveDate { get; set; }
     public required bool IsActive { get; set; }
-    public int ReplacedEmployeeId { get; set; }
+    public int ReplacedEmployeeId { get; set; } = 0;
+    public Employee? ReplacedEmployee { get; set; }
+    public int LineManagerId { get; set; } = 0;
+    public Employee? LineManager { get; set; }
 
     public static TableMetadata Metadata => new(
         typeof(Employee).Name,
@@ -42,7 +45,8 @@ public class Employee
             { nameof(JoinDate), EDataType.Date },
             { nameof(LeaveDate), EDataType.Date },
             { nameof(IsActive), EDataType.Boolean },
-            { nameof(ReplacedEmployeeId), EDataType.Integer }
+            { nameof(ReplacedEmployeeId), EDataType.Integer },
+            { nameof(LineManagerId), EDataType.Integer }
         },
         nameof(EmployeeName)
     );

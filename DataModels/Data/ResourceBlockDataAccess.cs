@@ -22,6 +22,20 @@ public class ResourceBlockDataAccess(string connectionString) : DataAccess<Resou
         return await QueryAsync(sql, new { projectId, year, week });
     }
 
+    public async Task CopyResourceBlocksFromWeek(int projectId, int copyToYear, int copyToWeek, int copyFromYear, int copyFromWeek)
+    {
+        var sql = "SELECT * FROM ResourceBlock WHERE ProjectId = @projectId AND Year = @copyFromYear AND Week = @copyFromWeek";
+        List<ResourceBlock> items = await QueryAsync(sql, new { projectId, copyFromYear, copyFromWeek });
+
+        foreach(ResourceBlock block in items)
+        {
+            block.ResourceBlockId = 0; // Reset ID for new entry
+            block.Year = copyToYear;
+            block.Week = copyToWeek;
+            await InsertAsync(block);
+        }
+    }
+
     public async Task<List<ResourceBlock>> GetFilteredResourceBlockByProjectId(int projectId, int year, int week, string[] designationNames)
     {
         var sql = @"

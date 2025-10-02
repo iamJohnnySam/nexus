@@ -65,7 +65,18 @@
             <div class="mb-3">
                 <label class="form-label">Replaced Employee</label>
                 <InputSelect class="form-control" @bind-Value="SelectedEmployee.ReplacedEmployeeId">
-                    <option value="0">-- None --</option>
+                    <option value=0>-- None --</option>
+                    @foreach (var emp in Employees.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
+                    {
+                        <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Line Manager</label>
+                <InputSelect class="form-control" @bind-Value="SelectedEmployee.LineManagerId">
+                    <option value=0>-- None --</option>
                     @foreach (var emp in Employees.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
                     {
                         <option value="@emp.EmployeeId">@emp.EmployeeName</option>
@@ -93,6 +104,7 @@
                     <th>Leave Date</th>
                     <th>Active</th>
                     <th>Replaced</th>
+                    <th>Line Manager</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -109,6 +121,7 @@
                         <td style="color: white">@e.LeaveDate?.ToShortDateString()</td>
                         <td style="color: white">@e.IsActive</td>
                         <td style="color: white">@Employees.FirstOrDefault(emp => emp.EmployeeId == e.ReplacedEmployeeId)?.EmployeeName</td>
+                        <td style="color: white">@Employees.FirstOrDefault(emp => emp.EmployeeId == e.LineManagerId)?.EmployeeName</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(e)">Edit</button>
                             <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(e)">Delete</button>
@@ -155,7 +168,8 @@
             JoinDate = e.JoinDate,
             LeaveDate = e.LeaveDate,
             IsActive = e.IsActive,
-            ReplacedEmployeeId = e.ReplacedEmployeeId
+            ReplacedEmployeeId = e.ReplacedEmployeeId,
+            LineManagerId = e.LineManagerId
         };
     }
 
@@ -191,8 +205,7 @@
             EmployeeName = string.Empty,
             GradeId = Grades.FirstOrDefault()?.GradeId ?? 0,
             IsActive = true,
-            JoinDate = DateTime.Today,
-            ReplacedEmployeeId = 0
+            JoinDate = DateTime.Today
         };
     }
 }

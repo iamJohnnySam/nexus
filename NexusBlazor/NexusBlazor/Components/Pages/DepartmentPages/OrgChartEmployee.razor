@@ -1,0 +1,16 @@
+﻿@using System.Linq
+
+<div class="tree">
+    @foreach (var root in RootEmployees)
+    {
+        <OrgChartTreeNode Employee="root" AllEmployees="Employees"></OrgChartTreeNode>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Employee> Employees { get; set; } = new();
+
+    private List<Employee> RootEmployees => Employees
+        .Where(e => e.LineManagerId == 0) // no manager = top-level
+        .ToList();
+}

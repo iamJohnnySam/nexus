@@ -1,0 +1,14 @@
+﻿@page "/department/organization_chart"
+@inject Manager manager
+
+<OrgChartEmployee Employees="Employees"></OrgChartEmployee>
+
+@code {
+    public List<Employee> Employees { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        Employees = manager.EmployeeDB.GetAllActiveEmployees().Result;
+        base.OnInitialized();
+    }
+}

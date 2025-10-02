@@ -1,0 +1,30 @@
+﻿<li>
+    <div class="node">
+        @Employee.EmployeeShortName
+        <br />
+        <small>@Employee.EmployeeDesignation?.DesignationName</small>
+    </div>
+
+    @if (Children.Any())
+    {
+        <svg class="connector" width="100%" height="40">
+            <path d="M50,0 C50,20 50,20 50,40" stroke="#ccc" stroke-width="2" fill="none"/>
+        </svg>
+
+        <ul>
+            @foreach (var child in Children)
+            {
+                <OrgChartTreeNode Employee="child" AllEmployees="AllEmployees"></OrgChartTreeNode>
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter] public Employee Employee { get; set; } = default!;
+    [Parameter] public List<Employee> AllEmployees { get; set; } = new();
+
+    private List<Employee> Children => AllEmployees
+        .Where(e => e.LineManagerId == Employee.EmployeeId)
+        .ToList();
+}

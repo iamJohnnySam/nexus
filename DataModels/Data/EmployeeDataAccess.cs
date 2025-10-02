@@ -21,6 +21,10 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
         {
             emp.EmployeeGrade = await GradeDB.GetByIdAsync(emp.GradeId);
             emp.EmployeeDesignation = await DesignationDB.GetByIdAsync(emp.DesignationId);
+            if (emp.ReplacedEmployeeId != 0)
+                emp.ReplacedEmployee = await GetByIdAsync(emp.ReplacedEmployeeId);
+            if (emp.LineManagerId != 0)
+                emp.LineManager = await GetByIdAsync(emp.LineManagerId);
         }
     }
 
@@ -35,8 +39,8 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
         }
 
         List<Employee> groupedAndSorted = [.. employees
-            .OrderBy(e => e.EmployeeDesignation.DesignationName)
-            .ThenByDescending(e => e.EmployeeGrade.GradeScore)];
+            .OrderBy(e => e.EmployeeDesignation!.DesignationName)
+            .ThenByDescending(e => e.EmployeeGrade!.GradeScore)];
 
         return groupedAndSorted;
     }

@@ -3,34 +3,35 @@
 @inject IJSRuntime JS
 @inject Manager manager
 
-@if (itemExists)
+@foreach (ResourceBlock block in ResourceBlocks)
 {
-    @foreach (ResourceBlock block in ResourceBlocks)
-    {
-        <div class="row">
-            <div class="col">
-                @if (ResourceType == EManualResourceType.Employee)
-                {
-                    <EmployeeDropdownComponent Employees="Employees" EmployeeId="block.EmployeeId" OnEmployeeUpdate="(employeeId) => EmployeeUpdate(block, employeeId)" />
-                }
-                else if (ResourceType == EManualResourceType.Project)
-                {
-                    <ProjectDropdownComponent Projects="Projects" ProjectId="block.ProjectId" OnProjectUpdate="(projectId) => ProjectUpdate(block, projectId)" />
-                }
-            </div>
-            <div class="col-2">
-                <buttton class="add_button" @onclick="() => RemoveBlock(block)">-</buttton>
-            </div>
-        </div>
-    }
     <div class="row">
         <div class="col">
+            @if (ResourceType == EManualResourceType.Employee)
+            {
+                <EmployeeDropdownComponent Employees="Employees" EmployeeId="block.EmployeeId" OnEmployeeUpdate="(employeeId) => EmployeeUpdate(block, employeeId)" />
+            }
+            else if (ResourceType == EManualResourceType.Project)
+            {
+                <ProjectDropdownComponent Projects="Projects" ProjectId="block.ProjectId" OnProjectUpdate="(projectId) => ProjectUpdate(block, projectId)" />
+            }
         </div>
-        <div class="col-3">
-            <buttton class="add_button" @onclick=AddBlock>+</buttton>
+        <div class="col-2">
+            <buttton class="add_button" @onclick="() => RemoveBlock(block)">-</buttton>
         </div>
     </div>
 }
+<div class="row">
+    <div class="col">
+        @if(ResourceBlocks.Count == 0)
+        {
+            <button @onclick=CopyResourcesFromLastWeek>Copy over</button>
+        }
+    </div>
+    <div class="col-3">
+        <buttton class="add_button" @onclick=AddBlock>+</buttton>
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -56,19 +57,13 @@
 
     public List<ResourceBlock> ResourceBlocks { get; set; } = [];
 
-    bool itemExists = false;
-
     protected override async Task OnParametersSetAsync()
     {
         if (Week > 52)
         {
             Year += 1;
         }
-        await CheckItemExists();
-        if (itemExists)
-        {
-            await GetItems();
-        }
+        await GetItems();
         await base.OnParametersSetAsync();
     }
 
@@ -79,31 +74,6 @@
             Employees = manager.EmployeeDB.GetAllEmployeesActiveWithin(Year, Week).Result.OrderBy(p => p.EmployeeName).ToList();
         }
         return base.OnInitializedAsync();
-    }
-
-    async Task CheckItemExists()
-    {
-        if (ResourceType == EManualResourceType.Project)
-        {
-            itemExists = true;
-            return;
-        }
-
-        Employee? employee = await manager.EmployeeDB.GetByIdAsync(Id);
-        if (employee != null)
-        {
-            DateTime weekStart = CalendarLogic.GetFirstMondayOfWeek(Year, Week);
-            DateTime weekend = weekStart.AddDays(5);
-            if(employee.JoinDate > weekend)
-            {
-                if(employee.LeaveDate == null || employee.LeaveDate < weekStart)
-                {
-                    itemExists = true;
-                    return;
-                }
-            }
-        }
-        itemExists = false;
     }
 
     async Task GetItems()
@@ -187,5 +157,25 @@
         await manager.ResourceBlockDB.DeleteAsync(block);
         GetItems();
         await InvokeAsync(StateHasChanged);
+    }
+
+    async void CopyResourcesFromLastWeek()
+    {
+        int copyWeek;
+        int copyYear;
+        if (Week == 1)
+        {
+            copyWeek = 52;
+            copyYear = Year - 1;
+        }
+        else
+        {
+            copyWeek = Week - 1;
+            copyYear = Year;
+        }
+
+        await manager.ResourceBlockDB.CopyResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
+        await GetItems();
+        StateHasChanged();
     }
 }
