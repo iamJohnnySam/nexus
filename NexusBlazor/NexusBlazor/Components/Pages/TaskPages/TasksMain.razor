@@ -11,7 +11,7 @@
     <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" AllActiveEmployees="Employees" />
 </div>
 
-<div style="padding: 10px 10px 10px 30px;">
+<div style="padding: 10px 10px 100px 30px;">
     
     <div class="row">
         <div class="col">
@@ -26,9 +26,6 @@
     </div>
 
 </div>
-<br />
-<br />
-<br />
 
 
 
@@ -58,6 +55,7 @@
     private void HandleProjectChange(string projectName)
     {
         CurrentProject = manager.LoginInfo.CurrentProject;
+        SelectedTask = null;
     }
 
     async void OnTaskSelected(TaskItem task)
@@ -72,7 +70,6 @@
         await manager.TaskItemDB.InsertAsync(task);
         SelectedTask = null;
         await InvokeAsync(StateHasChanged);
-
     }
 
 }
