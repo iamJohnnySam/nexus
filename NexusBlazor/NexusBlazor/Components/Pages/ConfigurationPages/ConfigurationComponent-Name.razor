@@ -1,0 +1,13 @@
+﻿@ConfigurationName<br />
+(@ModuleName)
+@if (IsAddOn)
+{
+    <br />
+    <span style="color: yellow; font-size: 8pt;">OPTIONAL</span>
+}
+
+@code {
+    [Parameter] public required string ConfigurationName { get; set; }
+    [Parameter] public required string ModuleName { get; set; }
+    [Parameter] public required bool IsAddOn { get; set; }
+}

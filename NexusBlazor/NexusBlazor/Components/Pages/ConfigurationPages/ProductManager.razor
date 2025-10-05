@@ -1,0 +1,115 @@
+﻿@page "/configuration/product"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Products</PageTitle>
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Product Manager</h3>
+
+    <!-- Top Section: Table -->
+    <div class="card p-3" style="background-color: transparent;">
+        <h5>@(SelectedProduct?.ProductId == 0 ? "Add New Product" : "Edit Product")</h5>
+
+        <EditForm Model="@SelectedProduct" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Product Name</label>
+                <InputText class="form-control" @bind-Value="SelectedProduct.ProductName" />
+                <ValidationMessage For="@(() => SelectedProduct.ProductName)" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="mb-4">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Product Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Products)
+                {
+                    <tr class="@((SelectedProduct?.ProductId == product.ProductId) ? "table-primary" : "")">
+                        <td style="color: white">@product.ProductId</td>
+                        <td style="color: white">@product.ProductName</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(product)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(product)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Product> Products = [];
+    private Product SelectedProduct = new()
+    {
+        ProductName = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        Products = await manager.ProductDB.GetAllAsync();
+    }
+
+    private void Edit(Product product)
+    {
+        SelectedProduct = new Product
+        {
+            ProductId = product.ProductId,
+            ProductName = product.ProductName
+        };
+    }
+
+    private async Task Delete(Product product)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{product.ProductName}'?");
+        if (!confirmed) return;
+
+        await manager.ProductDB.DeleteAsync(product);
+        await LoadProducts();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedProduct.ProductId == 0)
+        {
+            await manager.ProductDB.InsertAsync(SelectedProduct);
+        }
+        else
+        {
+            await manager.ProductDB.UpdateAsync(SelectedProduct);
+        }
+
+        await LoadProducts();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedProduct = new Product
+        {
+            ProductName = string.Empty
+        };
+    }
+}

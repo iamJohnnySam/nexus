@@ -10,5 +10,4 @@ namespace DataModels.Data;
 
 public class ProductModuleDataAccess(string connectionString) : DataAccess<ProductModule>(connectionString, ProductModule.Metadata)
 {
-
 }

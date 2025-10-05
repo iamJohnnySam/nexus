@@ -23,6 +23,6 @@ public class ProductModule
                 { nameof(ModuleName), EDataType.Text },
                 { nameof(Rank), EDataType.Integer }
         },
-        nameof(ModuleName)
+        nameof(Rank)
     );
 }

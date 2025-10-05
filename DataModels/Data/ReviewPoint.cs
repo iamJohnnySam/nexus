@@ -13,6 +13,8 @@ public class ReviewPoint
     [Key]
     public int ReviewPointId { get; set; }
     public int ModuleId { get; set; }
+    public ProductModule? Module { get; set; }
+    public required string ReviewCategory { get; set; }
     public required string ReviewDescription { get; set; }
 
     public static TableMetadata Metadata => new(
@@ -21,6 +23,7 @@ public class ReviewPoint
         {
                 { nameof(ReviewPointId), EDataType.Key },
                 { nameof(ModuleId), EDataType.Integer },
+                { nameof(ReviewCategory), EDataType.Text },
                 { nameof(ReviewDescription), EDataType.Text }
         },
         nameof(ReviewDescription)

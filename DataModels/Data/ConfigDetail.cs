@@ -13,9 +13,9 @@ public class ConfigDetail
     [Key]
     public int ConfigDetailId { get; set; }
     public int ConfigurationId { get; set; }
-    public Configuration? Configuration { get; set; }
+    public Configuration? Configuration { get; set; } = null;
     public int SpecificationId { get; set; }
-    public Specification? Specification { get; set; }
+    public Specification? Specification { get; set; } = null;
     public required string SpecificationDetail { get; set; }
     public string Comments { get; set; } = string.Empty;
     public int Revision { get; set; } = 0;

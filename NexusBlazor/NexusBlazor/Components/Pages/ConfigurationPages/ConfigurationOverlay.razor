@@ -1,0 +1,149 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@if (ShowOverlay)
+{
+    <div class="overlay-window">
+        <div class="card p-3" style="background-color: transparent;">
+            <h5>@(SelectedConfiguration?.ConfigurationId == 0 ? "Add New Configuration" : "Edit Configuration")</h5>
+
+            <EditForm Model="@SelectedConfiguration" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Configuration Name</label>
+                    <InputText class="form-control" @bind-Value="SelectedConfiguration.ConfigurationName" />
+                    <ValidationMessage For="@(() => SelectedConfiguration.ConfigurationName)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputText class="form-control" @bind-Value="SelectedConfiguration.ConfigurationDescription" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Project</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedConfiguration.ProjectId">
+                        <option value=0>-- Select Project --</option>
+                        @foreach (var project in Projects)
+                        {
+                            <option value="@project.ProjectId">@project.ProjectName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => SelectedConfiguration.ProjectId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Module</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedConfiguration.ProductModuleId">
+                        <option value=0>-- Select Module --</option>
+                        @foreach (var module in ProductModules)
+                        {
+                            <option value="@module.ModuleId">@module.ModuleName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => SelectedConfiguration.ProjectId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Quantity</label>
+                    <InputNumber class="form-control" @bind-Value="SelectedConfiguration.Quantity" />
+                    <ValidationMessage For="@(() => SelectedConfiguration.Quantity)" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedConfiguration.IsRequired" />
+                    <label class="form-check-label">Required Item (Only needed to specifically mark as not required)</label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedConfiguration.IsAddOn" />
+                    <label class="form-check-label">Add On (Optional)</label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool ShowOverlay { get; set; } = false;
+
+    [Parameter]
+    public Configuration SelectedConfiguration { get; set; } = new()
+    {
+        ConfigurationName = string.Empty,
+        Quantity = 1
+    };
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Project> Projects = [];
+    private List<ProductModule> ProductModules = [];
+
+
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Projects = (await manager.ProjectDB.GetAllAsync())
+                   .OrderByDescending(p => p.IsTrackedProject)
+                   .ThenByDescending(p => p.IsActive)
+                   .ThenByDescending(p => p.ProjectCode)
+                   .ThenBy(p => p.DesignCode)
+                   .ToList();
+        ProductModules = await manager.ProductModuleDB.GetAllAsync();
+        StateHasChanged();
+    }
+
+    private async Task Delete(ReviewItem item)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this review item?");
+        if (!confirmed) return;
+
+        await manager.ReviewItemDB.DeleteAsync(item);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedConfiguration.ConfigurationId == 0)
+        {
+            throw new InvalidOperationException("New Configuration Cannot be created.");
+        }
+        else
+        {
+            await manager.ConfigurationDB.UpdateAsync(SelectedConfiguration);
+        }
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedConfiguration = new()
+        {
+            ConfigurationName = string.Empty,
+            Quantity = 1
+        };
+    }
+}

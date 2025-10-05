@@ -1,0 +1,188 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@if (ShowOverlay)
+{
+    <div class="overlay-window">
+        <div class="card p-3" style="background-color: transparent; border:none;">
+            <h5>@(SelectedConfigurationDetail?.ConfigDetailId == 0 ? "Add New Configuration Detail" : "Edit Configuration Detail")</h5>
+
+            <EditForm Model="@SelectedConfigurationDetail" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col">Configuration ID: @SelectedConfigurationDetail!.ConfigurationId</div>
+                        <div class="col">Specification ID: @SelectedConfigurationDetail!.SpecificationId</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Configuration: @SelectedConfigurationDetail.Configuration!.ConfigurationName</div>
+                        <div class="col">Specification: @SelectedConfigurationDetail.Specification!.SpecificationName</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Detail</label><br />
+                    @foreach (string item in SelectedConfigurationDetail.Specification.ConfigurationOptions.Split(","))
+                    {
+                        <span class="badge bg-secondary" style="margin-left:5px">@item.Trim()</span>
+                    }
+                    <InputTextArea class="form-control" @bind-Value="SelectedConfigurationDetail.SpecificationDetail" />
+                    <ValidationMessage For="@(() => SelectedConfigurationDetail.SpecificationDetail)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputTextArea class="form-control" @bind-Value="SelectedConfigurationDetail.Comments" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Revision</label>
+                    <label>@SelectedConfigurationDetail.Revision</label><br />
+                    @if(SelectedConfigurationDetail.ConfigDetailId != 0)
+                    {
+                        <InputCheckbox class="form-check-input" @bind-Value="UpRev" />
+                        <label class="form-check-label">UpRev</label>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col">First Added: @SelectedConfigurationDetail!.FirstAdded.ToString("yyyy/MM/dd")</div>
+                        <div class="col">Last Updated: @SelectedConfigurationDetail!.LastUpdated.ToString("yyyy/MM/dd")</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+        @if (SelectedConfigurationDetail != null && SelectedConfigurationDetail.Revision > 0)
+        {
+            <h4>Revision History</h4>
+            <div class="mb-4">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Revision</th>
+                            <th>Detail</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var history in RevisionHistory)
+                        {
+                            <tr>
+                                <td style="color: white">@history.Revision</td>
+                                <td style="color: white">@history.SpecificationDetail</td>
+                                <td style="color: white">@history.Comments</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool ShowOverlay { get; set; } = false;
+
+    [Parameter]
+    public ConfigDetail SelectedConfigurationDetail { get; set; } = new()
+    {
+        SpecificationId = 0,
+        ConfigurationId = 0,
+        SpecificationDetail = string.Empty
+    };
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Project> Projects = [];
+    private List<ConfigDetail> RevisionHistory = [];
+    private List<ProductModule> ProductModules = [];
+    private bool UpRev { get; set; } = true;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        UpRev = true;
+        if(SelectedConfigurationDetail != null)
+        {
+            RevisionHistory = await manager.ConfigDetailDB.GetAllRevisionsAsync(SelectedConfigurationDetail.ConfigurationId, SelectedConfigurationDetail.SpecificationId);
+            if (SelectedConfigurationDetail.Configuration == null)
+            {
+                SelectedConfigurationDetail.Configuration = await manager.ConfigurationDB.GetByIdAsync(SelectedConfigurationDetail.ConfigurationId);
+            }
+            if (SelectedConfigurationDetail.Specification == null)
+            {
+                SelectedConfigurationDetail.Specification = await manager.SpecificationDB.GetByIdAsync(SelectedConfigurationDetail.SpecificationId);
+            }
+        }
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+
+    private async Task Delete(ReviewItem item)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this item?");
+        if (!confirmed) return;
+
+        await manager.ReviewItemDB.DeleteAsync(item);
+        ResetForm();
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        ConfigDetail saveConfig;
+        if (UpRev && SelectedConfigurationDetail.ConfigDetailId != 0)
+        {
+            saveConfig = new()
+                {
+                    ConfigurationId = SelectedConfigurationDetail.ConfigurationId,
+                    SpecificationId = SelectedConfigurationDetail.SpecificationId,
+                    SpecificationDetail = SelectedConfigurationDetail.SpecificationDetail,
+                    Comments = SelectedConfigurationDetail.Comments,
+                    Revision = SelectedConfigurationDetail.Revision + 1
+                };
+        }
+        else
+        {
+            saveConfig = SelectedConfigurationDetail;
+        }
+
+        if (saveConfig.ConfigDetailId == 0)
+        {
+            await manager.ConfigDetailDB.InsertAsync(saveConfig);
+        }
+        else
+        {
+            await manager.ConfigDetailDB.UpdateAsync(saveConfig);
+        }
+        await OnItemUpdate.InvokeAsync();
+        ResetForm();
+        StateHasChanged();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedConfigurationDetail = new()
+        {
+            SpecificationId = 0,
+            ConfigurationId = 0,
+            SpecificationDetail = string.Empty
+        };
+    }
+}

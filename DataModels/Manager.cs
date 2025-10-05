@@ -33,6 +33,9 @@ public class Manager
     public ReviewItemDataAccess ReviewItemDB { get; }
     public ReviewPointDataAccess ReviewPointDB { get; }
     public SimulationScenarioDataAccess SimulationScenarioDB { get; }
+    public  SimulationStationDataAccess SimulationStationDB { get; }
+    public SimulationManipulatorDataAccess SimulationManipulatorDB { get; }
+    public SimulationProcessDataAccess SimulationProcessDB { get; }
     public SpecificationDataAccess SpecificationDB { get; }
     public SupplierDataAccess SupplierDB { get; }
     public TaskItemDataAccess TaskItemDB { get; }
@@ -93,13 +96,14 @@ public class Manager
         ResourceBlockDB = new(_connectionString);
         ReviewItemDB = new(_connectionString);
         ReviewPointDB = new(_connectionString);
+
         SimulationScenarioDB = new(_connectionString);
-        
+        SimulationStationDB = new(_connectionString);
+        SimulationManipulatorDB = new(_connectionString);
+        SimulationProcessDB = new(_connectionString);
+
         SupplierDB = new(_connectionString);
         FlowElementDB = new(_connectionString);
-
-
-
     }
 
     private bool EnsureDatabaseExists()

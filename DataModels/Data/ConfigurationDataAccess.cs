@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,14 +18,17 @@ public class ConfigurationDataAccess(string connectionString, ProjectDataAccess 
         config.Project = await ProjectDB.GetByIdAsync(config.ProjectId);
         config.ProductModule = await ProductModuleDB.GetByIdAsync(config.ProductModuleId);
     }
-    public async Task<List<Configuration>> GetByProjectId(int projectId)
+    public async Task<List<Configuration>> GetByProjectIdAsync(int projectId, bool getObjects = true)
     {
         var items = await GetByColumnAsync(nameof(Configuration.ProjectId), projectId);
-        foreach(Configuration item in  items)
+        if (getObjects)
         {
-            await GetItems(item);
+            foreach (Configuration item in items)
+            {
+                await GetItems(item);
+            }
         }
-        return items;
+        return items.OrderBy(rank => rank.ProductModule!.Rank).ToList();
     }
 
     public override async Task<List<Configuration>> GetAllAsync(string? orderBy = null, bool descending = false)
@@ -43,5 +47,21 @@ public class ConfigurationDataAccess(string connectionString, ProjectDataAccess 
         if (item != null)
             await GetItems(item);
         return item;
+    }
+
+    public async Task<List<ProductModule>> GetProductModulesByProjectIdAsync(int ProjectId)
+    {
+        var items = await GetByProjectIdAsync(ProjectId, false);
+        List<int> moduleIds = [];
+        List<ProductModule> modules = [];
+        foreach (var item in items)
+        {
+            if (!moduleIds.Contains(item.ProductModuleId))
+            {
+                moduleIds.Add(item.ProductModuleId);
+                modules.Add((await ProductModuleDB.GetByIdAsync(item.ProductModuleId))!);
+            }
+        }
+        return modules.OrderBy(module => module.Rank).ToList();
     }
 }

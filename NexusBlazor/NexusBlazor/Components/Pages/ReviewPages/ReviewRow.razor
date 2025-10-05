@@ -1,0 +1,197 @@
+﻿@using NexusBlazor.Components.Pages.ConfigurationPages
+@inject Manager manager
+@rendermode InteractiveServer
+
+
+@for (int i = 0; i < MaxCount; i++)
+{
+    <tr>
+        @if(i == 0)
+        {
+            <td rowspan="@MaxCount">
+                <ConfigurationComponent_Name ConfigurationName="@ThisConfiguration.ConfigurationName"
+                                             ModuleName="@ThisConfiguration.ProductModule?.ModuleName"
+                                             IsAddOn="@ThisConfiguration.IsAddOn" />
+            </td>
+            <td rowspan="@MaxCount">
+                <div style="width: 100%; display: flex; justify-content: center; ">
+                    @ThisConfiguration.Quantity
+                </div>
+            </td>
+        }
+
+
+        @if (!ThisConfiguration.IsRequired)
+        {
+            <td colspan="7">
+                <span style="color:darkgrey">Not Required</span>
+            </td>
+        }
+        else if (SpecificationCount == 0 && ReviewPointCount == 0)
+        {
+            <td colspan="7">
+                <span style="color:red">No Specifications or Review Points Found</span>
+            </td>
+        }
+        else
+        {
+
+            @if (i < SpecificationCount)
+            {
+                Specification ThisSpecification = Specifications[i];
+                ConfigDetail? detail = manager.ConfigDetailDB.GetBySpecificationId(ThisConfiguration.ConfigurationId, ThisSpecification.SpecificationId).Result;
+                if (detail != null)
+                {
+                    <td>@ThisSpecification.SpecificationName (Rev @detail.Revision)</td>
+                    <td>
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            @detail.SpecificationDetail
+                        </div>
+                    </td>
+                    <td>@detail.Comments</td>
+                }
+                else
+                {
+                    <td>@ThisSpecification.SpecificationName</td>
+                    <td colspan="2">
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            No detail provided
+                        </div>
+                    </td>
+                }
+            }
+            else if (i == SpecificationCount)
+            {
+                <td colspan="3" rowspan="@(MaxCount - SpecificationCount)"></td>
+            }
+
+            @if (i < ReviewPointCount)
+            {
+                ReviewPoint ThisReviewPoint = ReviewPoints[i];
+                ReviewItem? reviewItem = manager.ReviewItemDB.GetByReviewPointAndProjectId(ThisReviewPoint.ReviewPointId, ProjectId).Result;
+                <td>@ThisReviewPoint.ReviewDescription</td>
+                <td>
+                    @if (reviewItem == null || (reviewItem != null && reviewItem.ReviewComments == string.Empty))
+                    {
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            <button class="modern-button" @onclick="() => OnAddComment(ThisReviewPoint.ReviewPointId)">Add Comment</button>
+                        </div>
+                    }
+                    else
+                    {
+                        @reviewItem.ReviewComments
+
+                        <br />
+
+                        @if (reviewItem.ReviewResponsibleID != 0)
+                        {
+                            <label>@manager.EmployeeDB.GetByIdAsync(reviewItem.ReviewResponsibleID).Result!.EmployeeName;</label>
+                            <br />
+                        }
+
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            <button class="modern-button" @onclick="() => OnEditComment(reviewItem!)" style="margin-top: 10px;">View Comment</button>
+                        </div>
+                    }
+                </td>
+                <td>
+                    @if (reviewItem == null || (reviewItem != null && !reviewItem.Approved && !reviewItem.NotApplicable))
+                    {
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            <button class="modern-button" @onclick="() => OnApprove(ThisReviewPoint.ReviewPointId)">Approve</button>
+                        </div>
+                    }
+                    else if (reviewItem.Approved)
+                    {
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            <span style="color: chartreuse; font-weight:bold;">Pass</span>
+                        </div>
+                    }
+                    else if (reviewItem.NotApplicable)
+                    {
+                        <div style="width: 100%; display: flex; justify-content: center; ">
+                            <span style="color: coral; font-weight:bold;">N/A</span>
+                        </div>
+                    }
+                </td>
+            }
+            else if (i == ReviewPointCount)
+            {
+                <td colspan="3" rowspan="@(MaxCount - ReviewPointCount)"></td>
+            }
+
+        }
+    </tr>
+}
+
+@code {
+    [Parameter]
+    public required Configuration ThisConfiguration { get; set; }
+
+    [Parameter]
+    public int ProjectId { get; set; }
+
+    [Parameter]
+    public EventCallback<ReviewItem> OnItemSelected { get; set; }
+
+    List<Specification> Specifications { get; set; } = [];
+    List<ReviewPoint> ReviewPoints { get; set; } = [];
+    int SpecificationCount;
+    int ReviewPointCount;
+    int MaxCount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ThisConfiguration.IsRequired)
+        {
+            Specifications = await manager.SpecificationDB.GetByProductModuleIdAsync(ThisConfiguration.ProductModuleId);
+            ReviewPoints = await manager.ReviewPointDB.GetByProductModuleIdAsync(ThisConfiguration.ProductModuleId);
+            SpecificationCount = Specifications.Count;
+            ReviewPointCount = ReviewPoints.Count;
+            MaxCount = Math.Max(SpecificationCount, ReviewPointCount);
+        }
+        else
+        {
+            MaxCount = 1;
+        }
+        if(MaxCount == 0)
+        {
+            MaxCount = 1;
+        }
+        base.OnParametersSet();
+    }
+
+    async void OnApprove(int ReviewPointId)
+    {
+        ReviewItem? reviewItem = manager.ReviewItemDB.GetByReviewPointAndProjectId(ReviewPointId, ProjectId).Result;
+        if(reviewItem != null)
+        {
+            reviewItem.Approved = true;
+            await manager.ReviewItemDB.UpdateAsync(reviewItem);
+            StateHasChanged();
+        }
+        else
+        {
+            await manager.ReviewItemDB.InsertAsync(new()
+            {
+                ProjectId = ProjectId,
+                ReviewPointId = ReviewPointId,
+                Approved = true
+            });
+        }
+    }
+
+    async void OnAddComment(int ReviewPointId)
+    {
+        await OnItemSelected.InvokeAsync(new()
+        {
+            ReviewPointId = ReviewPointId,
+            ProjectId = ProjectId
+        });
+    }
+
+    async void OnEditComment (ReviewItem item)
+    {
+        await OnItemSelected.InvokeAsync(item);
+    }
+}

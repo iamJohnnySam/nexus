@@ -67,8 +67,6 @@
         Deadline = DateTime.Today.AddDays(1)
     };
 
-    private string ResponsibleInput = "";
-
     private async Task HandleValidSubmit()
     {
         NewTaskItem.ProjectId = ProjectId;
@@ -88,6 +86,5 @@
             Deadline = DateTime.Today.AddDays(1),
             ResponsibleId = employeeId
         };
-        ResponsibleInput = "";
     }
 }

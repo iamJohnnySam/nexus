@@ -1,0 +1,5 @@
+﻿.scrollable-area {
+    height: calc(100vh - 120px);
+    overflow-y: scroll;
+    border: None;
+}

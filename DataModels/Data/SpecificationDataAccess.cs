@@ -19,7 +19,7 @@ public class SpecificationDataAccess(string connectionString, ProductModuleDataA
         {
             item.ProductModule = await ProductModuleDB.GetByIdAsync(item.ProductModuleId);
         }
-        return items.OrderBy(rank => rank.ProductModule!.Rank).ToList();
+        return [.. items.OrderBy(rank => rank.ProductModule!.Rank).ThenBy(rank => rank.ProductModule!.ModuleId).ThenBy(rank => rank.Rank)];
     }
 
     public override async Task<Specification?> GetByIdAsync(object id)
@@ -37,6 +37,6 @@ public class SpecificationDataAccess(string connectionString, ProductModuleDataA
         {
             item.ProductModule = await ProductModuleDB.GetByIdAsync(item.ProductModuleId);
         }
-        return items.OrderBy(rank => rank.ProductModule!.Rank).ToList();
+        return [.. items.OrderBy(rank => rank.ProductModule!.Rank).ThenBy(rank => rank.Rank)];
     }
 }

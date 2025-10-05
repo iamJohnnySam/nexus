@@ -36,7 +36,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        projects = manager.ProjectDB.GetAllActiveAsync().Result;
+        projects = await manager.ProjectDB.GetAllActiveAsync();
     }
 
 }

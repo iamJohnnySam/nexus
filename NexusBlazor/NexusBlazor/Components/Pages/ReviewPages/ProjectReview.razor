@@ -1,0 +1,63 @@
+﻿@page "/review"
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Review | @CurrentProject</PageTitle>
+<ProjectSelectionRowComponent Title="Project Review" OnProjectChange="HandleProjectChange" />
+
+<div style="padding: 10px 20px 10px 30px;">
+    <table width="100%" class="modern-table">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>Count</th>
+                <th colspan="3">Specification</th>
+                <th colspan="3">Review</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Configuration configuration in Configurations)
+            {
+                <ReviewRow ThisConfiguration="configuration" ProjectId="CurrentProject.ProjectId" OnItemSelected="ItemSelected" />
+            }
+        </tbody>
+    </table>
+</div>
+
+<ReviewCommentOverlay SelectedReviewItem="SelectedReviewItem" ShowOverlay="ShowOverlay" OnItemUpdate="StateHasChanged" />
+
+
+
+@code{
+
+    private Project CurrentProject { get; set; }
+    private List<Configuration> Configurations { get; set; } = [];
+
+    public bool ShowOverlay { get; set; } = false;
+    public ReviewItem SelectedReviewItem { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await base.OnInitializedAsync();
+    }   
+
+    private async Task LoadData()
+    {
+        CurrentProject = manager.LoginInfo.CurrentProject;
+        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
+        StateHasChanged();
+    }
+
+    private async Task HandleProjectChange(string projectName)
+    {
+        await manager.ProjectDB.SelectProjectFromName(projectName);
+        await LoadData();
+    }
+
+    void ItemSelected(ReviewItem item)
+    {
+        ShowOverlay = true;
+        SelectedReviewItem = item;
+    }
+}

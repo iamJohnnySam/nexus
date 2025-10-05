@@ -44,7 +44,7 @@
     position: relative;
 }
 
-.dropbtn {
+.dropButton {
     background: none;
     border: none;
     color: #f0f0f0;
@@ -54,7 +54,7 @@
     transition: color 0.3s;
 }
 
-.dropbtn:hover {
+.dropButton:hover {
     color: #00adb5;
 }
 

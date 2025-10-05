@@ -1,0 +1,166 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@if (ShowOverlay)
+{
+    <div class="overlay-window">
+        <div class="card p-3" style="background-color: transparent; border: none;">
+            <h5>@(SelectedReviewItem?.ReviewItemId == 0 ? "Add Review Item" : "Edit Review Item")</h5>
+
+            <EditForm Model="@SelectedReviewItem" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Project (@SelectedReviewItem.ProjectId)</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ProjectId">
+                        <option value=0>-- Select Project --</option>
+                        @foreach (var p in Projects)
+                        {
+                            <option value="@p.ProjectId">@p.ProjectName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Review Point</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ReviewPointId">
+                        <option value="">-- Select Review Point --</option>
+                        @foreach (var rp in ReviewPoints)
+                        {
+                            <option value="@rp.ReviewPointId">@rp.ReviewDescription</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Approved</label>
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedReviewItem.Approved" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Not Applicable</label>
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedReviewItem.NotApplicable" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Last Review Date</label>
+                    <InputDate class="form-control" @bind-Value="SelectedReviewItem.LastReviewDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Review Comments</label>
+                    <InputTextArea class="form-control" @bind-Value="SelectedReviewItem.ReviewComments" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Responsible</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ReviewResponsibleID">
+                        <option value="">-- Select User --</option>
+                        @foreach (var u in Users)
+                        {
+                            <option value="@u.EmployeeId">@u.EmployeeName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+        <div style="display: flex; justify-content: flex-end; padding:10px">
+            <button class="modern-button" @onclick="ResetForm">Close</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool ShowOverlay { get; set; }
+
+    [Parameter]
+    public ReviewItem SelectedReviewItem { get; set; } = new()
+    {
+        ReviewComments = string.Empty,
+        Approved = false,
+        LastReviewDate = null
+    };
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Project> Projects = [];
+    private List<ReviewPoint> ReviewPoints = [];
+    private List<Employee> Users = [];
+
+    protected override void OnParametersSet()
+    {
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Projects = await manager.ProjectDB.GetAllAsync();
+        ReviewPoints = await manager.ReviewPointDB.GetAllAsync();
+        Users = await manager.EmployeeDB.GetAllActiveEmployees();
+    }
+
+    private void Edit(ReviewItem item)
+    {
+        SelectedReviewItem = new ReviewItem
+        {
+            ReviewItemId = item.ReviewItemId,
+            ProjectId = item.ProjectId,
+            ReviewPointId = item.ReviewPointId,
+            Approved = item.Approved,
+            NotApplicable = item.NotApplicable,
+            LastReviewDate = item.LastReviewDate,
+            ReviewComments = item.ReviewComments,
+            ReviewResponsibleID = item.ReviewResponsibleID
+        };
+    }
+
+    private async Task Delete(ReviewItem item)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this review item?");
+        if (!confirmed) return;
+
+        await manager.ReviewItemDB.DeleteAsync(item);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedReviewItem.ReviewItemId == 0)
+        {
+            await manager.ReviewItemDB.InsertAsync(SelectedReviewItem);
+        }
+        else
+        {
+            await manager.ReviewItemDB.UpdateAsync(SelectedReviewItem);
+        }
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedReviewItem = new ReviewItem
+        {
+            ReviewComments = string.Empty,
+            Approved = false,
+            LastReviewDate = null
+        };
+    }
+}

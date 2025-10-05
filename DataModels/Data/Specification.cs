@@ -17,6 +17,8 @@ public class Specification
     public int ProductModuleId { get; set; }
     public ProductModule? ProductModule { get; set; }
     public string ConfigurationOptions {  get; set; } = string.Empty;
+    public string DefaultOption {  get; set; } = string.Empty;
+    public int Rank {  get; set; } = 0;
 
     public static TableMetadata Metadata => new(
         typeof(Specification).Name,
@@ -26,7 +28,9 @@ public class Specification
                 { nameof(SpecificationName), EDataType.Text },
                 { nameof(SpecificationDescription), EDataType.Text },
                 { nameof(ProductModuleId), EDataType.Integer },
-                { nameof(ConfigurationOptions), EDataType.Text }
+                { nameof(Rank), EDataType.Integer },
+                { nameof(ConfigurationOptions), EDataType.Text },
+                { nameof(DefaultOption), EDataType.Text }
         },
         nameof(SpecificationName)
     );

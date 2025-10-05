@@ -2,7 +2,7 @@
 @inject Manager manager
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Configuration | @CurrentProject</PageTitle>
+<PageTitle>nexus | Configuration | @CurrentProject.ProjectName</PageTitle>
 <ProjectSelectionRowComponent Title="Project Configuration" OnProjectChange="HandleProjectChange" />
 
 <div style="padding: 10px 20px 10px 30px;">
@@ -15,13 +15,15 @@
                 <th>Value</th>
                 <th>Comments</th>
                 <th>Rev</th>
-                <th>Controls</th>
+                <th colspan="2">Controls</th>
             </tr>
         </thead>
         <tbody>
             @foreach (Configuration configuration in Configurations)
             {
-                <ConfigurationRows ThisConfiguration=configuration OnConfigUpdate=LoadData />
+                <ConfigurationRows ThisConfiguration=configuration OnDetailUpdated=ConfigurationUpdated 
+                    OnConfigurationSelected="DisplayConfigurationOverlay"
+                    OnConfigurationDetailSelected="DisplayDetailOverlay"/>
             }
         </tbody>
     </table>
@@ -29,37 +31,69 @@
     <br />
     <h4>Add More Modules</h4>
     <div class="row">
-        @foreach (ProductModule productModule in OtherModules)
-        {
-            <div class="col-1" style="margin:5px; align-content:center; justify-content:center;">
-                <button class="modern-button" @onclick="() => AddConfig(productModule)">
-                    Add @productModule.ModuleName
-                </button>
+        <div class="col-3">
+            <DropdownComponent Items="Modules" OnItemUpdate="HandleNewModuleSelected" SelectedItemId=SelectedModuleToAdd />
+            @if(SelectedModuleToAdd != 0)
+            {
+                <div style="margin-top:10px;">
+                    <button class="modern-button" style="width: 100%" @onclick="() => AddConfig(AllModules.FirstOrDefault(module => module.ModuleId == SelectedModuleToAdd)!)">
+                        Add @OtherModules.FirstOrDefault(module => module.ModuleId == SelectedModuleToAdd)?.ModuleName
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="col">
+            <div class="row">
+            @foreach (ProductModule productModule in OtherModules)
+            {
+                <div class="col-1" style="margin:5px; align-content:center; justify-content:center;">
+                    <button class="modern-button" style="width: 100%; height: 100%" @onclick="() => AddConfig(productModule)">
+                        Add @productModule.ModuleName
+                    </button>
+                </div>                
+            }
             </div>
-        }
+        </div>
     </div>
 </div>
-
+<ConfigurationOverlay SelectedConfiguration="SelectedConfiguration" ShowOverlay="showConfigurationOverlay" OnItemUpdate="ConfigurationUpdated" />
+<ConfigurationDetailOverlay SelectedConfigurationDetail="SelectedDetail" ShowOverlay="showDetailOverlay" OnItemUpdate="ConfigurationUpdated" />
 
 
 @code{
-    
     private Project CurrentProject { get; set; }
     private List<Configuration> Configurations { get; set; } = [];
     private string EditorToShow { get; set; } = "None";
+    private List<ProductModule> AllModules { get; set; } = [];
+    private Dictionary<int, string> Modules = [];
     private List<ProductModule> OtherModules { get; set; } = [];
+
+    private Configuration? SelectedConfiguration { get; set; }
+    private ConfigDetail? SelectedDetail { get; set; }
+    private bool showConfigurationOverlay { get; set; } = false;
+    private bool showDetailOverlay { get; set; } = false;
+
+    private int SelectedModuleToAdd = 0;
 
     protected override async Task OnInitializedAsync()
     {
+        showConfigurationOverlay = false;
+        showDetailOverlay = false;
         await LoadData();
+
+        AllModules = await manager.ProductModuleDB.GetAllAsync();
+        foreach (ProductModule module in AllModules)
+        {
+            Modules.Add(module.ModuleId, module.ModuleName);
+        }
+
         await base.OnInitializedAsync();
     }   
-
 
     private async Task LoadData()
     {
         CurrentProject = manager.LoginInfo.CurrentProject;
-        Configurations = await manager.ConfigurationDB.GetByProjectId(CurrentProject.ProjectId);
+        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
         OtherModules = await manager.ProductModuleDB.GetAllAsync();
         OtherModules.RemoveAll(module => Configurations.Any(cfg => cfg.ProductModuleId == module.ModuleId));
         StateHasChanged();
@@ -81,6 +115,36 @@
                 Quantity = 1,
                 IsRequired = true
             });
+        SelectedModuleToAdd = 0;
         await LoadData();
+    }
+
+    async void HandleNewModuleSelected(int moduleId)
+    {
+        SelectedModuleToAdd = moduleId;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void ConfigurationUpdated()
+    {
+        showConfigurationOverlay = false;
+        showDetailOverlay = false;
+        StateHasChanged();
+    }
+
+    void DisplayConfigurationOverlay(Configuration configuration)
+    {
+        SelectedConfiguration = configuration;
+        showConfigurationOverlay = true;
+        showDetailOverlay = false;
+        StateHasChanged();
+    }
+
+    void DisplayDetailOverlay(ConfigDetail configDetail)
+    {
+        SelectedDetail = configDetail;
+        showConfigurationOverlay = false;
+        showDetailOverlay = true;
+        StateHasChanged();
     }
 }

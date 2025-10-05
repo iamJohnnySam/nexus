@@ -1,0 +1,119 @@
+﻿@page "/projects/customer"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Customer Manager</PageTitle>
+
+
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Customer Manager</h3>
+
+    <div class="row">
+        <div class="col scrollable-area">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in Customers)
+                    {
+                        <tr class="@((SelectedCustomer?.CustomerId == customer.CustomerId) ? "table-primary" : "")">
+                            <td style="color: white">@customer.CustomerId</td>
+                            <td style="color: white">@customer.CustomerName</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(customer)">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(customer)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-5">
+            <div class="card p-3" style="background-color: transparent;">
+                <h5>@(SelectedCustomer?.CustomerId == 0 ? "Add New Customer" : "Edit Customer")</h5>
+
+                <EditForm Model="@SelectedCustomer" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label class="form-label">Customer Name</label>
+                        <InputText class="form-control" @bind-Value="SelectedCustomer!.CustomerName" />
+                        <ValidationMessage For="@(() => SelectedCustomer.CustomerName)" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Customer> Customers = [];
+    private Customer SelectedCustomer = new()
+    {
+        CustomerName = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        Customers = await manager.CustomerDB.GetAllSortedAsync();
+    }
+
+    private void Edit(Customer customer)
+    {
+        SelectedCustomer = new Customer
+        {
+            CustomerId = customer.CustomerId,
+            CustomerName = customer.CustomerName
+        };
+    }
+
+    private async Task Delete(Customer customer)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{customer.CustomerName}'?");
+        if (!confirmed) return;
+
+        await manager.CustomerDB.DeleteAsync(customer);
+        await LoadCustomers();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedCustomer.CustomerId == 0)
+        {
+            await manager.CustomerDB.InsertAsync(SelectedCustomer);
+        }
+        else
+        {
+            await manager.CustomerDB.UpdateAsync(SelectedCustomer);
+        }
+
+        await LoadCustomers();
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedCustomer = new Customer
+        {
+            CustomerName = string.Empty
+        };
+    }
+}

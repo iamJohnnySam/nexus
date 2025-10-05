@@ -84,6 +84,23 @@ public class ConfigDetailDataAccess(string connectionString, ConfigurationDataAc
             await GetItems(result);            
         return result;
     }
+    public async Task<List<ConfigDetail>> GetAllRevisionsAsync(int configurationId, int specificationId)
+    {
+        var sql = @"
+        SELECT *
+        FROM ConfigDetail
+        WHERE ConfigurationId = @configurationId
+          AND SpecificationId = @specificationId
+        ORDER BY Revision DESC;";
+
+        List<ConfigDetail> result = await QueryAsync(sql, new { specificationId, configurationId });
+
+        foreach (ConfigDetail configDetail in result)
+        {
+            await GetItems(configDetail);
+        }
+        return result.ToList();
+    }
 
 
 }

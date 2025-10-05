@@ -1,0 +1,160 @@
+﻿@page "/review_manager"
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Review Manager</PageTitle>
+
+
+<div style="padding: 10px 20px 10px 30px;">
+    <h3>Review Point Manager</h3>
+
+    <div class="row">
+        <div class="col scrollable-area">
+            <div class="mb-4">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Module</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rp in ReviewPoints)
+                        {
+                            <tr class="@((SelectedReviewPoint?.ReviewPointId == rp.ReviewPointId) ? "table-primary" : "")">
+                                <td style="color: white">@rp.ReviewPointId</td>
+                                <td style="color: white">@Modules.FirstOrDefault(m => m.ModuleId == rp.ModuleId)?.ModuleName</td>
+                                <td style="color: white">@rp.ReviewCategory</td>
+                                <td style="color: white">@rp.ReviewDescription</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(rp)">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(rp)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-3" style="background-color: transparent;">
+                <h5>@(SelectedReviewPoint?.ReviewPointId == 0 ? "Add Review Point" : "Edit Review Point")</h5>
+
+                <EditForm Model="@SelectedReviewPoint" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label class="form-label">Module</label>
+                        <InputSelect class="form-control" @bind-Value="SelectedReviewPoint!.ModuleId">
+                            <option value="">-- Select Module --</option>
+                            @foreach (var module in Modules)
+                            {
+                                <option value="@module.ModuleId">@module.ModuleName</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Review ReviewCategory</label>
+                        <InputText class="form-control" @bind-Value="SelectedReviewPoint.ReviewCategory" />
+                        <ValidationMessage For="@(() => SelectedReviewPoint.ReviewCategory)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Review Description</label>
+                        <InputText class="form-control" @bind-Value="SelectedReviewPoint.ReviewDescription" @ref="reviewDescriptionText" />
+                        <ValidationMessage For="@(() => SelectedReviewPoint.ReviewDescription)" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private InputText reviewDescriptionText;
+    private List<ReviewPoint> ReviewPoints = [];
+    private List<ProductModule> Modules = [];
+    private int PreviouslySelectedModuleId = 0;
+    private string PreviouslySelectedCategory = "General";
+
+    private ReviewPoint SelectedReviewPoint = new()
+    {
+        ReviewCategory = "General",
+        ReviewDescription = string.Empty
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Modules = await manager.ProductModuleDB.GetAllAsync();
+        ReviewPoints = await manager.ReviewPointDB.GetAllAsync();
+    }
+
+    private void Edit(ReviewPoint rp)
+    {
+        SelectedReviewPoint = new ReviewPoint
+        {
+            ReviewPointId = rp.ReviewPointId,
+            ModuleId = rp.ModuleId,
+            ReviewCategory = rp.ReviewCategory,
+            ReviewDescription = rp.ReviewDescription
+        };
+    }
+
+    private async Task Delete(ReviewPoint rp)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete this review point?");
+        if (!confirmed) return;
+
+        await manager.ReviewPointDB.DeleteAsync(rp);
+        await LoadData();
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedReviewPoint.ReviewPointId == 0)
+        {
+            await manager.ReviewPointDB.InsertAsync(SelectedReviewPoint);
+            
+        }
+        else
+        {
+            await manager.ReviewPointDB.UpdateAsync(SelectedReviewPoint);
+            
+        }
+        PreviouslySelectedModuleId = SelectedReviewPoint.ModuleId;
+        PreviouslySelectedCategory = SelectedReviewPoint.ReviewCategory;
+        await LoadData();
+        ResetForm();
+        if (reviewDescriptionText?.Element != null)
+        {
+            await reviewDescriptionText.Element.Value.FocusAsync();
+        }
+    }
+
+    private void ResetForm()
+    {
+        SelectedReviewPoint = new ReviewPoint
+        {
+            ReviewCategory = PreviouslySelectedCategory,
+            ReviewDescription = string.Empty,
+            ModuleId = PreviouslySelectedModuleId
+        };
+    }
+}

@@ -1,72 +1,85 @@
 ﻿@inject Manager manager
+@rendermode InteractiveServer
+
+
+@if (Specifications.Count == 0 || !ThisConfiguration.IsRequired)
+{
+    <tr>
+        <td>
+            <ConfigurationComponent_Name ConfigurationName="@ThisConfiguration.ConfigurationName" ModuleName="@ThisConfiguration.ProductModule!.ModuleName" IsAddOn="ThisConfiguration.IsAddOn" />
+        </td>
+        <td style="text-align:center">
+            @ThisConfiguration.Quantity
+        </td>
+        @if (!ThisConfiguration.IsRequired)
+        {
+            <td colspan="5" style="color:darkgray;">Not Required</td>
+        }
+        else
+        {
+            <td colspan="5">No Specifications Found</td>
+        }
+        <td>
+            <button class="modern-button" @onclick="EditConfiguration">Edit</button>
+        </td>
+    </tr>
+}
 
 @if (ThisConfiguration.IsRequired)
 {
-    if (Specifications.Count == 0)
-    {
-        <tr>
-            <td>
-                <InputText class="transparent-textbox form-control" @bind-Value="ConfigurationName" /><br />
-                <span style="padding-left:10px">(@ThisConfiguration.ProductModule?.ModuleName)</span>
-                @if (ThisConfiguration.IsAddOn)
-                {
-                    <span style="color: yellow; font-size: 8pt;">OPTIONAL</span>
-                }
-            </td>
-            <td style="text-align:center">
-                <InputNumber class="transparent-textbox" @bind-Value="Quantity" style="width:100px;" />
-            </td>
-            <td>No Specifications Found</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    }
     moduleMentioned = false;
     @foreach (Specification specification in Specifications)
     {
+        ConfigDetail? configDetail = manager.ConfigDetailDB.GetBySpecificationIdLatestRevAsync(ThisConfiguration.ConfigurationId, specification.SpecificationId).Result;
         <tr>
             @if (!moduleMentioned)
             {
                 <td rowspan="@Specifications.Count">
-                    <InputText class="transparent-textbox form-control" @bind-Value="ConfigurationName" /><br />
-                    <span style="padding-left:10px">(@ThisConfiguration.ProductModule?.ModuleName)</span>
-                    @if (ThisConfiguration.IsAddOn)
-                    {
-                        <span style="color: yellow; font-size: 8pt;">OPTIONAL</span>
-                    }
+                    <ConfigurationComponent_Name ConfigurationName="@ThisConfiguration.ConfigurationName" ModuleName="@ThisConfiguration.ProductModule!.ModuleName" IsAddOn="ThisConfiguration.IsAddOn" />
                 </td>
                 <td rowspan="@Specifications.Count" style="text-align:center">
-                    <InputNumber class="transparent-textbox" @bind-Value="Quantity" style="width:100px;" />
+                    @ThisConfiguration.Quantity
                 </td>
             }
             <td>
                 @specification.SpecificationName 
-                <br />
-                @foreach(string item in specification.ConfigurationOptions.Split(","))
-                {
-                    <span class="badge bg-secondary" style="margin-left:5px">@item.Trim()</span>
-                }
             </td>
-            <ConfigDetailColumns ConfigID="ThisConfiguration.ConfigurationId" SpecID="specification.SpecificationId" OnNewConfig="HandleNewConfig" OnConfigUpdate="HandleConfigUpdate" />
+            @if (configDetail == null)
+            {
+                <td colspan="3">
+                    <span style="color: red;">Not Defined</span><br />
+                    @foreach (string item in specification.ConfigurationOptions.Split(","))
+                    {
+                        <span class="badge bg-secondary" style="margin-left:5px">@item.Trim()</span>
+                    }
+                </td>
+                <td>
+                    <button class="modern-button" @onclick="() => AddDetail(specification.SpecificationId)">Add</button>
+                    @if(specification.DefaultOption != string.Empty)
+                    {
+                        <button class="modern-button" @onclick="() => AddDefaultDetail(specification.SpecificationId)">Add Default</button>
+                    }
+                </td>
+            }
+            else
+            {
+                <td style="white-space: pre-wrap;">@configDetail.SpecificationDetail</td>
+                <td style="white-space: pre-wrap;">
+                    @configDetail.Comments
+                </td>
+                <td>@configDetail.Revision</td>
+                <td><button class="modern-button" @onclick="() => EditDetail(configDetail)">Edit</button></td>
+            }
+           
             @if (!moduleMentioned)
             {
                 <td rowspan="@Specifications.Count">
-                    @* <InputCheckbox class="form-check-input" /> *@
+                    <button class="modern-button" @onclick="EditConfiguration">Edit</button>
                 </td>
                 moduleMentioned = true;
             }
         </tr>
     }
-}
-else
-{
-    <tr>
-        <td>@ThisConfiguration.ProductModule?.ModuleName</td>
-        <td>0</td>
-        <td>Not Required</td>
-    </tr>
 }
 
 @code {
@@ -77,36 +90,18 @@ else
     public required Configuration ThisConfiguration { get; set; }
 
     [Parameter]
-    public EventCallback<ConfigDetail> OnConfigUpdate { get; set; }
+    public EventCallback OnDetailUpdated { get; set; }
 
-    private string confgurationName;
-    public string ConfigurationName
-    {
-        get { return confgurationName; }
-        set { confgurationName = value;
-            confgurationName = value;
-            ThisConfiguration.ConfigurationName = value;
-            manager.ConfigurationDB.UpdateAsync(ThisConfiguration).Wait();
-        }
-    }
+    [Parameter]
+    public EventCallback<Configuration> OnConfigurationSelected { get; set; }
 
-
-    private int quantity;
-    public int Quantity
-    {
-        get { return quantity; }
-        set { quantity = value;
-            ThisConfiguration.Quantity = value;
-            manager.ConfigurationDB.UpdateAsync(ThisConfiguration).Wait();
-        }
-    }
+    [Parameter]
+    public EventCallback<ConfigDetail> OnConfigurationDetailSelected { get; set; }
 
 
     protected override async Task OnParametersSetAsync()
     {
         Specifications = await manager.SpecificationDB.GetByProductModuleIdAsync(ThisConfiguration.ProductModuleId);
-        confgurationName = ThisConfiguration.ConfigurationName;
-        quantity = ThisConfiguration.Quantity;
         base.OnParametersSet();
     }
 
@@ -115,7 +110,7 @@ else
         if (configDetail != null)
         {
             await manager.ConfigDetailDB.InsertAsync(configDetail);
-            await OnConfigUpdate.InvokeAsync(configDetail);
+            await OnDetailUpdated.InvokeAsync();
         }
     }
 
@@ -124,7 +119,38 @@ else
         if (configDetail != null)
         {
             await manager.ConfigDetailDB.UpdateAsync(configDetail);
-            await OnConfigUpdate.InvokeAsync(configDetail);
+            await OnDetailUpdated.InvokeAsync();
         }
+    }
+
+    private async Task EditConfiguration()
+    {
+        await OnConfigurationSelected.InvokeAsync(ThisConfiguration);
+    }
+
+    private async Task AddDetail(int specId)
+    {
+        await OnConfigurationDetailSelected.InvokeAsync(new ConfigDetail()
+            {
+                ConfigurationId = ThisConfiguration.ConfigurationId,
+                SpecificationId = specId,
+                SpecificationDetail = string.Empty
+            });
+    }
+
+    private async Task AddDefaultDetail(int specId)
+    {
+        await manager.ConfigDetailDB.InsertAsync(new ConfigDetail()
+            {
+                ConfigurationId = ThisConfiguration.ConfigurationId,
+                SpecificationId = specId,
+                SpecificationDetail = (await manager.SpecificationDB.GetByIdAsync(specId))!.DefaultOption
+            });
+        await OnDetailUpdated.InvokeAsync();
+    }
+
+    private async Task EditDetail(ConfigDetail configDetail)
+    {
+        await OnConfigurationDetailSelected.InvokeAsync(configDetail);
     }
 }
