@@ -2,19 +2,51 @@
 @rendermode InteractiveServer
 
 <div>
-    @foreach (TaskItem taskItem in ParentTaskItems)
+    @foreach (TaskItem taskItem in IncompleteParentTaskItems)
     {
-        <div @onclick="() => onParentTaskSelected(taskItem)">
-            <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" IsBold="@SubTaskItems.ContainsKey(taskItem.TaskId)" OnTaskSelected="onTaskSelected" />
+        <div @onclick="() => ParentTaskSelected(taskItem)">
+            <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
             <div style="padding: 10px 0px 20px 0px;">
 
                 @if (SubTaskItems.ContainsKey(taskItem.TaskId))
                 {
-                    <div>
-                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId])
+                    <div class="@(SelectedParentTaskId == taskItem.TaskId ? showCollapsible : hideCollapsible)">
+                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
                         {
                             <div>
-                                <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="onTaskSelected" />
+                                <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
+                            </div>
+                        }
+                    </div>
+                }
+                @if (SelectedParentTaskId == taskItem.TaskId)
+                {
+                    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
+                }
+            </div>
+        </div>
+    }
+</div>
+@if(CompleteParentTaskItems.Count > 0)
+{
+    <br />
+    <hr />
+    <br />
+}
+<div>
+    @foreach (TaskItem taskItem in CompleteParentTaskItems)
+    {
+        <div @onclick="() => ParentTaskSelected(taskItem)">
+            <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
+            <div style="padding: 10px 0px 20px 0px;">
+
+                @if (SubTaskItems.ContainsKey(taskItem.TaskId))
+                {
+                    <div class="@(SelectedParentTaskId == taskItem.TaskId ? showCollapsible : hideCollapsible)">
+                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
+                        {
+                            <div>
+                                <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
                             </div>
                         }
                     </div>
@@ -33,50 +65,41 @@
     public EventCallback<TaskItem> OnTaskSelected { get; set; }
 
     [Parameter]
+    public EventCallback OnTaskUpdated { get; set; }
+
+    [Parameter]
     public required Project CurrentProject { get; set; }
 
     [Parameter]
-    public bool ShowIncompleteOnly { get; set; } = true;
+    public bool ShowIncompleteOnly { get; set; } = false;
 
-    private List<TaskItem> ParentTaskItems { get; set; } = [];
+    private List<TaskItem> IncompleteParentTaskItems { get; set; } = [];
+    private List<TaskItem> CompleteParentTaskItems { get; set; } = [];
+
     private Dictionary<int, List<TaskItem>> SubTaskItems { get; set; } = [];
     private List<Employee> AllEmployees { get; set; } = [];
-    int SelectedParentTaskId = 0;
+
+    [Parameter]
+    public int SelectedParentTaskId { get; set; } = 0;
+
+    string showCollapsible = "content-show";
+    string hideCollapsible = "content-hidden";
 
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        SelectedParentTaskId = 0;
-        AllEmployees = manager.EmployeeDB.GetAllActiveEmployees().Result;
-        RefreshTasks();
+        AllEmployees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result;
+        await RefreshTasks();
         base.OnParametersSet();
     }
 
-    private async void onParentTaskSelected(TaskItem task)
+    private async Task RefreshTasks()
     {
-        SelectedParentTaskId = task.TaskId;
-    }
-
-    async void onTaskSelected(TaskItem task)
-    {
-        await OnTaskSelected.InvokeAsync(task);
-    }
-
-    private void RefreshTasks()
-    {
-        List<TaskItem> IncompleteParentTaskItems;
-        List<TaskItem> CompleteParentTaskItems;
-
-        IncompleteParentTaskItems = manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId).Result;
+        IncompleteParentTaskItems = await manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId);
 
         if (!ShowIncompleteOnly)
         {
-            CompleteParentTaskItems = manager.TaskItemDB.GetAllCompleteParentTasks(CurrentProject.ProjectId).Result;
-            ParentTaskItems = IncompleteParentTaskItems.Concat(CompleteParentTaskItems).ToList();
-        }
-        else
-        {
-            ParentTaskItems = IncompleteParentTaskItems;
+            CompleteParentTaskItems = await manager.TaskItemDB.GetAllCompleteParentTasks(CurrentProject.ProjectId);
         }
 
         SubTaskItems = [];
@@ -91,13 +114,22 @@
         }
     }
 
-    private async void HandleTaskUpdate(TaskItem task)
+    void ParentTaskSelected(TaskItem task)
     {
-        await manager.TaskItemDB.UpdateAsync(task);
-        RefreshTasks();
+        SelectedParentTaskId = task.TaskId;
     }
 
-    private async void HandleTaskAdded(TaskItem task)
+    async void TaskSelected(TaskItem task)
+    {
+        await OnTaskSelected.InvokeAsync(task);
+    }
+
+    async void HandleTaskUpdate()
+    {
+        await OnTaskUpdated.InvokeAsync();
+    }
+
+    async void HandleTaskAdded(TaskItem task)
     {
         task.ProjectId = CurrentProject.ProjectId;
         await manager.TaskItemDB.InsertAsync(task);
@@ -105,12 +137,12 @@
         {
             SelectedParentTaskId = 0;
         }
-        RefreshTasks();
+        await RefreshTasks();
     }
 
-    private void HandleToggleShowComplete(bool showIncomplete)
+    private async void HandleToggleShowComplete(bool showIncomplete)
     {
         ShowIncompleteOnly = !showIncomplete;
-        RefreshTasks();
+        await RefreshTasks();
     }
 }

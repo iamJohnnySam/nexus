@@ -53,6 +53,7 @@ public class SimulationScenario
             SimulationStationIdCSV = String.Join(",", idList);
         }
     }
+    public Dictionary<SimulationStation, int> SimulatorStations { get; set; } = [];
     private string SimulationManipulatorIdCSV { get; set; } = "";
     public Dictionary<int, int> SimulationManipulatorIds
     {
@@ -90,6 +91,7 @@ public class SimulationScenario
             SimulationManipulatorIdCSV = String.Join(",", idList);
         }
     }
+    public Dictionary<SimulationManipulator, int> SimulatorManipulators { get; set; } = [];
     private string SimulationReaderIdCSV { get; set; } = "";
     public Dictionary<int, int> SimulationReaderIds
     {
@@ -127,6 +129,7 @@ public class SimulationScenario
             SimulationReaderIdCSV = String.Join(",", idList);
         }
     }
+    public Dictionary<SimulationReader, int> SimulatorReaders { get; set; } = [];                                                                                   
 
     public static TableMetadata Metadata => new(
         typeof(SimulationScenario).Name,

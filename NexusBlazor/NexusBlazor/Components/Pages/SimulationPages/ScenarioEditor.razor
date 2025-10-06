@@ -1,0 +1,66 @@
+﻿@page "/simulation/scenario_editor"
+@inject NavigationManager Navigation
+@inject Manager manager
+@inject Manager manager
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Tasks | @manager.LoginInfo.CurrentProject.ProjectName</PageTitle>
+
+<h1 style="padding: 10px 20px 0px 30px;">Simulation Scenario Editor</h1>
+<h3 style="padding: 10px 20px 0px 30px;">Project @CurrentProject.DesignCode (@CurrentProject.ProjectCode) @CurrentProject.ProjectName | @ThisScenario.SimulationName</h3>
+
+<div style="padding: 10px 10px 100px 30px;">
+    <h4>Stations</h4>
+    @foreach(KeyValuePair<SimulationStation, int> kvp in ThisScenario.SimulatorStations)
+    {
+
+    }
+
+    <h4>Manipulators</h4>
+
+
+    <h4>Readers</h4>
+
+
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")] 
+    public string? scenarioIdString { get; set; }
+
+    Project CurrentProject;
+    SimulationScenario ThisScenario;
+    int scenarioId;
+
+    List<string> Locations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(scenarioIdString))
+        {
+            Navigation.NavigateTo("/simulation/scenario_manager");
+            return;
+        }
+
+        if (int.TryParse(scenarioIdString, out scenarioId))
+        {
+            SimulationScenario? scenario = await manager.SimulationScenarioDB.GetByIdAsync(scenarioId);
+            if(scenario != null)
+            {
+                ThisScenario = scenario;
+            }
+            else
+            {
+                Navigation.NavigateTo("/simulation/scenario_manager");
+                return;
+            }
+        }
+        else
+        {
+            Navigation.NavigateTo("/simulation/scenario_manager");
+            return;
+        }
+
+        CurrentProject = manager.LoginInfo.CurrentProject;
+    }
+}

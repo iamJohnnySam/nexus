@@ -28,7 +28,7 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
         }
     }
 
-    public async Task<List<Employee>> GetAllActiveEmployees()
+    public async Task<List<Employee>> GetAllActiveEmployeesAsync()
     {
         await FixActiveEmployees(true);
         var employees = await GetByColumnAsync(nameof(Employee.IsActive), true);

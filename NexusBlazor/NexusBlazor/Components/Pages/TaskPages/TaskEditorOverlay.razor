@@ -1,0 +1,148 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@if (ShowOverlay)
+{
+    <div class="overlay-window-large">
+        <div class="card p-3" style="background-color: transparent; border:none;">
+            <h5>@(SelectedItem?.TaskId == 0 ? "Add New Task" : "Edit Task")</h5>
+
+            <EditForm Model="@SelectedItem" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                @if(SelectedItem!.ParentTaskId != 0)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Parent Task</label><br />
+                        <label class="form-label">@manager.TaskItemDB.GetByIdAsync(SelectedItem.ParentTaskId!).Result!.Title</label>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Task</label>
+                    <InputTextArea class="form-control" @bind-Value="SelectedItem.Title" />
+                    <ValidationMessage For="@(() => SelectedItem.Title)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputText class="form-control" @bind-Value="SelectedItem.Description" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Started On</label>
+                    <InputDate class="form-control" @bind-Value="SelectedItem.StartedOn" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Deadline</label>
+                    <InputDate class="form-control" @bind-Value="SelectedItem.Deadline" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Responsible</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedItem.ResponsibleId">
+                        <option value=0>-- Select Responsible --</option>
+                        @foreach (var employee in Employees)
+                        {
+                            <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => SelectedItem.ProjectId)" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.IsCompleted" />
+                    <label class="form-check-label">Completed</label>
+                </div>
+
+                <br />
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.IsBlocking" />
+                    <label class="form-check-label">Timeline Blocking Task</label>
+                </div>
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.PriorityTask" />
+                    <label class="form-check-label">Priority Task</label>
+                </div>
+
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Delete">Delete</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool ShowOverlay { get; set; } = false;
+
+    [Parameter]
+    public TaskItem SelectedItem { get; set; } = new()
+    {
+        Title = string.Empty,
+        Deadline = DateTime.Today.AddDays(1)
+    };
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Employee> Employees = [];
+
+
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Employees = await manager.EmployeeDB.GetAllAsync();
+        StateHasChanged();
+    }
+
+    private async Task Delete()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this item?");
+        if (!confirmed) return;
+
+        await manager.TaskItemDB.DeleteAsync(SelectedItem);
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedItem.TaskId == 0)
+        {
+            await manager.TaskItemDB.InsertAsync(SelectedItem);
+        }
+        else
+        {
+            await manager.TaskItemDB.UpdateAsync(SelectedItem);
+        }
+        await OnItemUpdate.InvokeAsync();
+        ResetForm();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedItem = new()
+        {
+            Title = string.Empty,
+            Deadline = DateTime.Today.AddDays(1)
+        };
+    }
+}

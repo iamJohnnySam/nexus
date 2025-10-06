@@ -9,12 +9,13 @@
         <div class="col">
             <label class="form-label">Task</label>
         </div>
-        <div class="col-1">
-            <label class="form-label">Deadline</label>
-        </div>
         <div class="col-2">
             <label class="form-label">Responsible</label>
         </div>
+        <div class="col-1">
+            <label class="form-label">Deadline</label>
+        </div>
+        
         <div class="col-1">
             <label class="invisible">Submit</label>
         </div>
@@ -22,14 +23,10 @@
 
     <div class="row align-items-end">
         <div class="col">
-            <InputText class="form-control" @bind-Value="NewTaskItem.Title" />
+            <InputText @ref=TaskText class="form-control" @bind-Value="NewTaskItem.Title" />
         </div>
-        
-        <div class="col-1">
-            <InputDate class="form-control" @bind-Value="NewTaskItem.Deadline" />
-        </div>
+
         <div class="col-2">
-            <label class="form-label">Responsible</label>
             <InputSelect class="form-control" @bind-Value="NewTaskItem.ResponsibleId">
                 <option value=0>-- Select Responsible --</option>
                 @foreach (var e in AllActiveEmployees)
@@ -38,6 +35,11 @@
                 }
             </InputSelect>
         </div>
+        
+        <div class="col-1">
+            <InputDate class="form-control" @bind-Value="NewTaskItem.Deadline" />
+        </div>
+        
         <div class="col-1">
             <button class="btn rounded-pill border border-white text-white px-4 py-2" 
             style="font-size: 12px;"
@@ -61,11 +63,22 @@
     [Parameter]
     public EventCallback<TaskItem> OnTaskAdded { get; set; }
 
+    InputText TaskText;
+
     private TaskItem NewTaskItem = new()
     {
         Title = "",
         Deadline = DateTime.Today.AddDays(1)
     };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (TaskText?.Element.HasValue == true)
+        {
+            await TaskText.Element.Value.FocusAsync();
+        }
+        await base.OnParametersSetAsync();
+    }
 
     private async Task HandleValidSubmit()
     {
@@ -73,6 +86,10 @@
         NewTaskItem.ParentTaskId = ParentTaskId;
         await OnTaskAdded.InvokeAsync(NewTaskItem);
         ResetForm();
+        if (TaskText?.Element.HasValue == true)
+        {
+            await TaskText.Element.Value.FocusAsync();
+        }
     }
 
     private void ResetForm()

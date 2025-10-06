@@ -8,7 +8,7 @@
 
     protected override void OnInitialized()
     {
-        Employees = manager.EmployeeDB.GetAllActiveEmployees().Result;
+        Employees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result;
         base.OnInitialized();
     }
 }

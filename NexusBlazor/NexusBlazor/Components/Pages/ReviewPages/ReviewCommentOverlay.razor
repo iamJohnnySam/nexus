@@ -110,7 +110,7 @@
     {
         Projects = await manager.ProjectDB.GetAllAsync();
         ReviewPoints = await manager.ReviewPointDB.GetAllAsync();
-        Users = await manager.EmployeeDB.GetAllActiveEmployees();
+        Users = await manager.EmployeeDB.GetAllActiveEmployeesAsync();
     }
 
     private void Edit(ReviewItem item)

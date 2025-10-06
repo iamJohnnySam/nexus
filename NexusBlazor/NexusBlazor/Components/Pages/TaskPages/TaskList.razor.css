@@ -1,0 +1,12 @@
+﻿
+.content-hidden {
+    display: none;
+    overflow: hidden;
+}
+
+.content-show {
+    margin: 0px 0px 0px 18px;
+    display: block;
+    overflow: hidden;
+}
+
