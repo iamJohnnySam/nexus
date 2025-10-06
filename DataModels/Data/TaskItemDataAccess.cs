@@ -108,6 +108,11 @@ public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo
         List<TaskItem> AllTasks = await QueryTaskList(query, reference);
         return BundleSubTasks(AllTasks);
     }
+    public async Task<List<TaskItem>> GetAllSubTasksOfParentTask(int parentTaskId)
+    {
+        string query = "SELECT * FROM TaskItem WHERE ParentTaskId = @parentTaskId";
+        return await QueryTaskList(query, new { parentTaskId });
+    }
     public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0)
     {
         object reference = LoginInfo.CurrentProject;

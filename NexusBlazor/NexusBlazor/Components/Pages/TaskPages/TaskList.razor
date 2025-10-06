@@ -6,7 +6,7 @@
     {
         <div @onclick="() => ParentTaskSelected(taskItem)">
             <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
-            <div style="padding: 10px 0px 20px 0px;">
+            <div>
 
                 @if (SubTaskItems.ContainsKey(taskItem.TaskId))
                 {
@@ -22,6 +22,7 @@
                 @if (SelectedParentTaskId == taskItem.TaskId)
                 {
                     <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
+                    <hr />
                 }
             </div>
         </div>
@@ -38,7 +39,7 @@
     {
         <div @onclick="() => ParentTaskSelected(taskItem)">
             <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
-            <div style="padding: 10px 0px 20px 0px;">
+            <div>
 
                 @if (SubTaskItems.ContainsKey(taskItem.TaskId))
                 {
@@ -112,6 +113,7 @@
             }
             SubTaskItems[subTask.Key].AddRange(subTask.Value);
         }
+        StateHasChanged();
     }
 
     void ParentTaskSelected(TaskItem task)
@@ -126,6 +128,7 @@
 
     async void HandleTaskUpdate()
     {
+        await RefreshTasks();
         await OnTaskUpdated.InvokeAsync();
     }
 

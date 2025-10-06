@@ -27,19 +27,26 @@
         <InputDate class="form-control" style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisDeadline" />
     </div>
 
-    <div class="col-1">
+    <div class="col-2">
         @if (IsTaskEdited)
         {
             <button class="btn btn-primary w-100" @onclick="TriggerUpdate">✅ Update</button>
         }
         else
         {
-            <button class="modern-button" style="font-size: 12px;" @onclick="ToggleComplete">
-                <nobr>@(InputTask.IsCompleted ? "Not Done" : "✅ Done")</nobr>
-            </button>
+            if (subTasksComplete)
+            {
+                <button class="modern-button" style="width:80px; margin: 2px 5px" @onclick="ToggleComplete">
+                    <nobr>@(InputTask.IsCompleted ? "Not Done" : "✅ Done")</nobr>
+                </button>
+            }
+            else
+            {
+                <button class="modern-button" style="width:80px; margin: 2px 5px">Pending</button>
+            }
         }
-        <button class="modern-button" style="font-size: 12px;" @onclick=onTaskSelected>
-            Edit
+        <button class="modern-button" style="width:80px; margin: 2px 5px" @onclick=onTaskSelected>
+            Edit Task
         </button>
     </div>
 </div>
@@ -57,6 +64,8 @@
     [Parameter]
     public List<Employee> AllEmployees { get; set; } = new();
 
+
+    bool subTasksComplete = false;
 
     private string title = string.Empty;
 
@@ -92,10 +101,19 @@
     private bool IsTaskEdited { get; set; } = false;
     private bool ShowDescription { get; set; } = false;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         title = InputTask.Title;
         deadline = InputTask.Deadline;
+        List<TaskItem> subTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(InputTask.TaskId);
+        if(subTasks.Count == 0)
+        {
+            subTasksComplete = true;
+        }
+        else
+        {
+            subTasksComplete = !subTasks.Any(obj => obj.IsCompleted == false);
+        }
     }
 
     private async Task TriggerUpdate()
@@ -134,7 +152,8 @@
         }
 
         EditableTask.IsCompleted = !EditableTask.IsCompleted;
-        await OnTaskUpdated.InvokeAsync(EditableTask);
+        await manager.TaskItemDB.UpdateAsync(EditableTask);
+        await OnTaskUpdated.InvokeAsync();
         IsTaskEdited = false;
         ShowDescription = false;
     }
@@ -143,5 +162,7 @@
     {
         return InputTask.IsCompleted ? "form-control item-completed" : "form-control";
     }
+
+
 
 }
