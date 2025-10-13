@@ -57,6 +57,17 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
 
         return projects;
     }
+    public async Task<List<Project>> GetAllTrackedAsync()
+    {
+        List<Project> projects = await GetByColumnAsync("IsTrackedProject", true, "ProjectName", true);
+
+        foreach (var project in projects)
+        {
+            await GetProjectObjects(project);
+        }
+
+        return projects;
+    }
     public async Task<List<Project>> GetAllActiveTrackedAsync()
     {
 

@@ -13,7 +13,7 @@ public class Employee
     [Key]
     public int EmployeeId { get; set; }
     public string EmployeeNumber { get; set; } = string.Empty;
-    public required string EmployeeName { get; set; }
+    public string EmployeeName { get; set; } = "John Doe";
     public string EmployeeShortName
     {
         get
@@ -27,7 +27,7 @@ public class Employee
     public int DesignationId { get; set; }
     public DateTime JoinDate { get; set; }
     public DateTime? LeaveDate { get; set; }
-    public required bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
     public int ReplacedEmployeeId { get; set; } = 0;
     public Employee? ReplacedEmployee { get; set; }
     public int LineManagerId { get; set; } = 0;

@@ -11,8 +11,9 @@ namespace DataModels.Data;
 public class SimulationStation
 {
     public int SimulationStationId { get; set; }
-    public required string FriendlyName { get; set; }
-    public required string Identifier { get; set; }
+    public string FriendlyName { get; set; } = "Untitled Station";
+    public string Identifier { get; set; } = "S";
+    public int ProductModuleId { get; set; }
     public required string PayloadType { get; set; }
     private string ProcessIdsCSV { get; set; } = string.Empty;
     public required List<uint> ProcessIds
@@ -80,6 +81,7 @@ public class SimulationStation
             { nameof(SimulationStationId), EDataType.Key },
             { nameof(FriendlyName), EDataType.Text },
             { nameof(Identifier), EDataType.Text },
+            { nameof(ProductModuleId), EDataType.Integer },
             { nameof(PayloadType), EDataType.Text },
             { nameof(ProcessIdsCSV), EDataType.Text },
             { nameof(Capacity), EDataType.Text },

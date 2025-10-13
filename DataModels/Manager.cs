@@ -1,7 +1,9 @@
 ﻿using DataModels.Administration;
 using DataModels.Data;
 using DataModels.Tools;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace DataModels;
 
@@ -33,7 +35,7 @@ public class Manager
     public ReviewItemDataAccess ReviewItemDB { get; }
     public ReviewPointDataAccess ReviewPointDB { get; }
     public SimulationScenarioDataAccess SimulationScenarioDB { get; }
-    public  SimulationStationDataAccess SimulationStationDB { get; }
+    public SimulationStationDataAccess SimulationStationDB { get; }
     public SimulationManipulatorDataAccess SimulationManipulatorDB { get; }
     public SimulationProcessDataAccess SimulationProcessDB { get; }
     public SpecificationDataAccess SpecificationDB { get; }
@@ -43,9 +45,26 @@ public class Manager
 
     public Manager()
     {
-        _connectionString = $"Data Source={dbPath};Version=3;";
+        string location;
 
-        bool dbJustCreated = EnsureDatabaseExists();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            location = Path.Combine(homeDir, dbPath);
+        }
+        else
+        {
+            location = dbPath;
+        }
+        _connectionString = $"Data Source={location};";
+        
+
+        bool dbJustCreated = false;
+        if (!string.IsNullOrEmpty(location) && !File.Exists(dbPath))
+        {
+            dbJustCreated = true;
+        }
+
 
         // Employee
         DesignationDB = new(_connectionString);
@@ -104,16 +123,6 @@ public class Manager
 
         SupplierDB = new(_connectionString);
         FlowElementDB = new(_connectionString);
-    }
-
-    private bool EnsureDatabaseExists()
-    {
-        if (!File.Exists(dbPath))
-        {
-            SQLiteConnection.CreateFile(dbPath);
-            return true;
-        }
-        return false;
     }
 
     private void InitializeDatabase()

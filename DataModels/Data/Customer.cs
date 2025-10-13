@@ -12,7 +12,7 @@ public class Customer
 {
     [Key]
     public int CustomerId { get; set; }
-    public required string CustomerName { get; set; }
+    public string CustomerName { get; set; } = "New Customer";
 
     public static TableMetadata Metadata => new(
         typeof(Customer).Name,

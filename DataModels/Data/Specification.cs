@@ -12,7 +12,7 @@ public class Specification
 {
     [Key]
     public int SpecificationId { get; set; }
-    public required string SpecificationName { get; set; }
+    public string SpecificationName { get; set; } = "Untitled Specification";
     public string SpecificationDescription { get; set; } = string.Empty;
     public int ProductModuleId { get; set; }
     public ProductModule? ProductModule { get; set; }

@@ -10,7 +10,7 @@ namespace DataModels.Data;
 public class SimulationProcess
 {
     public int SimulationProcessId { get; set; }
-    public required string ProcessName { get; set; }
+    public string ProcessName { get; set; } = "Untitled Process";
     public string? InputState { get; set; }
     public string? OutputState { get; set; }
     public string? Location { get; set; }

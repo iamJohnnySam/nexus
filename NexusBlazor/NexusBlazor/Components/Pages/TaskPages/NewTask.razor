@@ -73,10 +73,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (TaskText?.Element.HasValue == true)
-        {
-            await TaskText.Element.Value.FocusAsync();
-        }
         await base.OnParametersSetAsync();
     }
 

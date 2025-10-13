@@ -23,9 +23,19 @@
 }
 <div class="row">
     <div class="col">
-        @if(ResourceBlocks.Count == 0)
+        @if(ResourceType == EManualResourceType.Employee)
         {
-            <button @onclick=CopyResourcesFromLastWeek>Copy over</button>
+            @if (ResourceBlocks.Count == 0)
+            {
+                <button class="hidden-modern-button" @onclick=CopyEmployeeResourcesFromLastWeek>Copy over</button>
+            }
+        }
+        else if (ResourceType == EManualResourceType.Project)
+        {
+            @if (ResourceBlocks.Count == 0)
+            {
+                <button class="hidden-modern-button" @onclick=CopyProjectResourcesFromLastWeek>Copy over</button>
+            }
         }
     </div>
     <div class="col-3">
@@ -159,7 +169,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    async void CopyResourcesFromLastWeek()
+    async void CopyEmployeeResourcesFromLastWeek()
     {
         int copyWeek;
         int copyYear;
@@ -174,7 +184,27 @@
             copyYear = Year;
         }
 
-        await manager.ResourceBlockDB.CopyResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
+        await manager.ResourceBlockDB.CopyProjectResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
+        await GetItems();
+        StateHasChanged();
+    }
+
+    async void CopyProjectResourcesFromLastWeek()
+    {
+        int copyWeek;
+        int copyYear;
+        if (Week == 1)
+        {
+            copyWeek = 52;
+            copyYear = Year - 1;
+        }
+        else
+        {
+            copyWeek = Week - 1;
+            copyYear = Year;
+        }
+
+        await manager.ResourceBlockDB.CopyEmployeeResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
         await GetItems();
         StateHasChanged();
     }

@@ -16,7 +16,7 @@ public class ConfigDetail
     public Configuration? Configuration { get; set; } = null;
     public int SpecificationId { get; set; }
     public Specification? Specification { get; set; } = null;
-    public required string SpecificationDetail { get; set; }
+    public string SpecificationDetail { get; set; } = string.Empty;
     public string Comments { get; set; } = string.Empty;
     public int Revision { get; set; } = 0;
     public DateTime FirstAdded { get; set; } = DateTime.Now;

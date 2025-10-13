@@ -16,7 +16,7 @@ public class SimulationScenario
     public int ProjectId { get; set; }
     public required string XMLFile { get; set; }
     public float LastThroughput { get; set; }
-    private string SimulationStationIdCSV { get; set; } = "";
+    public string SimulationStationIdCSV { get; set; } = "";
     public Dictionary<int, int> SimulationStationIds
     {
         get
@@ -54,7 +54,7 @@ public class SimulationScenario
         }
     }
     public Dictionary<SimulationStation, int> SimulatorStations { get; set; } = [];
-    private string SimulationManipulatorIdCSV { get; set; } = "";
+    public string SimulationManipulatorIdCSV { get; set; } = "";
     public Dictionary<int, int> SimulationManipulatorIds
     {
         get
@@ -92,7 +92,7 @@ public class SimulationScenario
         }
     }
     public Dictionary<SimulationManipulator, int> SimulatorManipulators { get; set; } = [];
-    private string SimulationReaderIdCSV { get; set; } = "";
+    public string SimulationReaderIdCSV { get; set; } = "";
     public Dictionary<int, int> SimulationReaderIds
     {
         get

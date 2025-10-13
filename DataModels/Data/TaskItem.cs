@@ -17,7 +17,7 @@ public class TaskItem
     [Key]
     public int TaskId { get; set; }
     public int ProjectId { get; set; }
-    public required string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public DateTime StartedOn {  get; set; } = DateTime.Now;

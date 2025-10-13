@@ -16,8 +16,8 @@ public class OEMItem
     public ProductModule? ProductModule { get; set; }
     public required int SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
-    public required string OEMName { get; set; }
-    public required string OEMPartNumber { get; set; }
+    public string OEMName { get; set; } = "Untitled OEM Name";
+    public string OEMPartNumber { get; set; } = string.Empty;
     public string OEMDescription { get; set; } = string.Empty;
     public string InternalPartNumber { get; set; } = string.Empty;
     public string KitItems { get; set; } = string.Empty;

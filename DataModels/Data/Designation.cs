@@ -12,7 +12,7 @@ public class Designation
 {
     [Key]
     public int DesignationId { get; set; }
-    public required string DesignationName { get; set; }
+    public string DesignationName { get; set; } = "Untitled Designation";
     public string? Department {  get; set; }
 
     public static TableMetadata Metadata => new(

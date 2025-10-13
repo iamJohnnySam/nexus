@@ -12,7 +12,7 @@ public class Product
 {
     [Key]
     public int ProductId { get; set; }
-    public required string ProductName { get; set; }
+    public string ProductName { get; set; } = "Untitled Product";
 
     public static TableMetadata Metadata => new(
         typeof(Product).Name,

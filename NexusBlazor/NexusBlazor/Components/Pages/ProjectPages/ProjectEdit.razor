@@ -41,6 +41,11 @@
         </div>
 
         <div class="mb-3">
+            <label class="form-label">Part Number</label>
+            <InputText class="form-control" @bind-Value="SelectedProject.PartNumber" />
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Project Code</label>
             <InputText class="form-control" @bind-Value="SelectedProject.ProjectCode" />
         </div>
@@ -136,6 +141,7 @@
             ProductId = p.ProductId,
             DesignCode = p.DesignCode,
             ProjectCode = p.ProjectCode,
+            PartNumber = p.PartNumber,
             Priority = p.Priority,
             POStatus = p.POStatus,
             IsActive = p.IsActive,

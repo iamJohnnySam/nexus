@@ -7,10 +7,11 @@ public class Project
 {
     [Key]
     public int ProjectId { get; set; }
-    public required string ProjectName { get; set; }
+    public string ProjectName { get; set; } = "Untitled Project";
     public int CustomerId { get; set; }
     public string? DesignCode { get; set; }
     public string? ProjectCode { get; set; }
+    public string? PartNumber { get; set; }
     public EProjectPriority Priority { get; set; } = EProjectPriority.Normal;
     public ESalesStatus POStatus { get; set; }
     public int ProductId { get; set; }
@@ -32,6 +33,7 @@ public class Project
             { nameof(CustomerId), EDataType.Integer },
             { nameof(DesignCode), EDataType.Text },
             { nameof(ProjectCode), EDataType.Text },
+            { nameof(PartNumber), EDataType.Text },
             { nameof(Priority), EDataType.Integer },
             { nameof(POStatus), EDataType.Integer },
             { nameof(ProductId), EDataType.Integer },

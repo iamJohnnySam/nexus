@@ -14,8 +14,8 @@ public class ReviewPoint
     public int ReviewPointId { get; set; }
     public int ModuleId { get; set; }
     public ProductModule? Module { get; set; }
-    public required string ReviewCategory { get; set; }
-    public required string ReviewDescription { get; set; }
+    public string ReviewCategory { get; set; } =  "General";
+    public string ReviewDescription { get; set; } = string.Empty;
 
     public static TableMetadata Metadata => new(
         typeof(ReviewPoint).Name,

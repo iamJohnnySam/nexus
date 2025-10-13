@@ -10,7 +10,7 @@ namespace DataModels.Data;
 public class FlowElement
 {
     public int FlowElementId { get; set; }
-    public required string ElementName { get; set; }
+    public string ElementName { get; set; } = "Untitled Element";
     public string ElementType { get; set; } = "Process";
     public int PrecedingId { get; set; } = 0;
     public int RevertId { get; set; } = 0;

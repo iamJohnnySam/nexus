@@ -12,7 +12,7 @@ public class Supplier
 {
     [Key]
     public int SupplierId { get; set; }
-    public required string SupplierName { get; set; }
+    public string SupplierName { get; set; } = "Untitled Supplier";
     public string SupplierWebsite { get; set; } = string.Empty;
     public string SupplierContact { get; set; } = string.Empty;
     public string ProductTypesRaw { get; set; } = string.Empty;

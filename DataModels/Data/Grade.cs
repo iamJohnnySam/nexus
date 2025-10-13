@@ -13,7 +13,7 @@ public class Grade
 {
     [Key]
     public int GradeId { get; set; }
-    public required string GradeName { get; set; }
+    public string GradeName { get; set; } = "Untitled Grade";
     public int GradeScore { get; set; }
 
     public static TableMetadata Metadata => new(

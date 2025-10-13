@@ -3,7 +3,7 @@ using DataModels.DataTools;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ public static class MetadataDapperHelper
     // 🔹 INSERT ----------------------------------------------------------------
     public static async Task<int> InsertAsync(TableMetadata metadata, Dictionary<string, object?> values)
     {
-        await using var conn = new SQLiteConnection("Data Source=NexusDB.sqlite;Version=3;");
+        await using var conn = new SqliteConnection("Data Source=NexusDB.sqlite;Version=3;");
         await conn.OpenAsync();
 
         var cols = metadata.Columns.Where(c => c.Value != EDataType.Key).Select(c => c.Key).ToList();
@@ -31,7 +31,7 @@ public static class MetadataDapperHelper
     // 🔹 UPDATE ----------------------------------------------------------------
     public static async Task<int> UpdateAsync(TableMetadata metadata, Dictionary<string, object?> values)
     {
-        await using var conn = new SQLiteConnection("Data Source=NexusDB.sqlite;Version=3;");
+        await using var conn = new SqliteConnection("Data Source=NexusDB.sqlite;Version=3;");
         await conn.OpenAsync();
 
         var keyCol = metadata.Columns.First(c => c.Value == EDataType.Key).Key;
@@ -48,7 +48,7 @@ public static class MetadataDapperHelper
     // 🔹 DELETE ----------------------------------------------------------------
     public static async Task<int> DeleteAsync(TableMetadata metadata, object keyValue)
     {
-        await using var conn = new SQLiteConnection("Data Source=NexusDB.sqlite;Version=3;");
+        await using var conn = new SqliteConnection("Data Source=NexusDB.sqlite;Version=3;");
         await conn.OpenAsync();
 
         var keyCol = metadata.Columns.First(c => c.Value == EDataType.Key).Key;
@@ -59,7 +59,7 @@ public static class MetadataDapperHelper
     // 🔹 GET ALL ---------------------------------------------------------------
     public static async Task<List<T>> GetAllAsync<T>(TableMetadata metadata)
     {
-        await using var conn = new SQLiteConnection("Data Source=NexusDB.sqlite;Version=3;");
+        await using var conn = new SqliteConnection("Data Source=NexusDB.sqlite;Version=3;");
         await conn.OpenAsync();
 
         var sql = $"SELECT * FROM {metadata.TableName} ORDER BY {metadata.SortColumn} {(metadata.SortDescending ? "DESC" : "ASC")}";
@@ -70,7 +70,7 @@ public static class MetadataDapperHelper
     // 🔹 GET BY ID -------------------------------------------------------------
     public static async Task<T?> GetByIdAsync<T>(TableMetadata metadata, object keyValue)
     {
-        await using var conn = new SQLiteConnection("Data Source=NexusDB.sqlite;Version=3;");
+        await using var conn = new SqliteConnection("Data Source=NexusDB.sqlite;Version=3;");
         await conn.OpenAsync();
 
         var keyCol = metadata.Columns.First(c => c.Value == EDataType.Key).Key;

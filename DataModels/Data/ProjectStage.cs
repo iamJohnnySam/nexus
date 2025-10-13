@@ -12,8 +12,8 @@ public class ProjectStage
 {
     [Key]
     public int ProjectStageId { get; set; }
-    public required string ProjectStageName { get; set; }
-    public required string ProjectStageDescription { get; set; }
+    public string ProjectStageName { get; set; } = "Untitled Project Stage";
+    public string ProjectStageDescription { get; set; } = string.Empty;
     public int Sequence { get; set; }
 
     public static TableMetadata Metadata => new(

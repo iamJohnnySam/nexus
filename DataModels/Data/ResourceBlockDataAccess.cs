@@ -1,7 +1,7 @@
 ﻿using DataModels.DataTools;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,10 +22,24 @@ public class ResourceBlockDataAccess(string connectionString) : DataAccess<Resou
         return await QueryAsync(sql, new { projectId, year, week });
     }
 
-    public async Task CopyResourceBlocksFromWeek(int projectId, int copyToYear, int copyToWeek, int copyFromYear, int copyFromWeek)
+    public async Task CopyProjectResourceBlocksFromWeek(int projectId, int copyToYear, int copyToWeek, int copyFromYear, int copyFromWeek)
     {
         var sql = "SELECT * FROM ResourceBlock WHERE ProjectId = @projectId AND Year = @copyFromYear AND Week = @copyFromWeek";
         List<ResourceBlock> items = await QueryAsync(sql, new { projectId, copyFromYear, copyFromWeek });
+
+        foreach(ResourceBlock block in items)
+        {
+            block.ResourceBlockId = 0; // Reset ID for new entry
+            block.Year = copyToYear;
+            block.Week = copyToWeek;
+            await InsertAsync(block);
+        }
+    }
+
+    public async Task CopyEmployeeResourceBlocksFromWeek(int employeeId, int copyToYear, int copyToWeek, int copyFromYear, int copyFromWeek)
+    {
+        var sql = "SELECT * FROM ResourceBlock WHERE EmployeeId = @employeeId AND Year = @copyFromYear AND Week = @copyFromWeek";
+        List<ResourceBlock> items = await QueryAsync(sql, new { employeeId, copyFromYear, copyFromWeek });
 
         foreach(ResourceBlock block in items)
         {

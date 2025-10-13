@@ -101,6 +101,6 @@
             ActiveEmployees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
 
         }
-        ActiveProjects = manager.ProjectDB.GetAllActiveAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
+        ActiveProjects = manager.ProjectDB.GetAllAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
     }
 }

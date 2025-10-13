@@ -15,7 +15,7 @@ public class Milestone
     public required int ProjectId { get; set; }
     public Project? Project { get; set; } = null;
 
-    public required string Name { get; set; }
+    public string Name { get; set; } = "Untitled Milestone";
 
     public DateTime StartDate { get; set; }
     public DateTime PlannedStartDate { get; set; } = DateTime.Now;

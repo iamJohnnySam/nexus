@@ -12,7 +12,7 @@ public class Deliverable
 {
     [Key]
     public int DeliverableId { get; set; }
-    public string DeliverableName { get; set; }= string.Empty;
+    public string DeliverableName { get; set; } = "New Deliverable";
     public string DeliverableDescription { get; set; }= string.Empty;
     public string DeliverableType {  get; set; }= string.Empty;
 

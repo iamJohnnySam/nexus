@@ -10,8 +10,9 @@ namespace DataModels.Data;
 public class SimulationManipulator
 {
     public int SimulationManipulatorId { get; set; }
-    public required string ManipulatorName { get; set; }
-    public required string ManipulatorIdentifier { get; set; }
+    public string ManipulatorName { get; set; } = "Untitled Manipulator";
+    public string ManipulatorIdentifier { get; set; } = "M";
+    public int ProductModuleId { get; set; }
     private string EndEffectorsCSV { get; set; } = string.Empty;
     public required List<string> EndEffectors
     {
@@ -47,6 +48,7 @@ public class SimulationManipulator
             { nameof(SimulationManipulatorId), EDataType.Key },
             { nameof(ManipulatorName), EDataType.Text },
             { nameof(ManipulatorIdentifier), EDataType.Text },
+            { nameof(ProductModuleId), EDataType.Integer },
             { nameof(EndEffectorsCSV), EDataType.Text },
             { nameof(LocationsCSV), EDataType.Text },
             { nameof(MotionTime), EDataType.Integer },

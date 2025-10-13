@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using DataModels.Tools;
 using System;
 using System.Collections.Generic;
@@ -25,13 +25,13 @@ public class DataAccess<T> where T : class
 
     internal async Task CreateTableAsync()
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(SqlFactory.BuildCreateTable(Metadata));
     }
     public async Task InsertAsync(T entity)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
 
         // ExecuteScalarAsync<long> returns the new row id
@@ -50,7 +50,7 @@ public class DataAccess<T> where T : class
     }
     public virtual async Task<List<T>> GetAllAsync(string? orderBy = null, bool descending = false)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         var sql = SqlFactory.BuildSelect(Metadata, orderBy: orderBy, descending: descending);
         return [.. (await connection.QueryAsync<T>(sql))];
@@ -62,7 +62,7 @@ public class DataAccess<T> where T : class
     public virtual async Task<T?> GetByIdAsync(object id)
     {
         string primaryKey = SqlFactory.GetKeyColumn(Metadata);
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         return await connection.QuerySingleOrDefaultAsync<T>(
             SqlFactory.BuildSelect(Metadata, $"{primaryKey} = @{primaryKey}"),
@@ -78,7 +78,7 @@ public class DataAccess<T> where T : class
             sql += $" ORDER BY {orderByColumn} {(ascending ? "ASC" : "DESC")}";
         }
 
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SqliteConnection(connectionString);
         return [.. (await connection.QueryAsync<T>(sql, new { Value = value }))];
     }
     public async Task<T?> GetOneByColumnAsync<TValue>(string columnName, TValue value, string? orderByColumn = null, bool ascending = true)
@@ -91,36 +91,36 @@ public class DataAccess<T> where T : class
             sql += $" ORDER BY {orderByColumn} {(ascending ? "ASC" : "DESC")}";
         }
 
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SqliteConnection(connectionString);
         return await connection.QueryFirstOrDefaultAsync<T>(sql, new { Value = value });
     }
     public virtual async Task UpdateAsync(T entity)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(SqlFactory.BuildUpdate(Metadata), entity);
     }
     public virtual async Task DeleteAsync(object id)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(SqlFactory.BuildDelete(Metadata), id);
     }
     internal async Task<List<T>> QueryAsync(string sql, object? parameters = null)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         return [.. (await connection.QueryAsync<T>(sql, parameters))];
     }
     internal async Task<T?> QueryFirstOrDefaultAsync(string sql, object? parameters = null)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
     }
     internal virtual async Task ExecuteAsync(string sql, object? parameters = null)
     {
-        await using var connection = new SQLiteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(sql, parameters);
     }

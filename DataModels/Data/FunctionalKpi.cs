@@ -12,9 +12,9 @@ public class FunctionalKpi
 {
     [Key]
     public int FunctionalKpiId { get; set; }
-    public required string KpiName { get; set; }
+    public string KpiName { get; set; } = "Untitled KPI";
     public string KpiDescription { get; set; } = string.Empty;
-    public required string KpiDepartment { get; set; } = "Engineering Design";
+    public string KpiDepartment { get; set; } = "Engineering Design";
     public int KpiEffectiveFrom { get; set; } = DateTime.Now.Year;
 
     public static TableMetadata Metadata => new(

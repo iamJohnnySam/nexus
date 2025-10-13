@@ -12,7 +12,8 @@ public class ProductModule
 {
     [Key]
     public int ModuleId { get; set; }
-    public required string ModuleName { get; set; }
+    public string ModuleName { get; set; } = "Untitled Module";
+    public EModuleType ModuleType { get; set; } = EModuleType.None;
     public int Rank { get; set; }
 
     public static TableMetadata Metadata => new(
@@ -20,6 +21,7 @@ public class ProductModule
         new Dictionary<string, EDataType>
         {
                 { nameof(ModuleId), EDataType.Key },
+                { nameof(ModuleType), EDataType.Integer },
                 { nameof(ModuleName), EDataType.Text },
                 { nameof(Rank), EDataType.Integer }
         },

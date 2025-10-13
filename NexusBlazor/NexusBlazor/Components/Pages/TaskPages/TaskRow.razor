@@ -17,7 +17,7 @@
             <InputText class=@ItemClass() style="background-color:rgba(0, 0, 0, 0); color:white; border: none;" @bind-Value="thisTitle" />
         }
     </div>
-    <div class="col-1">
+    <div class="col-1" style="display: flex; justify-content: center; align-items: center;">
         @if (InputTask.Responsible != null)
         {
             <span>@InputTask.Responsible.EmployeeShortName</span>
@@ -36,16 +36,16 @@
         {
             if (subTasksComplete)
             {
-                <button class="modern-button" style="width:80px; margin: 2px 5px" @onclick="ToggleComplete">
+                <button class="modern-button" style="width:110px; margin: 2px 5px" @onclick="ToggleComplete">
                     <nobr>@(InputTask.IsCompleted ? "Not Done" : "✅ Done")</nobr>
                 </button>
             }
             else
             {
-                <button class="modern-button" style="width:80px; margin: 2px 5px">Pending</button>
+                <button style ="width:110px; margin: 2px 5px; background: none; border: none; color: white;">Pending Sub Tasks</button>
             }
         }
-        <button class="modern-button" style="width:80px; margin: 2px 5px" @onclick=onTaskSelected>
+        <button class="modern-button " style="width:80px; margin: 2px 5px" @onclick=onTaskSelected>
             Edit Task
         </button>
     </div>
@@ -162,7 +162,4 @@
     {
         return InputTask.IsCompleted ? "form-control item-completed" : "form-control";
     }
-
-
-
 }

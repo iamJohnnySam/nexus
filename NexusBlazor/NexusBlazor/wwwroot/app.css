@@ -68,6 +68,22 @@ h1:focus {
         border-color: #0056b3; /* Darker border on hover */
     }
 
+.hidden-modern-button {
+    background-color: transparent; /* Makes the background transparent */
+    border: none;
+    border-radius: 10px;
+    color: transparent;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for hover effects */
+}
+    .hidden-modern-button:hover {
+        background-color: rgba(0, 123, 255, 0.1); /* Slightly visible background on hover */
+        border: 1px solid white;
+        color: white;
+        border-color: #0056b3; /* Darker border on hover */
+    }
+
 .modern-table table {
     border: none;
     padding: 10px;
