@@ -30,11 +30,11 @@
 
 @code{
 
-    private Project CurrentProject { get; set; }
+    private Project CurrentProject { get; set; } = new();
     private List<Configuration> Configurations { get; set; } = [];
 
     public bool ShowOverlay { get; set; } = false;
-    public ReviewItem SelectedReviewItem { get; set; }
+    public ReviewItem SelectedReviewItem { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {

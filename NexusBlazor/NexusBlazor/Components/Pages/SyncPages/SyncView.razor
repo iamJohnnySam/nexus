@@ -1,0 +1,17 @@
+﻿@page "/sync"
+@using NexusMaintenance
+@inject Manager manager
+@rendermode InteractiveServer
+
+<h3>SyncView</h3>
+<button @onclick="UploadDatabase">Upload</button>
+@Status
+
+@code {
+    public string Status { get; set; } = "Waiting for Status";
+    private async Task UploadDatabase()
+    {
+        await new GoogleDriveSync().UploadDatabaseToDriveAsync(manager.dbPath);
+        Status = "Upload Completed";
+    }
+}

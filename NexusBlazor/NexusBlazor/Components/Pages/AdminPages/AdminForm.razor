@@ -43,7 +43,7 @@
                         <input type="checkbox"
                                class="form-check-input"
                                checked="@GetPropertyBool(Item, col.Key)"
-                               @onchange="e => SetPropertyBool(Item, col.Key, (bool)e.Value)" />
+                               @onchange="e => SetPropertyBool(Item, col.Key, e.Value is bool b && b)" />
                     }
                 </div>
             }

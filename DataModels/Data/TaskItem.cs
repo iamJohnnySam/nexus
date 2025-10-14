@@ -21,7 +21,7 @@ public class TaskItem
     public string Description { get; set; } = string.Empty;
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public DateTime StartedOn {  get; set; } = DateTime.Now;
-    public required DateTime Deadline { get; set; }
+    public DateTime Deadline { get; set; } = DateTime.Now;
     public Employee? Responsible { get; set; }
     public int ResponsibleId { get; set; }
     public bool IsCompleted { get; set; }

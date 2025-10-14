@@ -16,7 +16,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Grade Name</label>
-                <InputText class="form-control" @bind-Value="SelectedGrade.GradeName" />
+                <InputText class="form-control" @bind-Value="SelectedGrade!.GradeName" />
                 <ValidationMessage For="@(() => SelectedGrade.GradeName)" />
             </div>
 

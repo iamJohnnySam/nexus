@@ -1,5 +1,8 @@
 ﻿@page "/"
 @inject Manager manager
+@inject SqliteLogger Logger
+@inject IHttpContextAccessor HttpContextAccessor
+@rendermode InteractiveServer
 
 <PageTitle>nexus by iamJohnnySam</PageTitle>
 
@@ -36,6 +39,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var sessionId = Guid.NewGuid().ToString();
+        var user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Anonymous";
+        Logger.SetSessionContext(sessionId, user);
+        Logger.InfoAsync("Session started", interaction: "Program startup");
+
         projects = await manager.ProjectDB.GetAllActiveAsync();
     }
 

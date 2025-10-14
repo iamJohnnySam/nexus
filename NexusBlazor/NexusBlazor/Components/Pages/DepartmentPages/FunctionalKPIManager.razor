@@ -16,7 +16,7 @@
 
             <div class="mb-3">
                 <label class="form-label">KPI Name</label>
-                <InputText class="form-control" @bind-Value="SelectedKPI.KpiName" />
+                <InputText class="form-control" @bind-Value="SelectedKPI!.KpiName" />
                 <ValidationMessage For="@(() => SelectedKPI.KpiName)" />
             </div>
 

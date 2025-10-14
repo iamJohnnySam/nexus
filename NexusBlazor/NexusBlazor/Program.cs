@@ -2,6 +2,7 @@ using DataModels;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using NexusBlazor.Client.Pages;
 using NexusBlazor.Components;
+using NexusMaintenance;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +24,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 
+// 2025.10.14 to get session information
+builder.Services.AddHttpContextAccessor();
+
 // Internal Class References
 builder.Services.AddScoped<Manager>();
+builder.Services.AddScoped<SqliteLogger>();
 
 var app = builder.Build();
 

@@ -13,7 +13,7 @@
                 <ValidationSummary />
 
                 <div class="mb-3">
-                    <label class="form-label">Project (@SelectedReviewItem.ProjectId)</label>
+                    <label class="form-label">Project (@SelectedReviewItem!.ProjectId)</label>
                     <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ProjectId">
                         <option value=0>-- Select Project --</option>
                         @foreach (var p in Projects)

@@ -2,6 +2,8 @@
 using DataModels.Data;
 using DataModels.Tools;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging;
+using NexusMaintenance;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -11,7 +13,8 @@ public class Manager
 {
     public LoginInstance LoginInfo { get; }
 
-    private readonly string dbPath = "NexusDB.sqlite";
+    private readonly string dbFileName = "NexusDB.sqlite";
+    public readonly string dbPath;
     private readonly string _connectionString;
 
     // DataAccess
@@ -45,22 +48,20 @@ public class Manager
 
     public Manager()
     {
-        string location;
-
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            location = Path.Combine(homeDir, dbPath);
+            dbPath = Path.Combine(homeDir, dbFileName);
         }
         else
         {
-            location = dbPath;
+            dbPath = dbFileName;
         }
-        _connectionString = $"Data Source={location};";
+        _connectionString = $"Data Source={dbPath};";
         
 
         bool dbJustCreated = false;
-        if (!string.IsNullOrEmpty(location) && !File.Exists(dbPath))
+        if (!string.IsNullOrEmpty(dbPath) && !File.Exists(dbFileName))
         {
             dbJustCreated = true;
         }
@@ -123,6 +124,8 @@ public class Manager
 
         SupplierDB = new(_connectionString);
         FlowElementDB = new(_connectionString);
+
+        new SqliteLogger().InfoAsync($"Manager Created");
     }
 
     private void InitializeDatabase()

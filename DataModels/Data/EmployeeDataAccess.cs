@@ -98,8 +98,8 @@ public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB
         }
 
         List<Employee> groupedAndSorted = [.. employees
-            .OrderBy(e => e.EmployeeDesignation.DesignationName)
-            .ThenByDescending(e => e.EmployeeGrade.GradeScore)];
+            .OrderBy(e => e.EmployeeDesignation!.DesignationName)
+            .ThenByDescending(e => e.EmployeeGrade!.GradeScore)];
 
         return groupedAndSorted;
     }
