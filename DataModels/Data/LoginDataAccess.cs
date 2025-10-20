@@ -14,7 +14,7 @@ public class LoginDataAccess(string connectionString) : DataAccess<Login>(connec
     {
         return await GetByColumnAsync(nameof(Login.IsActive), true);
     }
-    public async Task<Login?> GetByEmployeeId(int employeeId)
+    public async Task<Login?> GetByEmployeeIdAsync(int employeeId)
     {
         return await GetOneByColumnAsync(nameof(Login.EmployeeId), employeeId);
     }

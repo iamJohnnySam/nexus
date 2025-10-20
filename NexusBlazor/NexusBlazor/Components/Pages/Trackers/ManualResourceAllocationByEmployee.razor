@@ -1,4 +1,5 @@
 ﻿@page "/manual_resource_allocation_by_employee"
+@attribute [Authorize]
 @using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject Manager manager
@@ -24,7 +25,17 @@
             @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
             {
                 <th style=@cellStyle>
-                    Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
+                    @if (i > 52)
+                    {
+                        thisYear = DateTime.Now.Year + 1;
+                        thisWeek = i % 52;
+                    }
+                    else
+                    {
+                        thisYear = DateTime.Now.Year;
+                        thisWeek = i;
+                    }
+                    Week @(thisWeek) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, thisWeek).ToString("MM/dd"))
                 </th>
             }
             <th>Comments</th>
@@ -60,7 +71,25 @@
                     @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
                     {
                         <td>
-                            <ManualResourceCell ResourceType=ResourceType Id="employee.EmployeeId" Week="i" Year="DateTime.Now.Year" Projects="ActiveProjects" />
+                            @if(i > 52)
+                            {
+                                thisYear = DateTime.Now.Year + 1;
+                                thisWeek = i % 52;
+                            }
+                            else
+                            {
+                                thisYear = DateTime.Now.Year;
+                                thisWeek = i;
+                            }
+
+                            @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(thisYear, thisWeek) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(thisYear, thisWeek)))
+                            {
+                                <ManualResourceCell ResourceType=ResourceType Id="employee.EmployeeId" Week="thisWeek" Year="thisYear" Projects="ActiveProjects" />
+                            }
+                            else
+                            {
+                                <span>N/A</span>
+                            }
                         </td>
                     }
                     <td>
@@ -80,6 +109,9 @@
     private int NumberOfWeeks { get; set; } = 12;
     private EManualResourceType ResourceType = EManualResourceType.Project;
 
+    private int thisYear = DateTime.Now.Year;
+    private int thisWeek = 1;
+
     protected override void OnInitialized()
     {
         CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
@@ -98,7 +130,7 @@
         cellStyle = $"width: {cellWidth}px; ";
         if (ResourceType == EManualResourceType.Project)
         {
-            ActiveEmployees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
+            ActiveEmployees = manager.EmployeeDB.GetAllActiveAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
 
         }
         ActiveProjects = manager.ProjectDB.GetAllAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();

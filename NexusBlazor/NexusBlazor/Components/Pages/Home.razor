@@ -1,41 +1,49 @@
 ﻿@page "/"
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @inject SqliteLogger Logger
 @inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <PageTitle>nexus by iamJohnnySam</PageTitle>
-
 <section class="hero" id="home">
-    <h1>Welcome to nɛxus</h1>
-</section>
+        <h1>Welcome to nɛxus</h1>
+    </section>
 
-<section class="projects" id="projects">
-    @if (projects == null)
-    {
-        <div class="project-card">
-            <div class="project-title">Loading Projects...</div>
-            <div class="project-desc">...</div>
-        </div>
-    }
-    else if (projects.Count == 0)
-    {
-        <div class="project-card">
-            <div class="project-title">NO PROJECTS AVAILABLE</div>
-            <div class="project-desc">...</div>
-        </div>
-    }
-    else
-    {
-        @foreach (var project in projects)
-        {
-            <ProjectCardComponent ThisProject=project />
-        }
-    }
-</section>
+<AuthorizeView>
+    <Authorized>
+        <section class="projects" id="projects">
+            @if (projects == null)
+            {
+                <div class="project-card">
+                    <div class="project-title">Loading Projects...</div>
+                    <div class="project-desc">...</div>
+                </div>
+            }
+            else if (projects.Count == 0)
+            {
+                <div class="project-card">
+                    <div class="project-title">NO PROJECTS AVAILABLE</div>
+                    <div class="project-desc">...</div>
+                </div>
+            }
+            else
+            {
+                @foreach (var project in projects)
+                {
+                    <ProjectCardComponent ThisProject=project />
+                }
+            }
+        </section>
+    </Authorized>
+</AuthorizeView>
+
 
 @code {
     private List<Project> projects = [];
+
+    public Employee? LoggedInEmployee { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,7 +52,8 @@
         Logger.SetSessionContext(sessionId, user);
         Logger.InfoAsync("Session started", interaction: "Program startup");
 
-        projects = await manager.ProjectDB.GetAllActiveAsync();
+        projects = (await manager.ProjectDB.GetAllAsync()).OrderByDescending(status => status.POStatus).ThenBy(name => name.ProjectCode).ToList();
+        LoggedInEmployee = await Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider);
     }
 
 }

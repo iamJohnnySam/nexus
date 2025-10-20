@@ -38,9 +38,16 @@
             }
         }
     </div>
-    <div class="col-3">
-        <buttton class="add_button" @onclick=AddBlock>+</buttton>
-    </div>
+    @if(FilterDesignation == EDesignation.None)
+    {
+        <div class="col-2">
+            <buttton class="add_button" @onclick=AddBlock>+</buttton>
+        </div>
+    }
+    else
+    {
+        <div class="col-2"></div>
+    }
 </div>
 
 @code {

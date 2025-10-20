@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo, EmployeeDataAccess employeeDB) : DataAccess<TaskItem>(connectionString, TaskItem.Metadata)
+public class TaskItemDataAccess(string connectionString, EmployeeDataAccess employeeDB) : DataAccess<TaskItem>(connectionString, TaskItem.Metadata)
 {
-    public LoginInstance LoginInfo = loginInfo;
     private readonly EmployeeDataAccess EmployeeDB = employeeDB;
 
-    public TaskItem GetNewParentTask()
+    public TaskItem GetNewParentTask(LoginInformation LoginInfo)
     {
         return new TaskItem
         {
@@ -24,7 +23,7 @@ public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo
             ResponsibleId = 0
         };
     }
-    public TaskItem GetNewSubTask(TaskItem t)
+    public TaskItem GetNewSubTask(TaskItem t, LoginInformation LoginInfo)
     {
         return new TaskItem
         {
@@ -46,38 +45,20 @@ public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo
 
         return tasks;
     }
-    public async Task<List<TaskItem>> GetAllParentTasks(int projectID = 0)
+    public async Task<List<TaskItem>> GetAllParentTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0)";
-        return await QueryTaskList(query, reference);
+        return await QueryTaskList(query, new { ProjectId = projectID });
     }
-    public async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID = 0)
+    public async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 0";
-        return await QueryTaskList(query, reference);
+        return await QueryTaskList(query, new { ProjectId = projectID });
     }
-    public async Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID = 0)
+    public async Task<List<TaskItem>> GetAllCompleteParentTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 1";
-        return await QueryTaskList(query, reference);
+        return await QueryTaskList(query, new { ProjectId = projectID });
     }
     private static Dictionary<int, List<TaskItem>> BundleSubTasks(List<TaskItem> AllTasks)
     {
@@ -96,16 +77,10 @@ public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo
         }
         return SubTasks;
     }
-    public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID = 0)
+    public async Task<Dictionary<int, List<TaskItem>>> GetAllSubTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0";
-        List<TaskItem> AllTasks = await QueryTaskList(query, reference);
+        List<TaskItem> AllTasks = await QueryTaskList(query, new { ProjectId = projectID });
         return BundleSubTasks(AllTasks);
     }
     public async Task<List<TaskItem>> GetAllSubTasksOfParentTask(int parentTaskId)
@@ -113,28 +88,16 @@ public class TaskItemDataAccess(string connectionString, LoginInstance loginInfo
         string query = "SELECT * FROM TaskItem WHERE ParentTaskId = @parentTaskId";
         return await QueryTaskList(query, new { parentTaskId });
     }
-    public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID = 0)
+    public async Task<Dictionary<int, List<TaskItem>>> GetAllCompleteSubTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0 AND IsCompleted = 1";
-        List<TaskItem> AllTasks = await QueryTaskList(query, reference);
+        List<TaskItem> AllTasks = await QueryTaskList(query, new { ProjectId = projectID });
         return BundleSubTasks(AllTasks);
     }
-    public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks(int projectID = 0)
+    public async Task<Dictionary<int, List<TaskItem>>> GetAllIncompleteSubTasks(int projectID)
     {
-        object reference = LoginInfo.CurrentProject;
-        if (projectID != 0)
-        {
-            reference = new { ProjectId = projectID };
-        }
-
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND ParentTaskId IS NOT NULL AND ParentTaskId <> 0 AND IsCompleted = 0";
-        List<TaskItem> AllTasks = await QueryTaskList(query, reference);
+        List<TaskItem> AllTasks = await QueryTaskList(query, new { ProjectId = projectID });
         return BundleSubTasks(AllTasks);
     }
     public async Task MarkTaskComplete(TaskItem t)

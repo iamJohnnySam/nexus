@@ -1,0 +1,116 @@
+﻿@page "/manual_resource_allocation_weekly_print/{Year:int}/{Week:int}"
+@attribute [Authorize]
+@using DataModels.Tools
+@using NexusBlazor.Components.Logic
+@inject Manager manager
+
+<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
+
+<div class="row" style="padding-top: 20px;">
+    <div class="col">
+        <h2 class="text-2xl font-semibold" style="padding-left: 30px; align-content:center;">Manual Resource Allocation</h2>
+    </div>
+    <div class="col-1" style="text-align:right; align-content:center;">Week #:</div>
+    <div class="col-3" style="align-content:center;">
+        @thisWeek
+    </div>
+    <div class="col-1">
+    </div>
+</div>
+<hr style="border-top: 1px solid white" />
+
+<div style="padding: 10px 20px 10px 20px;">
+    <table style="width: 100%; ">
+        <tr style="border-bottom: 1px solid red;">
+            <th>Project</th>
+            <th>Design</th>
+            <th>Project Code</th>
+            <th>Stage</th>
+            <th>Mechanical Design</th>
+            <th>Electrical</th>
+            <th>Automation</th>
+            <th>Product</th>
+            <th>Software</th>
+            <th>Comments</th>
+        </tr>
+
+        @foreach (Project project in ActiveProjects)
+        {
+            ResourceBlocks_ME = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Mechanical Design Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
+            ResourceBlocks_EE = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Electrical Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
+            ResourceBlocks_PD = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Automation Engineer", "Product Development Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
+            ResourceBlocks_SE = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Software Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
+            ResourceBlocks_PR = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Automation Engineer (Product)", "Mechanical Design Engineer (Product)" })).Result.OrderBy(p => p.EmployeeId).ToList();
+            <tr>
+                <td>@project.ProjectName</td>
+                <td>@project.DesignCode</td>
+                <td>@project.ProjectCode</td>
+                <td>@project.POStatus.ToString()</td>
+                <td>
+                    @foreach(var block in ResourceBlocks_ME)
+                    {
+                        <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                    }
+                </td>
+                <td>
+                    @foreach (var block in ResourceBlocks_EE)
+                    {
+                        <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                    }
+                </td>
+                <td>
+                    @foreach (var block in ResourceBlocks_PD)
+                    {
+                        <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                    }
+                </td>
+                <td>
+                    @foreach (var block in ResourceBlocks_SE)
+                    {
+                        <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                    }
+                </td>
+                <td>
+                    @foreach (var block in ResourceBlocks_PR)
+                    {
+                        <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                    }
+                </td>
+                <td></td>
+            </tr>
+        }
+
+    </table>
+</div>
+
+@code {
+    [Parameter] public int Year { get; set; } = DateTime.Now.Year;
+    [Parameter] public int Week { get; set; }
+
+    private string thisWeek = "52";
+    List<Project> ActiveProjects { get; set; } = [];
+    public List<ResourceBlock> ResourceBlocks_ME { get; set; } = [];
+    public List<ResourceBlock> ResourceBlocks_EE { get; set; } = [];
+    public List<ResourceBlock> ResourceBlocks_PD { get; set; } = [];
+    public List<ResourceBlock> ResourceBlocks_SE { get; set; } = [];
+    public List<ResourceBlock> ResourceBlocks_PR { get; set; } = [];
+
+
+    protected override void OnInitialized()
+    {
+        Week = CalendarLogic.WeekOfYear(DateTime.Now);
+        thisWeek = Week.ToString();
+
+        base.OnInitialized();
+        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
+    }
+
+    private void ChangeWeek(int week)
+    {
+        Week = week;
+        thisWeek = week.ToString();
+        StateHasChanged();
+    }
+
+
+}

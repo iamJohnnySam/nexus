@@ -1,10 +1,11 @@
 ﻿@page "/simulation/scenario_editor"
+@attribute [Authorize]
 @inject NavigationManager Navigation
-@inject Manager manager
+@inject LoginInformation LoginInfo
 @inject Manager manager
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Tasks | @manager.LoginInfo.CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Tasks | @CurrentProject.ProjectName</PageTitle>
 
 <h1 style="padding: 10px 20px 0px 30px;">Simulation Scenario Editor</h1>
 <h3 style="padding: 10px 20px 0px 30px;">Project @CurrentProject.DesignCode (@CurrentProject.ProjectCode) @CurrentProject.ProjectName | @ThisScenario.SimulationName</h3>
@@ -61,6 +62,6 @@
             return;
         }
 
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
     }
 }

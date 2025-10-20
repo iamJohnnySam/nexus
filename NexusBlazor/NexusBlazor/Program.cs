@@ -1,7 +1,9 @@
 using DataModels;
+using DataModels.Administration;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using NexusBlazor.Client.Pages;
+using Microsoft.AspNetCore.Components.Authorization;
 using NexusBlazor.Components;
+using NexusBlazor.Components.Logic;
 using NexusMaintenance;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,25 +13,26 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-// 2025.09.24 Added Authentication
+// 2025.09.24 Added Authorization
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "NexusAuthCookie";
-        options.LoginPath = "/Login";
-        options.LogoutPath = "/Logout";
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout";
         options.Cookie.MaxAge = TimeSpan.FromHours(4);
-        options.AccessDeniedPath = "/AccessDenied";
+        options.AccessDeniedPath = "/access_denied";
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 
 // 2025.10.14 to get session information
 builder.Services.AddHttpContextAccessor();
 
 // Internal Class References
-builder.Services.AddScoped<Manager>();
-builder.Services.AddScoped<SqliteLogger>();
+builder.Services.AddSingleton<Manager>();
+builder.Services.AddSingleton<SqliteLogger>();
+builder.Services.AddScoped<LoginInformation>();
 
 var app = builder.Build();
 

@@ -1,0 +1,47 @@
+﻿@page "/profile"
+@attribute [Authorize]
+
+@inject LoginInformation LoginInfo
+@inject Manager manager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div style="padding: 10px 30px 10px 30px;">
+    <h3>Profile</h3>
+
+    <h4>Login Information</h4>
+    @if(LoginInfo.CurrentEmployee == null)
+    {
+        <p><strong>Employee not found</strong></p>
+    }
+    <p><strong>Employee:</strong> @ThisEmployee?.EmployeeName</p>
+    <p><strong>Employee ID:</strong> @LoginInfo.CurrentEmployeeId</p>
+    <p><strong>Current Project:</strong> @ThisProject?.ProjectName</p>
+
+    <br />
+    <br />
+
+    <h4>Cookie Information</h4>
+    <p><strong>Employee:</strong> @user.Identity.Name</p>
+    <br />
+    <h5>Claims</h5>
+    @foreach (var claim in user.Claims)
+    {
+        <p><strong>@claim.Type:</strong> @claim.Value</p>
+    }
+</div>
+
+
+@code {
+    System.Security.Claims.ClaimsPrincipal user = new();
+    public Employee? ThisEmployee { get; set; }
+    public Project? ThisProject { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+
+        ThisEmployee = Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider).Result;
+        ThisProject = Helpers.GetCurrentProject(manager, LoginInfo).Result;
+    }
+}

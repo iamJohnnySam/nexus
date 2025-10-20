@@ -1,5 +1,7 @@
 ﻿@page "/review"
+@attribute [Authorize]
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
 <PageTitle>nexus | Review | @CurrentProject</PageTitle>
@@ -44,14 +46,14 @@
 
     private async Task LoadData()
     {
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
         StateHasChanged();
     }
 
     private async Task HandleProjectChange(string projectName)
     {
-        await manager.ProjectDB.SelectProjectFromName(projectName);
+        await manager.ProjectDB.SelectProjectFromName(projectName, LoginInfo);
         await LoadData();
     }
 

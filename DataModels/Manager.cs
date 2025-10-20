@@ -1,5 +1,4 @@
-﻿using DataModels.Administration;
-using DataModels.Data;
+﻿using DataModels.Data;
 using DataModels.Tools;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
@@ -11,8 +10,6 @@ namespace DataModels;
 
 public class Manager
 {
-    public LoginInstance LoginInfo { get; }
-
     private readonly string dbFileName = "NexusDB.sqlite";
     public readonly string dbPath;
     private readonly string _connectionString;
@@ -36,7 +33,7 @@ public class Manager
     public ProjectStageDataAccess ProjectStageDB { get; }
     public ResourceBlockDataAccess ResourceBlockDB { get; }
     public ReviewItemDataAccess ReviewItemDB { get; }
-    public ReviewPointDataAccess ReviewPointDB { get; }
+    public ReviewPointDataAccess ReviewPointDB { get; } 
     public SimulationScenarioDataAccess SimulationScenarioDB { get; }
     public SimulationStationDataAccess SimulationStationDB { get; }
     public SimulationManipulatorDataAccess SimulationManipulatorDB { get; }
@@ -58,14 +55,6 @@ public class Manager
             dbPath = dbFileName;
         }
         _connectionString = $"Data Source={dbPath};";
-        
-
-        bool dbJustCreated = false;
-        if (!string.IsNullOrEmpty(dbPath) && !File.Exists(dbFileName))
-        {
-            dbJustCreated = true;
-        }
-
 
         // Employee
         DesignationDB = new(_connectionString);
@@ -77,17 +66,12 @@ public class Manager
         ProductDB = new(_connectionString);
 
         ProjectDB = new(_connectionString, CustomerDB, ProductDB, EmployeeDB);
-        ProjectDB.CurrentProjectChanged += ProjectDB_CurrentProjectChanged;
 
 
-        if (dbJustCreated)
+        if (ProjectDB.GetByIdAsync(1).Result == null)
         {
             InitializeDatabase();
         }
-
-        LoginInfo = new() { 
-            CurrentProject = ProjectDB.GetByIdAsync(1).Result! 
-        };
 
         ProductModuleDB = new(_connectionString);
         ConfigurationDB = new(_connectionString, ProjectDB, ProductModuleDB);
@@ -96,7 +80,7 @@ public class Manager
         
 
         // Tasks
-        TaskItemDB = new(_connectionString, LoginInfo, EmployeeDB);
+        TaskItemDB = new(_connectionString, EmployeeDB);
 
         ProjectStageDB = new(_connectionString);
 
@@ -146,10 +130,5 @@ public class Manager
             ProductId = newProduct.ProductId,
         };
         ProjectDB.InsertAsync(newProject).Wait();
-    }
-
-    private void ProjectDB_CurrentProjectChanged(object? sender, Project e)
-    {
-        LoginInfo.CurrentProject = e;
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/department/organization_chart"
+@attribute [Authorize]
 @inject Manager manager
 
 <OrgChartEmployee Employees="Employees"></OrgChartEmployee>
@@ -8,7 +9,7 @@
 
     protected override void OnInitialized()
     {
-        Employees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result;
+        Employees = manager.EmployeeDB.GetAllActiveAsync().Result;
         base.OnInitialized();
     }
 }

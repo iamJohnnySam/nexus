@@ -1,5 +1,7 @@
 ﻿@page "/simulation/scenario"
+@attribute [Authorize]
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -106,7 +108,7 @@
 
     private async Task LoadData()
     {
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         Projects = await manager.ProjectDB.GetAllAsync();
         Scenarios = await manager.SimulationScenarioDB.GetByProjectId(CurrentProject.ProjectId);
         SelectedScenario = new SimulationScenario

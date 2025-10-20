@@ -1,10 +1,13 @@
-﻿<div class="navbar">
+﻿@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject LoginInformation LoginInfo
+
+<div class="navbar">
     <div class="logo">nɛxus<span style="font-size:x-small;"> | by iamJohnnySam</span></div>
 
     <div class="menu">
         <nav>
             <a href="/">Home</a>
-
             <div class="dropdown">
                 <button class="dropButton">Projects</button>
                 <div class="dropdown-content">
@@ -16,7 +19,7 @@
                     <a href="/configuration/module">Module Manager</a>
                     <a href="/configuration/specification">Specification Manager</a>
                 </div>
-             </div>
+            </div>
 
             <div class="dropdown">
                 <button class="dropButton">Trackers</button>
@@ -82,19 +85,50 @@
                     <a href="/admin/projectblock">Project Block</a>
                     <a href="/admin/resourceblock">Resource Block</a>
                     <a href="/admin/supplier">Supplier</a>
-
                 </div>
             </div>
 
+            <!-- Profile Dropdown -->
             <div class="dropdown">
-                <button class="dropButton">Profile</button>
+                <button class="dropButton">@UserName</button>
                 <div class="dropdown-content">
                     <a href="/profile">Profile</a>
-                    <a href="/sync">Sync</a>
-                    <a href="/logout">Logout</a>
+
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
+                            <a href="/sync">Sync</a>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView>
+                        <NotAuthorized>
+                            <a href="/login">Login</a>
+                        </NotAuthorized>
+                        <Authorized>
+                            <a href="/logout">Logout</a>
+                        </Authorized>
+                    </AuthorizeView>
                 </div>
             </div>
-            
         </nav>
     </div>
 </div>
+
+@code {
+    private string UserName { get; set; } = "Loading...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            UserName = user.Identity?.Name ?? "User";
+        }
+        else
+        {
+            UserName = "Guest";
+        }
+    }
+}

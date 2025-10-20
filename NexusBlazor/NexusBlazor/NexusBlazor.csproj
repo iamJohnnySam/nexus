@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,7 +10,7 @@
     <ProjectReference Include="..\..\DataModels\DataModels.csproj" />
     <ProjectReference Include="..\..\NexusMaintenance\NexusMaintenance.csproj" />
     <ProjectReference Include="..\NexusBlazor.Client\NexusBlazor.Client.csproj" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.20" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.20" />
   </ItemGroup>
 
 </Project>

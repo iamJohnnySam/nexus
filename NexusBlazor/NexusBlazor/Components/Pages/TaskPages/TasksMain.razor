@@ -1,8 +1,10 @@
 ﻿@page "/tasks"
+@attribute [Authorize]
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Tasks | @manager.LoginInfo.CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Tasks | @CurrentProject.ProjectName</PageTitle>
 
 <ProjectSelectionRowComponent Title="Project Task Manager" OnProjectChange="HandleProjectChange" />
 
@@ -23,15 +25,15 @@
 
 @code {
     public List<Employee> Employees { get; set; } = [];
-    public Project CurrentProject { get; set; }
+    public Project CurrentProject { get; set; } = new();
     private TaskItem? SelectedTask {get;set;} = null;
     bool showOverlay = false;
-    int SelectedParentTaskId = 0;
+    int SelectedParentTaskId { get; set; } = 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        Employees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result;
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        Employees = await manager.EmployeeDB.GetAllActiveAsync();
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         base.OnInitialized();
     }
 
@@ -48,10 +50,10 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void HandleProjectChange(string projectName)
+    private async Task HandleProjectChange(string projectName)
     {
         SelectedParentTaskId = 0;
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         SelectedTask = null;
     }
 

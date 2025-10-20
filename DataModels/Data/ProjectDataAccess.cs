@@ -1,4 +1,5 @@
-﻿using DataModels.DataTools;
+﻿using DataModels.Administration;
+using DataModels.DataTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,6 @@ namespace DataModels.Data;
 
 public class ProjectDataAccess(string connectionString, CustomerDataAccess customerDB, ProductDataAccess productDB, EmployeeDataAccess employeeDB) : DataAccess<Project>(connectionString, Project.Metadata)
 {
-    public event EventHandler<Project>? CurrentProjectChanged;
     private CustomerDataAccess CustomerDB { get; } = customerDB;
     private ProductDataAccess ProductDB { get; } = productDB;
     private EmployeeDataAccess EmployeeDB { get; } = employeeDB;
@@ -112,14 +112,14 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
         name += project.ProjectName;
         return name;
     }
-    public async Task<Project> SelectProjectFromName(string projectName)
+    public async Task<Project> SelectProjectFromName(string projectName, LoginInformation LoginInfo)
     {
         Project project = await GetOneByColumnAsync("ProjectName", projectName) ?? throw new Exception($"Project with name '{projectName}' not found.");
 
         if (project != null)
         {
             await GetProjectObjects(project);
-            CurrentProjectChanged?.Invoke(this, project);
+            LoginInfo.CurrentProject = project;
         }
         else
         {

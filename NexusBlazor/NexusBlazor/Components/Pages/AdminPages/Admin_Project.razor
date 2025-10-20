@@ -1,4 +1,5 @@
 ﻿@page "/admin/project"
+@attribute [Authorize (Roles = "Admin")]
 @using DataModels.Tools
 @inject Manager manager
 @rendermode InteractiveServer

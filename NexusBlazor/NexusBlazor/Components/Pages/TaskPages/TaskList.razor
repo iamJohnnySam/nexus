@@ -89,7 +89,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        AllEmployees = manager.EmployeeDB.GetAllActiveEmployeesAsync().Result;
+        AllEmployees = manager.EmployeeDB.GetAllActiveAsync().Result;
         await RefreshTasks();
         base.OnParametersSet();
     }

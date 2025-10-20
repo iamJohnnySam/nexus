@@ -1,7 +1,9 @@
 ﻿@page "/manual_resource_allocation_weekly"
+@attribute [Authorize]
 @using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject Manager manager
+@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
 <PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
@@ -15,6 +17,7 @@
         <WeekSelectionDropdownComponent OnWeekChange="ChangeWeek" SelectedWeek="@thisWeek" />
     </div>
     <div class="col-1">
+        <button class="modern-button" @onclick="NavigateWithParameters">Print</button>
     </div>
 </div>
 <hr style="border-top: 1px solid white" />
@@ -58,8 +61,9 @@
 
     protected override void OnInitialized()
     {
-        thisWeek = CurrentWeek.ToString();
         CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        thisWeek = CurrentWeek.ToString();
+        
         base.OnInitialized();
         ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
     }
@@ -70,6 +74,11 @@
         thisWeek = week.ToString();
         StateHasChanged();
     }
-
+    private void NavigateWithParameters()
+    {
+        int year = CurrentYear;
+        int week = CurrentWeek;
+        NavigationManager.NavigateTo($"/manual_resource_allocation_weekly_print/{year}/{week}");
+    }
 
 }

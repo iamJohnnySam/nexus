@@ -1,0 +1,139 @@
+﻿@page "/login"
+
+@using DataModels.Tools
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject LoginInformation LoginInfo
+@inject Manager manager
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>nexus | Login</PageTitle>
+<br />
+<br />
+<div class="container">
+    <div class="form-container sign-up-container">
+        <form action="#">
+            <h1>Create Account</h1>
+            <span>Select your name from the dropdown and create a password</span>
+            <input type="text" placeholder="Name" />
+            <input type="email" placeholder="Email" />
+            <input type="password" placeholder="Password" />
+            <button>Sign Up</button>
+        </form>
+    </div>
+    <div class="form-container sign-in-container">
+        <EditForm Model="LoginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+
+            <h1>Sign in</h1>
+            <span>Select your name from the dropdown and enter your password</span>
+
+            <InputSelect class="form-control" @bind-Value="SelectedEmployeeId">
+                <option value=0>Select Your Name</option>
+                @foreach (var emp in Employees)
+                {
+                    <option value="@emp.EmployeeId">@emp.EmployeeName</option>
+                }
+            </InputSelect>
+
+            <InputText placeholder="Password" @bind-Value="LoginModel.Password" type="password" />
+            <ValidationMessage For="@(() => LoginModel.Password)" />
+
+            <p class="text-danger" style="text-align:center">@ErrorMessage</p>
+
+            <button type="submit" class="btn btn-primary">Login</button>
+        </EditForm>
+    </div>
+
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-right">
+                <h1>Hello!</h1>
+                <p>Enter your details to login to nexus</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [CascadingParameter] public HttpContext? httpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    public LoginViewModel LoginModel { get; set; } = new();
+
+    private string ErrorMessage = string.Empty;
+    private List<Employee> Employees { get; set; } = [];
+
+    private int selectedEmployeeId;
+    public int SelectedEmployeeId
+    {
+        get
+        {
+            return selectedEmployeeId;
+        }
+        set
+        {
+            selectedEmployeeId = value;
+            LoginModel.EmployeeId = value.ToString();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SelectedEmployeeId = 39;
+        Employees = await manager.EmployeeDB.GetAllActiveAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task HandleLogin()
+    {
+        var userService = new UserService();
+        Login? userDetails = await manager.LoginDB.GetByEmployeeIdAsync(SelectedEmployeeId);
+
+        if(LoginModel.Password == null || LoginModel.EmployeeId == null)
+        {
+            ErrorMessage = "Please enter both Employee and Password.";
+            return;
+        }
+        if (userDetails == null)
+        {
+            ErrorMessage = "No sign up detected";
+            return;
+        }
+
+        if (userService.VerifyPassword(LoginModel.EmployeeId, userDetails.Password, LoginModel.Password))
+        {
+            LoginInfo.CurrentEmployeeId = userDetails.EmployeeId;
+            LoginInfo.CurrentEmployee = await manager.EmployeeDB.GetByIdAsync(userDetails.EmployeeId);
+            string role = userDetails.Administrator ? "Admin" : "User";
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, LoginInfo.CurrentEmployee!.EmployeeShortName),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.SerialNumber, LoginInfo.CurrentEmployee!.EmployeeId.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var pricipal = new ClaimsPrincipal(identity);
+            await httpContext.SignInAsync(pricipal);
+
+            LoginInfo.CurrentEmployeeId = userDetails.EmployeeId;
+            LoginInfo.CurrentEmployee = await manager.EmployeeDB.GetByIdAsync(userDetails.EmployeeId);
+
+            StateHasChanged();
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            ErrorMessage = "Invalid username or password";
+        }
+    }
+}

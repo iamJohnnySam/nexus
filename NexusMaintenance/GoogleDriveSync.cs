@@ -5,6 +5,7 @@ using Google.Apis.Util.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace NexusMaintenance;
 public class GoogleDriveSync
 {
     SqliteLogger logger;
-    private static DriveService GetDriveService()
+    private static DriveService GetDriveService_local()
     {
         string[] Scopes = { DriveService.Scope.DriveFile };
         string ApplicationName = "Nexus Project App";
@@ -37,16 +38,39 @@ public class GoogleDriveSync
         });
     }
 
+
+    public static DriveService GetDriveService()
+    {
+        string credentialsPath = "service-account.json";
+
+        GoogleCredential credential;
+        using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+        {
+            credential = GoogleCredential.FromStream(stream)
+                .CreateScoped(DriveService.Scope.DriveFile);
+        }
+
+        // Initialize Drive API service
+        var service = new DriveService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = "NexusBackupService",
+        });
+
+        return service;
+    }
+
     public GoogleDriveSync()
     {
         logger = new();
     }
 
-    // 1Sp6bAlSCZm3QWYDk3OxZ3GmnrkJcjrSM
+    // Folder: 1Sp6bAlSCZm3QWYDk3OxZ3GmnrkJcjrSM
 
-    public async Task UploadDatabaseToDriveAsync(string dbPath)
+    public async Task UploadDatabaseToDriveAsync_OAuth(string dbPath)
     {
-        var driveService = GetDriveService();
+        DriveService driveService = GetDriveService_local();
+
 
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         string tempFile = $"NexusDB_{timestamp}.sqlite";
@@ -85,12 +109,88 @@ public class GoogleDriveSync
         logger.InfoAsync($"✅ Uploaded {Path.GetFileName(tempCopy)} to Google Drive folder 'Nexus/Backups'.");
     }
 
+    public static async Task UploadDatabaseToDriveAsync(string filePath)
+    {
+        var tempFilePath = Path.Combine(Path.GetTempPath(), $"NexusDB_{DateTime.Now:yyyyMMdd_HHmmss}.sqlite");
+        File.Copy(filePath, tempFilePath, overwrite: true);
+
+        var service = GetDriveService();
+
+        var folderName = "nexus/backups";
+        string folderId = await GetOrCreateFolderAsync(service, folderName);
+
+        var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+        {
+            Name = Path.GetFileName(tempFilePath),
+            Parents = new List<string> { folderId }
+        };
+
+        using (var stream = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read))
+        {
+            var request = service.Files.Create(fileMetadata, stream, "application/x-sqlite3");
+            request.Fields = "id";
+            await request.UploadAsync();
+        }
+
+        File.Delete(tempFilePath);
+        Console.WriteLine($"Uploaded: {Path.GetFileName(tempFilePath)}");
+    }
+
+
+    private static async Task<string> GetOrCreateFolderAsync(DriveService service, string folderName)
+    {
+        // Split nested folders (e.g., Nexus/backups)
+        string[] parts = folderName.Split('/');
+        string? parentId = null;
+
+        foreach (string name in parts)
+        {
+            var listRequest = service.Files.List();
+            listRequest.Q = $"mimeType='application/vnd.google-apps.folder' and name='{name}'" +
+                            (parentId == null ? "" : $" and '{parentId}' in parents");
+            listRequest.Fields = "files(id, name)";
+            var list = await listRequest.ExecuteAsync();
+
+            var folder = list.Files.FirstOrDefault();
+            if (folder == null)
+            {
+                // Create folder
+                var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                {
+                    Name = name,
+                    MimeType = "application/vnd.google-apps.folder",
+                    Parents = parentId == null ? null : new List<string> { parentId }
+                };
+
+                var createRequest = service.Files.Create(fileMetadata);
+                createRequest.Fields = "id";
+                var created = await createRequest.ExecuteAsync();
+                parentId = created.Id;
+            }
+            else
+            {
+                parentId = folder.Id;
+            }
+        }
+
+        return parentId!;
+    }
+
+
 
 
 
     public async Task DownloadLatestVersionAsync(string saveToPath)
     {
-        var driveService = GetDriveService();
+        DriveService driveService;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            driveService = GetDriveService();
+        }
+        else
+        {
+            driveService = GetDriveService_local();
+        }
 
         var listRequest = driveService.Files.List();
         listRequest.Q = "name contains 'NexusDB_' and mimeType='application/octet-stream'";

@@ -1,5 +1,8 @@
 ﻿@page "/configuration"
+@attribute [Authorize]
+
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
 <PageTitle>nexus | Configuration | @CurrentProject.ProjectName</PageTitle>
@@ -92,7 +95,7 @@
 
     private async Task LoadData()
     {
-        CurrentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
         OtherModules = await manager.ProductModuleDB.GetAllAsync();
         OtherModules.RemoveAll(module => Configurations.Any(cfg => cfg.ProductModuleId == module.ModuleId));
@@ -101,7 +104,7 @@
 
     private async Task HandleProjectChange(string projectName)
     {
-        await manager.ProjectDB.SelectProjectFromName(projectName);
+        await manager.ProjectDB.SelectProjectFromName(projectName, LoginInfo);
         await LoadData();
     }
 
@@ -110,7 +113,7 @@
         await manager.ConfigurationDB.InsertAsync(new Configuration()
             {
                 ConfigurationName = productModule.ModuleName,
-                ProjectId = manager.LoginInfo.CurrentProject.ProjectId,
+                ProjectId = LoginInfo.CurrentProject!.ProjectId,
                 ProductModuleId = productModule.ModuleId,
                 Quantity = 1,
                 IsRequired = true

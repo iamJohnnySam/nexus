@@ -1,12 +1,20 @@
 ﻿@page "/project_timeline"
+@attribute [Authorize]
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Project Timeline | @manager.LoginInfo.CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Project Timeline | @CurrentProject.ProjectName</PageTitle>
 <ProjectSelectionRowComponent Title="Project Timeline" />
 
 
 
 @code {
+    public Project CurrentProject { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
+        base.OnInitialized();
+    }
 }

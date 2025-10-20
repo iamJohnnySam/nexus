@@ -1,9 +1,11 @@
 ﻿@page "/projects"
+@attribute [Authorize]
 @inject Manager manager
+@inject LoginInformation LoginInfo
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Projects</PageTitle>
+<PageTitle>nexus | @CurrentProject.ProjectName</PageTitle>
 
 <div class="row" style="padding: 20px 30px 20px 30px;">
     <div class="col">
@@ -23,7 +25,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row" style="padding: 20px 30px 20px 30px;">
     <div class="col-8 scrollable-area">
         
         <table class="table table-bordered table-hover">
@@ -47,7 +49,7 @@
             <tbody>
                 @foreach (var project in AllActiveProjects)
                 {
-                    <tr class="@((currentProject?.ProjectId == project.ProjectId) ? "table-primary" : "")">
+                    <tr class="@((CurrentProject?.ProjectId == project.ProjectId) ? "table-primary" : "")">
                         <td style="color: white">@project.ProjectName</td>
                         <td style="color: white">@project.Customer?.CustomerName</td>
                         <td style="color: white">@project.Product?.ProductName</td>
@@ -59,7 +61,12 @@
                         <td style="color: white">@(project.IsActive ? "✓" : "✗")</td>
                         <td style="color: white">@(project.IsTrackedProject ? "✓" : "✗")</td>
                         <td style="color: white">@project.PrimaryDesigner?.EmployeeShortName</td>
-                        <td style="color: white"><a href="@project.RequirementDocumentLink">Link</a></td>
+                        <td style="color: white">
+                            @if (project.RequirementDocumentLink != string.Empty)
+                            {
+                                <a href = "@project.RequirementDocumentLink" > Link </a>
+                            }
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => HandleProjectSelection(project)">Select</button>
                             @if(project.ProjectId != 1)
@@ -73,18 +80,18 @@
         </table>
     </div>
     <div class="col">
-        <ProjectEdit SelectedProject="@currentProject" OnProjectUpdated="HandleProjectUpdate" />
+        <ProjectEdit SelectedProject="@CurrentProject" OnProjectUpdated="HandleProjectUpdate" />
     </div>
 </div>
 
 @code {
     private List<Project> AllActiveProjects = [];
-    private Project currentProject;
+    private Project CurrentProject;
 
     protected override async Task OnInitializedAsync()
     {
         await GetData();
-        currentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         base.OnInitialized();
     }
 
@@ -100,8 +107,8 @@
 
     private void HandleProjectSelection(Project p)
     {
-        manager.LoginInfo.CurrentProject = p;
-        currentProject = p;
+        LoginInfo.CurrentProject = p;
+        CurrentProject = p;
     }
 
     private async Task Delete(Project project)
@@ -118,11 +125,13 @@
         if (!reconfirmed) return;
 
 
-        if (project.ProjectId == manager.LoginInfo.CurrentProject.ProjectId)
+        if (project.ProjectId == LoginInfo.CurrentProject!.ProjectId)
         {
-            manager.LoginInfo.CurrentProject = await manager.ProjectDB.GetByIdAsync(1);
+            LoginInfo.CurrentProject = await manager.ProjectDB.GetByIdAsync(1);
+            CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         }
-        await manager.SpecificationDB.DeleteAsync(project);
+        await manager.ProjectDB.DeleteAsync(project);
+        await GetData();
         StateHasChanged();
     }
 
@@ -131,13 +140,13 @@
         Project NewProject = ProjectDataAccess.GetNew();
         await manager.ProjectDB.InsertAsync(NewProject);
         await GetData();
-        manager.LoginInfo.CurrentProject = NewProject;
-        currentProject = NewProject;
+        LoginInfo.CurrentProject = NewProject;
+        CurrentProject = NewProject;
     }
 
     private async void HandleProjectUpdate()
     {
         await GetData();
-        currentProject = manager.LoginInfo.CurrentProject;
+        CurrentProject = LoginInfo.CurrentProject!;
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/admin/taskitem"
+@attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
 @using DataModels.Tools
 @inject Manager manager

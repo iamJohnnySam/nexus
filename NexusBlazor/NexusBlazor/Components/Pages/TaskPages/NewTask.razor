@@ -1,5 +1,6 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @inject Manager manager
+@inject LoginInformation LoginInfo
 
 <EditForm Model="@NewTaskItem" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -90,7 +91,7 @@
 
     private void ResetForm()
     {
-        int employeeId = manager.LoginInfo.CurrentEmployee == null ? 0 : manager.LoginInfo.CurrentEmployee.EmployeeId;
+        int employeeId = LoginInfo.CurrentEmployee == null ? 0 : LoginInfo.CurrentEmployee.EmployeeId;
         NewTaskItem = new TaskItem
         {
             ProjectId = ProjectId,
