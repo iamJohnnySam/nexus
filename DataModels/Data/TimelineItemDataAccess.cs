@@ -1,108 +1,102 @@
 ﻿using DataModels.DataTools;
 using DataModels.Tools;
-using System;
-using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class MilestoneDataAccess(string connectionString, EmployeeDataAccess employeeDB, ProjectDataAccess projectDB, ProjectStageDataAccess projectStageDB) : DataAccess<Milestone>(connectionString, Milestone.Metadata)
+public class TimelineItemDataAccess(string connectionString, EmployeeDataAccess employeeDB, ProjectDataAccess projectDB, ProjectStageDataAccess projectStageDB) : DataAccess<TimelineItem>(connectionString, TimelineItem.Metadata)
 {
     private readonly EmployeeDataAccess EmployeeDB = employeeDB;
     private readonly ProjectDataAccess ProjectDB = projectDB;
     private readonly ProjectStageDataAccess ProjectStageDB = projectStageDB;
 
-    private async Task GetObjects(Milestone? milestone)
+    private async Task GetObjects(TimelineItem? timelineItem)
     {
-        if (milestone != null)
+        if (timelineItem != null)
         {
-            milestone.Project = await ProjectDB.GetByIdAsync(milestone.ProjectId);
-            if (milestone.EngineerId != 0)
+            timelineItem.Project = await ProjectDB.GetByIdAsync(timelineItem.ProjectId);
+            if (timelineItem.EngineerId != 0)
             {
-                milestone.Engineer = await EmployeeDB.GetByIdAsync(milestone.EngineerId);
+                timelineItem.Engineer = await EmployeeDB.GetByIdAsync(timelineItem.EngineerId);
             }
-            if (milestone.ProjectStageId != 0)
+            if (timelineItem.ProjectStageId != 0)
             {
-                milestone.ProjectStage = await ProjectStageDB.GetByIdAsync(milestone.ProjectStageId);
+                timelineItem.ProjectStage = await ProjectStageDB.GetByIdAsync(timelineItem.ProjectStageId);
             }
         }
     }
 
-    public async override Task<List<Milestone>> GetAllAsync(string? orderBy = null, bool descending = false)
+    public async override Task<List<TimelineItem>> GetAllAsync(string? orderBy = null, bool descending = false)
     {
-        var milestones = await base.GetAllAsync(orderBy, descending);
-        foreach (var milestone in milestones)
+        var timelineItems = await base.GetAllAsync(orderBy, descending);
+        foreach (var timelineItem in timelineItems)
         {
-            await GetObjects(milestone);
+            await GetObjects(timelineItem);
         }
-        return milestones;
+        return timelineItems;
     }
 
-    public async Task<List<Milestone>> GetByProjectIdAsync(int id)
+    public async Task<List<TimelineItem>> GetByProjectIdAsync(int id)
     {
-        var milestones = await GetByColumnAsync(nameof(Milestone.ProjectId), id);
+        var timelineItems = await GetByColumnAsync(nameof(TimelineItem.ProjectId), id);
 
-        foreach (Milestone milestone in milestones)
+        foreach (TimelineItem timelineItem in timelineItems)
         {
-            await GetObjects(milestone);
+            await GetObjects(timelineItem);
         }
 
-        return [.. milestones
+        return [.. timelineItems
             .OrderBy(m => m.StartDate)
             .ThenBy(m => m.StartDate.AddDays(m.RequiredDays))];
     }
-    public async Task<List<Milestone>> GetActiveMilestonesForEngineer(int engineerId)
+    public async Task<List<TimelineItem>> GetActiveTimelineItemForEngineer(int engineerId)
     {
         string sql = @"
-        SELECT * FROM Milestone
+        SELECT * FROM TimelineItem
         WHERE EngineerId = @EngineerId
           AND DATE(StartDate) IS NOT NULL
           AND DATE(StartDate, '+' || RequiredDays || ' days') > DATE('now');";
 
-        var milestones = await QueryAsync(sql, new
+        var timelineItems = await QueryAsync(sql, new
         {
             EngineerId = engineerId
         });
 
-        foreach (Milestone m in milestones)
+        foreach (TimelineItem m in timelineItems)
         {
             await GetObjects(m);
         }
 
-        return [.. milestones
+        return [.. timelineItems
             .OrderBy(m => m.StartDate)
             .ThenBy(m => m.StartDate.AddDays(m.RequiredDays))];
     }
-    public async Task FixMilestoneStartDates(int id)
+    public async Task FixTimelineItemStartDates(int id)
     {
-        List<Milestone> milestones = await GetByProjectIdAsync(id);
-        var milestoneDict = milestones.ToDictionary(m => m.MilestoneId);
-        var dependencyGraph = milestones
-            .GroupBy(m => m.DependentMilestoneId)
+        List<TimelineItem> timelineItems = await GetByProjectIdAsync(id);
+        var timelineItemDict = timelineItems.ToDictionary(m => m.TimelineItemId);
+        var dependencyGraph = timelineItems
+            .GroupBy(m => m.DependentTimelineItemId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var resolved = new HashSet<int>();
-        var queue = new Queue<Milestone>();
+        var queue = new Queue<TimelineItem>();
 
-        foreach (Milestone milestone in milestones.Where(m => m.DependentMilestoneId == 0))
+        foreach (TimelineItem timelineItem in timelineItems.Where(m => m.DependentTimelineItemId == 0))
         {
-            AddMilestoneMissingDates(milestone);
-            resolved.Add(milestone.MilestoneId);
-            queue.Enqueue(milestone);
+            AddTimelineItemMissingDates(timelineItem);
+            resolved.Add(timelineItem.TimelineItemId);
+            queue.Enqueue(timelineItem);
         }
 
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            if (!dependencyGraph.ContainsKey(current.MilestoneId))
+            if (!dependencyGraph.ContainsKey(current.TimelineItemId))
                 continue;
 
-            foreach (var dependent in dependencyGraph[current.MilestoneId])
+            foreach (var dependent in dependencyGraph[current.TimelineItemId])
             {
-                if (resolved.Contains(dependent.MilestoneId)) continue;
+                if (resolved.Contains(dependent.TimelineItemId)) continue;
 
                 switch (dependent.DependencyType)
                 {
@@ -127,39 +121,39 @@ public class MilestoneDataAccess(string connectionString, EmployeeDataAccess emp
                         break;
                 }
 
-                AddMilestoneMissingDates(dependent);
+                AddTimelineItemMissingDates(dependent);
                 _ = UpdateAsync(dependent);
 
-                resolved.Add(dependent.MilestoneId);
+                resolved.Add(dependent.TimelineItemId);
                 queue.Enqueue(dependent);
             }
         }
     }
-    public static void AddMilestoneMissingDates(Milestone milestone)
+    public static void AddTimelineItemMissingDates(TimelineItem milestone)
     {
         milestone.EndDate = CalendarLogic.AddWorkDays(milestone.StartDate, milestone.RequiredDays);
         milestone.PlannedEndDate = CalendarLogic.AddWorkDays(milestone.PlannedStartDate, milestone.PlannedRequiredDays);
     }
-    public async Task<List<Milestone>> GetMilestonesForProjectBetweenDates(int projectId, DateTime windowStart, DateTime windowEnd)
+    public async Task<List<TimelineItem>> GetTimelineItemForProjectBetweenDates(int projectId, DateTime windowStart, DateTime windowEnd)
     {
         string sql = @"
-                SELECT * FROM Milestone
+                SELECT * FROM TimelineItem
                 WHERE ProjectId = @ProjectId
                 AND DATE(StartDate) IS NOT NULL;";
 
-        var milestones = await QueryAsync(sql, new
+        var timelineItems = await QueryAsync(sql, new
         {
             ProjectId = projectId,
             StartDate = windowStart.ToString("yyyy-MM-dd"),
             EndDate = windowEnd.ToString("yyyy-MM-dd"),
         });
 
-        List<Milestone> RelevantMilestones = [];
+        List<TimelineItem> RelevantTimelineItems = [];
 
-        foreach (Milestone milestone in milestones)
+        foreach (TimelineItem timelineItem in timelineItems)
         {
-            DateTime milestoneStart = milestone.StartDate;
-            DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, milestone.RequiredDays);
+            DateTime milestoneStart = timelineItem.StartDate;
+            DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, timelineItem.RequiredDays);
 
             bool sceneA = milestoneStart >= windowStart && milestoneStart < windowEnd;
             bool sceneB = milestoneEnd >= windowStart && milestoneEnd < windowEnd;
@@ -167,23 +161,23 @@ public class MilestoneDataAccess(string connectionString, EmployeeDataAccess emp
 
             if (sceneA || sceneB || sceneC)
             {
-                await GetObjects(milestone);
-                RelevantMilestones.Add(milestone);
+                await GetObjects(timelineItem);
+                RelevantTimelineItems.Add(timelineItem);
             }
 
         }
 
-        return RelevantMilestones;
+        return RelevantTimelineItems;
     }
-    public async Task<List<Milestone>> GetAllMilestonesOfBlockingEngineers(int engineerId, DateTime startDate, DateTime endDate, int excludeProjectId)
+    public async Task<List<TimelineItem>> GetAllTimelineItemsOfBlockingEngineers(int engineerId, DateTime startDate, DateTime endDate, int excludeProjectId)
     {
         string sql = @"
-        SELECT * FROM Milestone
+        SELECT * FROM TimelineItem
         WHERE EngineerId = @EngineerId
           AND ProjectId != @ExcludeProjectId
           AND DATE(StartDate) IS NOT NULL;";
 
-        var milestones = await QueryAsync(sql, new
+        var timelineItems = await QueryAsync(sql, new
         {
             EngineerId = engineerId,
             ExcludeProjectId = excludeProjectId,
@@ -191,12 +185,12 @@ public class MilestoneDataAccess(string connectionString, EmployeeDataAccess emp
             EndDate = endDate.ToString("yyyy-MM-dd")
         });
 
-        List<Milestone> RelevantMilestones = [];
+        List<TimelineItem> RelevantTimelineItems = [];
 
-        foreach (Milestone milestone in milestones)
+        foreach (TimelineItem timelineItem in timelineItems)
         {
-            DateTime milestoneStart = milestone.StartDate;
-            DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, milestone.RequiredDays);
+            DateTime milestoneStart = timelineItem.StartDate;
+            DateTime milestoneEnd = CalendarLogic.AddWorkDays(milestoneStart, timelineItem.RequiredDays);
 
             bool sceneA = milestoneStart >= startDate && milestoneStart < endDate;
             bool sceneB = milestoneEnd >= startDate && milestoneEnd < endDate;
@@ -204,12 +198,12 @@ public class MilestoneDataAccess(string connectionString, EmployeeDataAccess emp
 
             if (sceneA || sceneB || sceneC)
             {
-                await GetObjects(milestone);
-                RelevantMilestones.Add(milestone);
+                await GetObjects(timelineItem);
+                RelevantTimelineItems.Add(timelineItem);
             }
 
         }
 
-        return RelevantMilestones;
+        return RelevantTimelineItems;
     }
 }

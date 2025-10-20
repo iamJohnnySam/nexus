@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class Milestone
+public class TimelineItem
 {
     [Key]
-    public int MilestoneId { get; set; }
+    public int TimelineItemId { get; set; }
     public required int ProjectId { get; set; }
     public Project? Project { get; set; } = null;
 
@@ -24,7 +24,7 @@ public class Milestone
     public int RequiredDays { get; set; }
     public int PlannedRequiredDays { get; set; }
 
-    public int DependentMilestoneId { get; set; }
+    public int DependentTimelineItemId { get; set; }
     public EDependencyType DependencyType { get; set; } = EDependencyType.FinishToStart;
     public int EngineerId { get; set; }
     public Employee? Engineer { get; set; } = null;
@@ -33,10 +33,10 @@ public class Milestone
     public ProjectStage? ProjectStage { get; set; }
 
     public static TableMetadata Metadata => new(
-        typeof(Milestone).Name,
+        typeof(TimelineItem).Name,
         new Dictionary<string, EDataType>
         {
-            { nameof(MilestoneId), EDataType.Key },
+            { nameof(TimelineItemId), EDataType.Key },
             { nameof(ProjectId), EDataType.Integer },
             { nameof(Name), EDataType.Text },
             { nameof(StartDate), EDataType.Date },
@@ -45,7 +45,7 @@ public class Milestone
             { nameof(PlannedEndDate), EDataType.Date },
             { nameof(RequiredDays), EDataType.Integer },
             { nameof(PlannedRequiredDays), EDataType.Integer },
-            { nameof(DependentMilestoneId), EDataType.Integer },
+            { nameof(DependentTimelineItemId), EDataType.Integer },
             { nameof(DependencyType), EDataType.Integer },
             { nameof(EngineerId), EDataType.Integer },
             { nameof(IsCompleted), EDataType.Boolean },

@@ -24,7 +24,7 @@ public class Manager
     public FunctionalKpiDataAccess FunctionalKpiDB { get; }
     public GradeDataAccess GradeDB { get; }
     public LoginDataAccess LoginDB { get; }
-    public MilestoneDataAccess MilestoneDB { get; }
+    public TimelineItemDataAccess MilestoneDB { get; }
     public OEMItemDataAccess OEMItemDB { get; }
     public ProductDataAccess ProductDB { get; }
     public ProductModuleDataAccess ProductModuleDB { get; }
