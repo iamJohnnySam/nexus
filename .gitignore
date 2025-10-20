@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /NexusMaintenance/credentials.json
 /NexusBlazor/NexusBlazor/credentials.json
 /NexusBlazor/NexusBlazor/token.json/Google.Apis.Auth.OAuth2.Responses.TokenResponse-user
+/NexusBlazor/NexusBlazor/service-account.json
