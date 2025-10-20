@@ -1,0 +1,139 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="overlay-window">
+    <div class="card p-3" style="background-color: transparent; border: none;">
+        <h5>@(SelectedItem?.TaskId == 0 ? "Add Item" : "Edit Item")</h5>
+
+        <EditForm Model="@SelectedItem" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Project (@SelectedItem!.ProjectId): @ThisProject?.ProjectName</label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Task</label>
+                <InputText class="form-control" @bind-Value="SelectedItem.Title" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <InputTextArea class="form-control" @bind-Value="SelectedItem.Description" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Started Date</label>
+                <InputDate class="form-control" @bind-Value="SelectedItem.StartedOn" />
+            </div>
+
+            @if (SubTasksComplete)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Completed</label>
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.IsCompleted" />
+                </div>
+            }
+
+            <div class="mb-3">
+                <label class="form-label">Deadline</label>
+                <InputDate class="form-control" @bind-Value="SelectedItem.Deadline" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Responsible</label>
+                <InputSelect class="form-control" @bind-Value="SelectedItem.ResponsibleId">
+                    <option value="">-- Select Responsible --</option>
+                    @foreach (var u in ResponsiblePersons)
+                    {
+                        <option value="@u.EmployeeId">@u.EmployeeName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+    <div style="display: flex; justify-content: flex-end; padding:10px">
+        @if(SubTasks.Count == 0)
+        {
+            <button style="margin: 0px 10px;" class="modern-button btn-danger" @onclick="DeleteItem">Delete</button>
+        }
+        <button style="margin: 0px 10px;" class="modern-button" @onclick="ResetForm">Close</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TaskItem SelectedItem { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Employee> ResponsiblePersons = [];
+    private Project? ThisProject;
+
+    public List<TaskItem> SubTasks { get; set; } = [];
+    public bool SubTasksComplete { get; set; } = false;
+
+    protected override void OnParametersSet()
+    {
+        ThisProject = manager.ProjectDB.GetByIdAsync(SelectedItem.ProjectId).Result;
+        SubTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(SelectedItem.TaskId).Result;
+        if (SubTasks.Count == 0)
+        {
+            SubTasksComplete = true;
+        }
+        else
+        {
+            SubTasksComplete = !SubTasks.Any(obj => obj.IsCompleted == false);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        ResponsiblePersons = await manager.EmployeeDB.GetAllActiveAsync();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedItem.TaskId == 0)
+        {
+            await manager.TaskItemDB.InsertAsync(SelectedItem);
+        }
+        else
+        {
+            await manager.TaskItemDB.UpdateAsync(SelectedItem);
+        }
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedItem = new ();
+    }
+
+    private async void DeleteItem()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete this item?");
+        if (!confirmed) return;
+
+        await manager.TaskItemDB.DeleteAsync(SelectedItem);
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+}

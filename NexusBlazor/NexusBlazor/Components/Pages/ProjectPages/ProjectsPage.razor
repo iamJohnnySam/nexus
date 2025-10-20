@@ -97,12 +97,8 @@
 
     private async Task GetData()
     {
-        AllActiveProjects = (await manager.ProjectDB.GetAllAsync())
-                           .OrderByDescending(p => p.IsTrackedProject)
-                           .ThenByDescending(p => p.IsActive)
-                           .ThenByDescending(p => p.ProjectCode)
-                           .ThenBy(p => p.DesignCode)
-                           .ToList();
+        AllActiveProjects = await manager.ProjectDB.GetAllAsync();
+
     }
 
     private void HandleProjectSelection(Project p)

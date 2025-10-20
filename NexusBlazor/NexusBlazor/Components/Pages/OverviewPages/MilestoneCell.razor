@@ -1,0 +1,83 @@
+﻿@inject Manager manager
+@rendermode InteractiveServer
+
+<div style="padding: 5px 5px;">
+    <table style="width:100%">
+        @foreach (Milestone milestone in MilestonesOpen)
+        {
+            <tr>
+                <td style="width:30%" @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName</td>
+                <td style="width:40%">@milestone.Comments</td>
+                <td style="padding-right:10px; width:9%;">@milestone.PlannedDate.ToString("yyyy-MM-dd")</td>
+                <td style="width:9%; padding-right:10px;">
+                    @if (milestone.OnHold)
+                    {
+                        <span style="color: wheat">On Hold</span>
+                    }
+                    else if ((milestone.PlannedDate - DateTime.Today).Days >= 0)
+                    {
+                        <span>@((milestone.PlannedDate - DateTime.Today).Days) Days</span>
+                    }
+                    else
+                    {
+                        <span style="color:palevioletred">@((milestone.PlannedDate - DateTime.Today).Days) Days</span>
+                    }
+                </td>
+                <td>
+                    @if (milestone.ResponsibleId != 0)
+                    {
+                        @manager.EmployeeDB.GetByIdAsync(milestone.ResponsibleId).Result?.EmployeeShortName
+                    }
+                </td>
+            </tr>
+        }
+    </table>
+    <br />
+    <table style="width:100%">
+        @foreach (Milestone milestone in MilestonesClosed)
+        {
+            <tr>
+                <td style="width:30%" @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName</td>
+                <td style="width:40%">@milestone.Comments</td>
+                <td style="padding-right:10px; width:9%;">@milestone.PlannedDate.ToString("yyyy-MM-dd")</td>
+                <td style="width:9%; padding-right:10px;">@milestone.ActualDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    @if (milestone.ResponsibleId != 0)
+                    {
+                        @manager.EmployeeDB.GetByIdAsync(milestone.ResponsibleId).Result?.EmployeeShortName
+                    }
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public required Project CurrentProject { get; set; }
+
+    [Parameter]
+    public EventCallback<Milestone> OnMilestoneEdit { get; set; }
+
+    public List<Milestone> MilestonesOpen { get; set; } = [];
+    public List<Milestone> MilestonesClosed { get; set; } = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        MilestonesOpen = (await manager.MilestoneDB.GetOpenByProjectIdAsync(CurrentProject.ProjectId)).OrderBy(planned => planned.PlannedDate).ToList();
+        MilestonesClosed = (await manager.MilestoneDB.GetCompletedByProjectIdAsync(CurrentProject.ProjectId)).OrderByDescending(planned => planned.PlannedDate).ToList();
+    }
+
+    private async Task EditMilestone(Milestone milestone)
+    {
+        if (OnMilestoneEdit.HasDelegate)
+        {
+            await OnMilestoneEdit.InvokeAsync(milestone);
+        }
+    }
+}

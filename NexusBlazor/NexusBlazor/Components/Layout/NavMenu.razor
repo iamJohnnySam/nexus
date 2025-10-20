@@ -8,7 +8,13 @@
     <div class="menu">
         <nav>
             <a href="/">Home</a>
-            <div class="dropdown">
+            <AuthorizeView Context="auth">
+                <NotAuthorized>
+                    <a href="/login">Login</a>
+                </NotAuthorized>
+                <Authorized>
+                    <a href="/overview">Overview</a>
+                    <div class="dropdown">
                 <button class="dropButton">Projects</button>
                 <div class="dropdown-content">
                     <a href="/projects">Project Overview</a>
@@ -70,25 +76,28 @@
                 </div>
             </div>
 
-            <div class="dropdown">
-                <button class="dropButton">Admin</button>
-                <div class="dropdown-content">
-                    <a href="/admin/login">Login</a>
-                    <a href="/admin/product">Product</a>
-                    <a href="/admin/configdetail">Configuration Detail</a>
-                    <a href="/admin/configuration">Configuration</a>
-                    <a href="/admin/projectstage">Project Stage</a>
-                    <a href="/admin/deliverable">Deliverable</a>
-                    <a href="/admin/functionalkpi">Functional KPI</a>
-                    <a href="/admin/milestone">Milestone</a>
-                    <a href="/admin/oemitem">OEMItem</a>
-                    <a href="/admin/projectblock">Project Block</a>
-                    <a href="/admin/resourceblock">Resource Block</a>
-                    <a href="/admin/supplier">Supplier</a>
-                </div>
-            </div>
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                            <div class="dropdown">
+                                <button class="dropButton">Admin</button>
+                                <div class="dropdown-content">
+                                    <a href="/admin/login">Login</a>
+                                    <a href="/admin/product">Product</a>
+                                    <a href="/admin/configdetail">Configuration Detail</a>
+                                    <a href="/admin/configuration">Configuration</a>
+                                    <a href="/admin/projectstage">Project Stage</a>
+                                    <a href="/admin/deliverable">Deliverable</a>
+                                    <a href="/admin/functionalkpi">Functional KPI</a>
+                                    <a href="/admin/milestone">Milestone</a>
+                                    <a href="/admin/oemitem">OEMItem</a>
+                                    <a href="/admin/projectblock">Project Block</a>
+                                    <a href="/admin/resourceblock">Resource Block</a>
+                                    <a href="/admin/supplier">Supplier</a>
+                                </div>
+                            </div>
+                </Authorized>
+            </AuthorizeView>
 
-            <!-- Profile Dropdown -->
             <div class="dropdown">
                 <button class="dropButton">@UserName</button>
                 <div class="dropdown-content">
@@ -99,17 +108,11 @@
                             <a href="/sync">Sync</a>
                         </Authorized>
                     </AuthorizeView>
-
-                    <AuthorizeView>
-                        <NotAuthorized>
-                            <a href="/login">Login</a>
-                        </NotAuthorized>
-                        <Authorized>
                             <a href="/logout">Logout</a>
-                        </Authorized>
-                    </AuthorizeView>
                 </div>
             </div>
+                </Authorized>
+            </AuthorizeView>
         </nav>
     </div>
 </div>

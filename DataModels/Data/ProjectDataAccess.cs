@@ -44,7 +44,11 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
             await GetProjectObjects(project);
         }
 
-        return projects;
+        return projects.OrderByDescending(p => p.IsTrackedProject)
+                           .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.ProjectCode)
+                           .ThenBy(p => p.DesignCode)
+                           .ToList();
     }
     public async Task<List<Project>> GetAllActiveAsync()
     {
@@ -55,7 +59,11 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
             await GetProjectObjects(project);
         }
 
-        return projects;
+        return projects.OrderByDescending(p => p.IsTrackedProject)
+                           .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.ProjectCode)
+                           .ThenBy(p => p.DesignCode)
+                           .ToList();
     }
     public async Task<List<Project>> GetAllTrackedAsync()
     {
@@ -66,7 +74,11 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
             await GetProjectObjects(project);
         }
 
-        return projects;
+        return projects.OrderByDescending(p => p.IsTrackedProject)
+                           .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.ProjectCode)
+                           .ThenBy(p => p.DesignCode)
+                           .ToList();
     }
     public async Task<List<Project>> GetAllActiveTrackedAsync()
     {
@@ -81,7 +93,11 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
             await GetProjectObjects(project);
         }
 
-        return projects;
+        return projects.OrderByDescending(p => p.IsTrackedProject)
+                           .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.ProjectCode)
+                           .ThenBy(p => p.DesignCode)
+                           .ToList();
     }
     public async Task<List<string>> GetAllProjectNamesAsync()
     {

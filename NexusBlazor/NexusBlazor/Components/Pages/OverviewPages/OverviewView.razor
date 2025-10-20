@@ -1,0 +1,144 @@
+﻿@page "/overview"
+@attribute [Authorize]
+
+@using DataModels.Tools
+@using NexusBlazor.Components.Pages.Trackers
+
+@inject Manager manager
+
+@rendermode InteractiveServer
+
+<PageTitle>nɛxus | Overview</PageTitle>
+
+<div style="padding: 10px 20px 10px 20px;">
+    <div class="row">
+        <div class="col">
+            <h3>Project Overview</h3>
+        </div>
+        <div class="col-1"><button class="modern-button">Print</button></div>
+        <div class="col-1"></div>
+    </div>
+    <br />
+    @foreach(Project project in ActiveProjects)
+    {
+        <div class="row" style="padding-bottom:10px" @onclick="() => ProjectSelected(project)">
+            <div class="col-7"><strong>@project.ProjectName | @project.DesignCode (@project.ProjectCode)</strong></div>
+            <div class="col">Pending Tasks</div>
+            <div class="col-1">This Week</div>
+        </div>
+
+        <div class="row">
+            <div class="col-7">
+                <MilestoneCell CurrentProject="project" OnMilestoneEdit="EditMilestone" />
+                @if (SelectedProjectId == project.ProjectId)
+                {
+                    <div style="text-align:center; padding-top:10px;"><button class="modern-button" @onclick="() => AddMilestone(project)">Add</button></div>
+                }
+            </div>
+            <div class="col">
+                <TaskItemsCell CurrentProject="project" OnTaskItemEdit="EditTaskItem" />
+                @if (SelectedProjectId == project.ProjectId)
+                {
+                    <div style="text-align:center; padding-top:10px;">
+                        <InputText @bind-Value="NewTaskTitle" />
+                    </div>  
+                }
+            </div>
+            <div class="col-1">
+                <ManualResourceCell ResourceType="EManualResourceType.Employee" Id="project.ProjectId" Year="DateTime.Now.Year" Week="CalendarLogic.WeekOfYear(DateTime.Now)" />
+            </div>
+        </div>
+
+        <hr />
+    }
+</div>
+
+@if (ShowMilestoneOverlay)
+{
+    <MilestoneEditOverlay SelectedItem="SelectedMilestone" OnItemUpdate="ItemUpdated" />
+}
+@if (ShowTaskOverlay)
+{
+    <ParentTaskOverlay SelectedItem="SelectedTask" OnItemUpdate="ItemUpdated" />
+}
+
+@code {
+    public List<Project> ActiveProjects { get; set; } = [];
+    public int SelectedProjectId { get; set; } = 0;
+    public Milestone SelectedMilestone { get; set; } = new();
+    public TaskItem SelectedTask { get; set; } = new();
+
+    public bool ShowMilestoneOverlay { get; set; } = false;
+    public bool ShowTaskOverlay { get; set; } = false;
+
+    public string NewTaskTitle
+    {
+        get { return ""; }
+        set
+        {
+            manager.TaskItemDB.InsertAsync(new TaskItem
+            {
+                Title = value,
+                ProjectId = SelectedProjectId,
+                ParentTaskId = 0,
+                CreatedOn = DateTime.Now,
+                Deadline = DateTime.Now.AddDays(1),
+                IsCompleted = false
+            }).Wait();
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private void EditMilestone(Milestone milestone)
+    {
+        SelectedMilestone = milestone;
+        SelectedProjectId = milestone.ProjectId;
+        ShowMilestoneOverlay = true;
+        ShowTaskOverlay = false;
+        StateHasChanged();
+    }
+    
+
+    private void EditTaskItem(TaskItem task)
+    {
+        SelectedTask = task;
+        SelectedProjectId = task.ProjectId;
+        ShowMilestoneOverlay = false;
+        ShowTaskOverlay = true;
+        StateHasChanged();
+    }
+
+    private void ProjectSelected(Project project)
+    {
+        SelectedProjectId = project.ProjectId;
+    }
+
+    private void ItemUpdated()
+    {
+        ShowMilestoneOverlay = false;
+        ShowTaskOverlay = false;
+        StateHasChanged();
+    }
+
+    private void AddMilestone(Project project)
+    {
+        SelectedMilestone = new Milestone
+        {
+            ProjectId = project.ProjectId,
+            MilestoneName = "New Milestone",
+            PlannedDate = DateTime.Now,
+            IsCompleted = false,
+            Comments = ""
+        };
+        SelectedProjectId = project.ProjectId;
+        ShowMilestoneOverlay = true;
+        ShowTaskOverlay = false;
+        StateHasChanged();
+    }
+}

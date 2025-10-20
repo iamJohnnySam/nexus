@@ -109,7 +109,7 @@
 
     private async Task LoadData()
     {
-        Employees = await manager.EmployeeDB.GetAllAsync();
+        Employees = (await manager.EmployeeDB.GetAllAsync()).OrderBy(name => name.EmployeeName).ToList(); 
         StateHasChanged();
     }
 

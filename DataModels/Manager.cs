@@ -24,7 +24,8 @@ public class Manager
     public FunctionalKpiDataAccess FunctionalKpiDB { get; }
     public GradeDataAccess GradeDB { get; }
     public LoginDataAccess LoginDB { get; }
-    public TimelineItemDataAccess MilestoneDB { get; }
+    public TimelineItemDataAccess TimelineItemDB { get; }
+    public MilestoneDataAccess MilestoneDB { get; }
     public OEMItemDataAccess OEMItemDB { get; }
     public ProductDataAccess ProductDB { get; }
     public ProductModuleDataAccess ProductModuleDB { get; }
@@ -88,10 +89,11 @@ public class Manager
         
         
         FunctionalKpiDB = new(_connectionString);
-        
-        
-        
-        MilestoneDB = new(_connectionString, EmployeeDB, ProjectDB, ProjectStageDB);
+
+
+
+        TimelineItemDB = new(_connectionString, EmployeeDB, ProjectDB, ProjectStageDB);
+        MilestoneDB = new(_connectionString);
         OEMItemDB = new(_connectionString);
         
         

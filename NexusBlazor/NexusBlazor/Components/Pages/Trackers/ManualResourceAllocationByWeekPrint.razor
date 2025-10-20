@@ -4,7 +4,7 @@
 @using NexusBlazor.Components.Logic
 @inject Manager manager
 
-<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
+<PageTitle>nɛxus | Resource Allocation (Manual)</PageTitle>
 
 <div class="row" style="padding-top: 20px;">
     <div class="col">
@@ -102,7 +102,7 @@
         thisWeek = Week.ToString();
 
         base.OnInitialized();
-        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result.OrderByDescending(p => p.POStatus).ThenBy(p => p.DesignCode).ToList();
+        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result;
     }
 
     private void ChangeWeek(int week)

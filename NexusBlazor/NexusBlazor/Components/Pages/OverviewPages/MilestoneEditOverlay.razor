@@ -1,0 +1,130 @@
+﻿@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="overlay-window">
+    <div class="card p-3" style="background-color: transparent; border: none;">
+        <h5>@(SelectedItem?.MilestoneId == 0 ? "Add Item" : "Edit Item")</h5>
+
+        <EditForm Model="@SelectedItem" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">Project (@SelectedItem!.ProjectId): @ThisProject?.ProjectName</label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Milestone</label>
+                <InputText class="form-control" @bind-Value="SelectedItem.MilestoneName" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Comments</label>
+                <InputTextArea class="form-control" @bind-Value="SelectedItem.Comments" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Planned Date</label>
+                <InputDate class="form-control" @bind-Value="SelectedItem.PlannedDate" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Completed</label>
+                <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.IsCompleted" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Completion Date</label>
+                <InputDate class="form-control" @bind-Value="SelectedItem.ActualDate" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">On Hold</label>
+                <InputCheckbox class="form-check-input" @bind-Value="SelectedItem.OnHold" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Responsible</label>
+                <InputSelect class="form-control" @bind-Value="SelectedItem.ResponsibleId">
+                    <option value="">-- Select Responsible --</option>
+                    @foreach (var u in ResponsiblePersons)
+                    {
+                        <option value="@u.EmployeeId">@u.EmployeeName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+    <div style="display: flex; justify-content: flex-end; padding:10px">
+        <button style="margin: 0px 10px;" class="modern-button" @onclick="DeleteItem">Delete</button>
+        <button style="margin: 0px 10px;" class="modern-button" @onclick="ResetForm">Close</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Milestone SelectedItem { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<Employee> ResponsiblePersons = [];
+    private Project? ThisProject;
+
+    protected override void OnParametersSet()
+    {
+        ThisProject = manager.ProjectDB.GetByIdAsync(SelectedItem.ProjectId).Result;
+        if (!SelectedItem.IsCompleted && SelectedItem.ActualDate == DateTime.MinValue)
+        {
+            SelectedItem.ActualDate = SelectedItem.PlannedDate;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        ResponsiblePersons = (await manager.EmployeeDB.GetAllActiveAsync()).OrderBy(name => name.EmployeeName).ToList();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedItem.MilestoneId == 0)
+        {
+            await manager.MilestoneDB.InsertAsync(SelectedItem);
+        }
+        else
+        {
+            await manager.MilestoneDB.UpdateAsync(SelectedItem);
+        }
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+
+    private async void ResetForm()
+    {
+        await OnItemUpdate.InvokeAsync();
+        SelectedItem = new ();
+    }
+
+    private async void DeleteItem()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete this item?");
+        if (!confirmed) return;
+
+        await manager.MilestoneDB.DeleteAsync(SelectedItem);
+        await OnItemUpdate.InvokeAsync();
+        await LoadData();
+        ResetForm();
+    }
+}
