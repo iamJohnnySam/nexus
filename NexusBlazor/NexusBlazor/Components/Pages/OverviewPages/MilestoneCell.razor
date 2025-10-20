@@ -7,7 +7,7 @@
         {
             <tr>
                 <td style="width:30%" @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName</td>
-                <td style="width:40%">@milestone.Comments</td>
+                <td style="width:40%; white-space: pre-wrap;">@milestone.Comments</td>
                 <td style="padding-right:10px; width:9%;">@milestone.PlannedDate.ToString("yyyy-MM-dd")</td>
                 <td style="width:9%; padding-right:10px;">
                     @if (milestone.OnHold)

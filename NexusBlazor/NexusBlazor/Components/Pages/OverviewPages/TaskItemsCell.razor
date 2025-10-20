@@ -160,6 +160,7 @@
     private async Task LoadData()
     {
         IncompleteParentTaskItems = (await manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId));
+        SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId);
         StateHasChanged();
     }
 
@@ -177,7 +178,7 @@
         else
         {
             CurrentParentTaskId = task.TaskId;
-            SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(task.TaskId);
+            SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId);
         }
         StateHasChanged();
     }

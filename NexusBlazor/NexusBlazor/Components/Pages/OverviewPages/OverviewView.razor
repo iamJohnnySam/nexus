@@ -32,7 +32,16 @@
                 <MilestoneCell CurrentProject="project" OnMilestoneEdit="EditMilestone" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
-                    <div style="text-align:center; padding-top:10px;"><button class="modern-button" @onclick="() => AddMilestone(project)">Add</button></div>
+                    <div class="row">
+                        <div class="col">
+                            <div style="text-align:center; padding-top:10px;">
+                                <InputText @bind-Value="NewMilestoneTitle" />
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div style="text-align:center; padding-top:10px;"><button class="modern-button" @onclick="() => AddMilestone(project)">Add & Edit Milestone</button></div>
+                        </div>
+                    </div>
                 }
             </div>
             <div class="col">
@@ -89,6 +98,23 @@
         }
     }
 
+    public string NewMilestoneTitle
+    {
+        get { return ""; }
+        set
+        {
+            manager.MilestoneDB.InsertAsync(new Milestone
+            {
+                MilestoneName = value,
+                ProjectId = SelectedProjectId,
+                PlannedDate = DateTime.Now.AddDays(7),
+                IsCompleted = false,
+                OnHold = false
+            }).Wait();
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
@@ -131,7 +157,7 @@
         SelectedMilestone = new Milestone
         {
             ProjectId = project.ProjectId,
-            MilestoneName = "New Milestone",
+            MilestoneName = "",
             PlannedDate = DateTime.Now,
             IsCompleted = false,
             Comments = ""
