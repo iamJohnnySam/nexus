@@ -7,9 +7,20 @@
     <table style="width:100%">
         @foreach (TaskItem parentTask in IncompleteParentTaskItems)
         {
-            <tr>
+            List<TaskItem> subTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(parentTask.TaskId).Result;
+            bool subTasksComplete = false;
+            @if (subTasks.Count == 0)
+            {
+                subTasksComplete = true;
+            }
+            else
+            {
+                subTasksComplete = !subTasks.Any(obj => obj.IsCompleted == false);
+            }
+
+             <tr>
                 <td @onclick="() => EditTask(parentTask)">
-                    @if(CurrentParentTaskId == parentTask.TaskId)
+                    @if (CurrentParentTaskId == parentTask.TaskId || (ShowExpanded && subTasks.Count > 0))
                     {
                         <strong>@parentTask.Title</strong>
                     }
@@ -18,7 +29,16 @@
                         @parentTask.Title
                     }
                 </td>
-                <td style="padding-right:10px; width:17%;">@parentTask.Deadline.ToString("yyyy-MM-dd")</td>
+                <td style="padding-right:10px; width:17%;">
+                    @if((parentTask.Deadline - DateTime.Today).Days < 0)
+                    {
+                        <span style="color: palevioletred">@parentTask.Deadline.ToString("yyyy-MM-dd")</span>
+                    }
+                    else
+                    {
+                        @parentTask.Deadline.ToString("yyyy-MM-dd")
+                    }
+                </td>
                 <td style="width:17%">
                     @if (parentTask.ResponsibleId != 0)
                     {
@@ -33,20 +53,7 @@
                     }
                 </td>
 
-                @{
-                    List<TaskItem> subTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(parentTask.TaskId).Result;
-                    bool subTasksComplete = false;
-                    @if (subTasks.Count == 0)
-                    {
-                        subTasksComplete = true;
-                    }
-                    else
-                    {
-                        subTasksComplete = !subTasks.Any(obj => obj.IsCompleted == false);
-                    }
-                }
-
-                @if (subTasksComplete)
+                @if (subTasksComplete && !ShowExpanded)
                 {
                     <td style="width: 6%" @onclick="() => CompleteTask(parentTask)">✔</td>
                 }
@@ -66,13 +73,13 @@
             </tr>
 
 
-            @if(CurrentParentTaskId == parentTask.TaskId)
+            @if (ShowExpanded)
             {
-                @foreach (TaskItem subTask in SubTasks)
+                foreach (TaskItem subTask in subTasks)
                 {
                     <tr>
                         <td style="padding-left:30px;" @onclick="() => EditTask(subTask)">
-                            @if(subTask.IsCompleted)
+                            @if (subTask.IsCompleted)
                             {
                                 <s>@subTask.Title</s>
                             }
@@ -81,30 +88,94 @@
                                 @subTask.Title
                             }
                         </td>
-                        <td style="padding-right:10px; width:17%;">@subTask.Deadline.ToString("yyyy-MM-dd")</td>
+                        <td style="padding-right:10px; width:17%;">
+                            @if ((subTask.Deadline - DateTime.Today).Days < 0)
+                            {
+                                <span style="color: palevioletred">@subTask.Deadline.ToString("yyyy-MM-dd")</span>
+                            }
+                            else
+                            {
+                                @subTask.Deadline.ToString("yyyy-MM-dd")
+                            }
+                        </td>
                         <td style="width:17%">
                             @if (subTask.ResponsibleId != 0)
                             {
-                                if(subTask.Responsible == null)
+                                if (subTask.Responsible == null)
                                 {
                                     @manager.EmployeeDB.GetByIdAsync(subTask.ResponsibleId).Result?.EmployeeShortName
                                 }
                                 else
                                 {
-                                    @subTask.Responsible.EmployeeShortName;
+                                    @subTask.Responsible.EmployeeShortName
+                                    ;
                                 }
                             }
                         </td>
-                        <td style="width: 6%" @onclick="() => CompleteTask(subTask)">@(subTask.IsCompleted ? "" : "✔")</td>
+                        @if (!ShowExpanded)
+                        {
+                            <td style="width: 6%" @onclick="() => CompleteTask(subTask)">@(subTask.IsCompleted ? "" : "✔")</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
                         <td>-</td>
                     </tr>
                 }
-                <tr>
-                    <td colspan="4">
-                        <InputText @bind-Value="NewTaskTitle" />
-                    </td>
-                    <td>-</td>
-                </tr>
+            }
+            else
+            {
+                if (CurrentParentTaskId == parentTask.TaskId)
+                {
+                    foreach (TaskItem subTask in SubTasks)
+                    {
+                        <tr>
+                            <td style="padding-left:30px;" @onclick="() => EditTask(subTask)">
+                                @if (subTask.IsCompleted)
+                                {
+                                    <s>@subTask.Title</s>
+                                }
+                                else
+                                {
+                                    @subTask.Title
+                                }
+                            </td>
+                            <td style="padding-right:10px; width:17%;">
+                                @if ((subTask.Deadline - DateTime.Today).Days < 0)
+                                {
+                                    <span style="color: palevioletred">@subTask.Deadline.ToString("yyyy-MM-dd")</span>
+                                }
+                                else
+                                {
+                                    @subTask.Deadline.ToString("yyyy-MM-dd")
+                                }
+                            </td>
+                            <td style="width:17%">
+                                @if (subTask.ResponsibleId != 0)
+                                {
+                                    if (subTask.Responsible == null)
+                                    {
+                                        @manager.EmployeeDB.GetByIdAsync(subTask.ResponsibleId).Result?.EmployeeShortName
+                                    }
+                                    else
+                                    {
+                                        @subTask.Responsible.EmployeeShortName
+                                        ;
+                                    }
+                                }
+                            </td>
+                            <td style="width: 6%" @onclick="() => CompleteTask(subTask)">@(subTask.IsCompleted ? "" : "✔")</td>
+                            <td>-</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="4">
+                            <InputText @bind-Value="NewTaskTitle" />
+                        </td>
+                        <td>-</td>
+                    </tr>
+                }
             }
         }
     </table>
@@ -117,6 +188,9 @@
     [Parameter]
     public EventCallback<TaskItem> OnTaskItemEdit { get; set; }
 
+    [Parameter]
+    public bool ShowExpanded { get; set; } = false;
+
     public List<Employee> ResponsiblePersons { get; set; } = [];
     public List<TaskItem> IncompleteParentTaskItems { get; set; } = [];
     public List<TaskItem> SubTasks { get; set; } = [];
@@ -128,14 +202,16 @@
         get { return ""; }
         set 
         {
+            TaskItem parent = manager.TaskItemDB.GetByIdAsync(CurrentParentTaskId).Result!;
             manager.TaskItemDB.InsertAsync(new TaskItem
             {
                 Title = value,
                 ProjectId = CurrentProject.ProjectId,
                 ParentTaskId = CurrentParentTaskId,
                 CreatedOn = DateTime.Now,
-                Deadline = DateTime.Now.AddDays(1),
-                IsCompleted = false
+                Deadline = parent.Deadline,
+                IsCompleted = false,
+                ResponsibleId = parent.ResponsibleId
             }).Wait();
 
             SubTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId).Result;

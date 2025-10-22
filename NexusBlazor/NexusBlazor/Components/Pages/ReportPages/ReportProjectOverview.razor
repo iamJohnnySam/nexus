@@ -1,0 +1,89 @@
+﻿
+@using DataModels.Tools
+@using NexusBlazor.Components.Pages.OverviewPages
+@using NexusBlazor.Components.Pages.Trackers
+
+@inject Manager manager
+
+<div style="padding: 10px 20px 10px 20px;">
+    @foreach(Project project in ActiveProjects)
+    {
+        <div class="row" style="padding-bottom:10px">
+            <div class="col-3"><h4>@project.ProjectName</h4></div>
+            <div class="col-3"><strong>@project.DesignCode | @project.ProjectCode (Owner: 
+                    @if (project.PrimaryDesignerId == 0)
+                    {
+                        <span>Not Assigned</span>
+                    }
+                    else
+                    {
+                        @manager.EmployeeDB.GetByIdAsync(project.PrimaryDesignerId).Result?.EmployeeShortName
+                    }
+                    )</strong></div>
+            <div class="col">Pending Tasks</div>
+            <div class="col-1">Week @Week Resources</div>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <MilestoneCell CurrentProject="project" ShowExpanded="@true" />
+            </div>
+            <div class="col">
+                <TaskItemsCell CurrentProject="project" ShowExpanded="@true" />
+            </div>
+            <div class="col-1">
+                @{
+                    List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByProjectId(project.ProjectId, Year, Week).Result;
+                }
+                @foreach (ResourceBlock block in blocks)
+                {
+                    <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
+                }
+            </div>
+        </div>
+
+        <hr />
+    }
+</div>
+
+@code {
+    public List<Project> ActiveProjects { get; set; } = [];
+    public int SelectedProjectId { get; set; } = 0;
+    public Milestone SelectedMilestone { get; set; } = new();
+    public TaskItem SelectedTask { get; set; } = new();
+
+    public bool ShowMilestoneOverlay { get; set; } = false;
+    public bool ShowTaskOverlay { get; set; } = false;
+
+    public bool Printable { get; set; } = false;
+
+    private int Year { get; set; } = DateTime.Today.Year;
+    private int Week { get; set; } = CalendarLogic.WeekOfYear(DateTime.Now);
+
+    public string NewTaskTitle
+    {
+        get { return ""; }
+        set
+        {
+            manager.TaskItemDB.InsertAsync(new TaskItem
+            {
+                Title = value,
+                ProjectId = SelectedProjectId,
+                ParentTaskId = 0,
+                CreatedOn = DateTime.Now,
+                Deadline = DateTime.Now.AddDays(1),
+                IsCompleted = false
+            }).Wait();
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
+        await base.OnInitializedAsync();
+
+        Year = DateTime.Today.Year;
+        Week = CalendarLogic.WeekOfYear(DateTime.Now);
+    }
+}

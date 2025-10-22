@@ -13,7 +13,18 @@
                     <a href="/login">Login</a>
                 </NotAuthorized>
                 <Authorized>
-                    <a href="/overview">Overview</a>
+                    <div class="dropdown">
+                        <button class="dropButton">Overview</button>
+                        <div class="dropdown-content">
+                            <a href="/overview">Project Summary</a>
+                            <a href="/report">Report</a>
+                            <a href="/">----- Trackers -----</a>
+                            <a href="/project_timeline">Project Timeline</a>
+                            <a href="/manual_resource_allocation_by_project">Resource Allocation (Project)</a>
+                            <a href="/manual_resource_allocation_by_employee">Resource Allocation (Employee)</a>
+                            <a href="/manual_resource_allocation_weekly">Resource Allocation (Weekly)</a>
+                        </div>
+                    </div>
                     <div class="dropdown">
                 <button class="dropButton">Projects</button>
                 <div class="dropdown-content">
@@ -24,16 +35,6 @@
                     <a href="/configuration/product">Product Manager</a>
                     <a href="/configuration/module">Module Manager</a>
                     <a href="/configuration/specification">Specification Manager</a>
-                </div>
-            </div>
-
-            <div class="dropdown">
-                <button class="dropButton">Trackers</button>
-                <div class="dropdown-content">
-                    <a href="/project_timeline">Project Timeline</a>
-                    <a href="/manual_resource_allocation_by_project">Manual Resource Allocation (Project)</a>
-                    <a href="/manual_resource_allocation_by_employee">Manual Resource Allocation (Employee)</a>
-                    <a href="/manual_resource_allocation_weekly">Manual Resource Allocation (Weekly)</a>
                 </div>
             </div>
 

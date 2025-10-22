@@ -1,0 +1,46 @@
+﻿.white-text{
+    color: white;
+}
+
+.tabs-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows labels to wrap if necessary */
+}
+
+    .tabs-container input[type="radio"] {
+        display: none; /* Hide the actual radio buttons */
+    }
+
+    .tabs-container label {
+        padding: 10px 15px;
+        color:black;
+        cursor: pointer;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-bottom: none; /* Create a tab-like appearance */
+        margin-right: 5px;
+        border-radius: 5px 5px 0 0;
+        transition: background-color 0.3s ease;
+    }
+
+        .tabs-container label:hover {
+            background-color: #e0e0e0;
+        }
+
+    .tabs-container input[type="radio"]:checked + label {
+        background-color: #fff;
+        border-color: #ccc;
+        border-bottom: 1px solid #fff; /* "Connect" the active tab to its content */
+    }
+
+.tab-content {
+    width: 100%;
+    padding: 20px;
+    border-top: 1px solid #ccc;
+    display: none; /* Hide all tab content by default */
+    order: 1; /* Ensure content appears below tabs */
+}
+
+.tabs-container input[type="radio"]:checked + label + .tab-content {
+    display: block; /* Show the content of the active tab */
+}

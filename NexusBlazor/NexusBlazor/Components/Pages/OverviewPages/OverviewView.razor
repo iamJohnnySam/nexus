@@ -15,20 +15,31 @@
         <div class="col">
             <h3>Project Overview</h3>
         </div>
-        <div class="col-1"><button class="modern-button">Print</button></div>
+        <div class="col-2">
+        </div>
         <div class="col-1"></div>
     </div>
     <br />
     @foreach(Project project in ActiveProjects)
     {
         <div class="row" style="padding-bottom:10px" @onclick="() => ProjectSelected(project)">
-            <div class="col-7"><strong>@project.ProjectName | @project.DesignCode (@project.ProjectCode)</strong></div>
+            <div class="col-3"><h4>@project.ProjectName</h4></div>
+            <div class="col-3"><strong>@project.DesignCode | @project.ProjectCode (Owner: 
+                    @if (project.PrimaryDesignerId == 0)
+                    {
+                        <span>Not Assigned</span>
+                    }
+                    else
+                    {
+                @manager.EmployeeDB.GetByIdAsync(project.PrimaryDesignerId).Result?.EmployeeShortName
+                    }
+                    )</strong></div>
             <div class="col">Pending Tasks</div>
-            <div class="col-1">This Week</div>
+            <div class="col-1">Week @Week Resources</div>
         </div>
 
         <div class="row">
-            <div class="col-7">
+            <div class="col-6">
                 <MilestoneCell CurrentProject="project" OnMilestoneEdit="EditMilestone" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
@@ -80,6 +91,9 @@
     public bool ShowMilestoneOverlay { get; set; } = false;
     public bool ShowTaskOverlay { get; set; } = false;
 
+    private int Year { get; set; } = DateTime.Today.Year;
+    private int Week { get; set; } = CalendarLogic.WeekOfYear(DateTime.Now);
+
     public string NewTaskTitle
     {
         get { return ""; }
@@ -119,6 +133,9 @@
     {
         ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
         await base.OnInitializedAsync();
+
+        Year = DateTime.Today.Year;
+        Week = CalendarLogic.WeekOfYear(DateTime.Now);
     }
 
     private void EditMilestone(Milestone milestone)
@@ -129,7 +146,7 @@
         ShowTaskOverlay = false;
         StateHasChanged();
     }
-    
+
 
     private void EditTaskItem(TaskItem task)
     {

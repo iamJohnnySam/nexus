@@ -23,18 +23,21 @@
 }
 <div class="row">
     <div class="col">
-        @if(ResourceType == EManualResourceType.Employee)
+        @if(FilterDesignation == EDesignation.None)
         {
-            @if (ResourceBlocks.Count == 0)
+            if (ResourceType == EManualResourceType.Employee)
             {
-                <button class="hidden-modern-button" @onclick=CopyEmployeeResourcesFromLastWeek>Copy over</button>
+                if (ResourceBlocks.Count == 0)
+                {
+                    <button class="hidden-modern-button" @onclick=CopyEmployeeResourcesFromLastWeek>Copy over</button>
+                }
             }
-        }
-        else if (ResourceType == EManualResourceType.Project)
-        {
-            @if (ResourceBlocks.Count == 0)
+            else if (ResourceType == EManualResourceType.Project)
             {
-                <button class="hidden-modern-button" @onclick=CopyProjectResourcesFromLastWeek>Copy over</button>
+                if (ResourceBlocks.Count == 0)
+                {
+                    <button class="hidden-modern-button" @onclick=CopyProjectResourcesFromLastWeek>Copy over</button>
+                }
             }
         }
     </div>
@@ -79,6 +82,11 @@
         if (Week > 52)
         {
             Year += 1;
+        }
+        Week = Week % 52;
+        if (Week == 0)
+        {
+            Week = 52;
         }
         await GetItems();
         await base.OnParametersSetAsync();

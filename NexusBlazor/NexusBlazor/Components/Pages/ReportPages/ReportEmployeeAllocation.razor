@@ -1,15 +1,8 @@
-﻿@page "/manual_resource_allocation_by_employee"
-@attribute [Authorize]
-@using DataModels.Tools
+﻿@using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject Manager manager
-@rendermode InteractiveServer
-
-<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
 
 <div style="padding: 10px 20px 10px 20px;">
-    <h1>Resource Allocations</h1>
-
     <table style="width: 100%; ">
         <tr style="border-bottom: 1px solid red;">
             <th>Employee</th>
@@ -55,7 +48,16 @@
                     <td>
                         @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(Year, Week) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(Year, Week)))
                         {
-                            <ManualResourceCell ResourceType=EManualResourceType.Project Id="employee.EmployeeId" Week="Week" Year="Year" Projects="ActiveProjects" />
+                            List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByEmployeeId(employee.EmployeeId, Year, Week).Result;
+                            @foreach (ResourceBlock block in blocks)
+                            {
+                                if(block.ProjectId == 0)
+                                {
+                                    continue;
+                                }
+                                Project project = manager.ProjectDB.GetByIdAsync(block.ProjectId).Result!;
+                                <div>@project.DesignCode (@project.ProjectCode)</div>
+                            }
                         }
                         else
                         {
@@ -92,7 +94,6 @@
     {
         cellWidth = (95 * 16) / NumberOfWeeks;
         cellStyle = $"width: {cellWidth}px; ";
-        ActiveProjects = manager.ProjectDB.GetAllAsync().Result;
         ActiveEmployees = manager.EmployeeDB.GetAllActiveAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
     }
 }

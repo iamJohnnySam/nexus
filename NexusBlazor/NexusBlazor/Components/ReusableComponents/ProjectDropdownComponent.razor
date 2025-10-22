@@ -1,13 +1,6 @@
 ﻿@inject Manager manager
 
-@if (projectExists)
-{
-    <DropdownComponent SelectedItemId="ProjectId" OnItemUpdate="UpdateProject" Items="Items" />
-}
-else
-{
-    <label>@manager.ProjectDB.GetByIdAsync(ProjectId).Result.DesignCode </label>
-}
+<DropdownComponent SelectedItemId="ProjectId" OnItemUpdate="UpdateProject" Items="Items" />
 
 @code {
     [Parameter]
@@ -16,16 +9,20 @@ else
     [Parameter]
     public int ProjectId { get; set; } = 0;
 
+    public Project? Project { get; set; }
+
     [Parameter]
     public EventCallback<int> OnProjectUpdate { get; set; }
 
     public Dictionary<int, string> Items { get; set; } = [];
 
-    private bool projectExists = false;
 
     protected override void OnParametersSet()
     {
-        projectExists = Projects.Any(obj => obj.ProjectId == ProjectId) || ProjectId == 0;
+        if(ProjectId != 0)
+        {
+            Project = manager.ProjectDB.GetByIdAsync(ProjectId).Result;
+        }
         base.OnParametersSet();
     }
     protected override void OnInitialized()

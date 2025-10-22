@@ -102,7 +102,7 @@
 
     private async Task LoadData()
     {
-        ResponsiblePersons = await manager.EmployeeDB.GetAllActiveAsync();
+        ResponsiblePersons = (await manager.EmployeeDB.GetAllActiveAsync()).OrderBy(name => name.EmployeeName).ToList();
     }
 
     private async Task HandleSubmit()

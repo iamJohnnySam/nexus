@@ -16,11 +16,22 @@
             <th>Project Code</th>
             @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
             {
+                int thisYear = DateTime.Now.Year;
+                int thisWeek = 1;
                 <th style=@cellStyle>
-                    Week @(i % 52) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, i % 52).ToString("MM/dd"))
+                    @if (i > 52)
+                    {
+                        thisYear = DateTime.Now.Year + 1;
+                        thisWeek = i % 52;
+                    }
+                    else
+                    {
+                        thisYear = DateTime.Now.Year;
+                        thisWeek = i;
+                    }
+                    Week @(thisWeek) (@CalendarLogic.GetFirstMondayOfWeek(DateTime.Today.Year, thisWeek).ToString("MM/dd"))
                 </th>
             }
-            <th>Comments</th>
         </tr>
 
 
@@ -36,8 +47,6 @@
                         <ManualResourceCell ResourceType=ResourceType Id="project.ProjectId" Week="i" Year="DateTime.Now.Year" />
                     </td>
                 }
-                <td>
-                </td>
             </tr>
         }
 

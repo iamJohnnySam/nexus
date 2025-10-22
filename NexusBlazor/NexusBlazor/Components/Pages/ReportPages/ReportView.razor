@@ -1,0 +1,41 @@
+﻿@page "/report"
+@attribute [Authorize]
+@using DataModels.Tools
+@layout ReportLayout
+
+<PageTitle>Engineering Report (Week @Week) - Exported (@DateTime.Today.ToString("yyyy.MM.dd")) - by nɛxus</PageTitle>
+
+<div class="white-text" style="padding: 10px 10px;">
+    <h3><a href="/">⚒</a> ENGINEERING REPORT FOR WEEK @Week</h3>
+</div>
+
+<div class="white-text" style="padding: 10px 10px;">
+    <div class="tabs-container">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <label for="tab1">Project Overview</label>
+        <div class="tab-content" id="content1">
+            <ReportProjectOverview />
+        </div>
+
+        <input type="radio" name="tabs" id="tab2">
+        <label for="tab2">Allocation By Project</label>
+        <div class="tab-content" id="content2">
+            <ReportProjectAllocation />
+        </div>
+
+        <input type="radio" name="tabs" id="tab3">
+        <label for="tab3">Allocation By Employee</label>
+        <div class="tab-content" id="content3">
+            <ReportEmployeeAllocation />
+        </div>
+    </div>
+</div>
+
+@code{
+    public int Week { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Week = CalendarLogic.WeekOfYear(DateTime.Now);
+    }
+}

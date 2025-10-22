@@ -1,19 +1,12 @@
-﻿@page "/manual_resource_allocation_by_employee"
-@attribute [Authorize]
-@using DataModels.Tools
+﻿@using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject Manager manager
-@rendermode InteractiveServer
-
-<PageTitle>nexus | Resource Allocation (Manual)</PageTitle>
 
 <div style="padding: 10px 20px 10px 20px;">
-    <h1>Resource Allocations</h1>
-
     <table style="width: 100%; ">
         <tr style="border-bottom: 1px solid red;">
-            <th>Employee</th>
-            <th>Designation</th>
+            <th>Project</th>
+            <th>Project Code</th>
             @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
             {
                 int thisYear = DateTime.Now.Year;
@@ -35,11 +28,12 @@
         </tr>
 
 
-        @foreach (Employee employee in ActiveEmployees)
+        @foreach (Project project in ActiveProjects)
         {
             <tr>
-                <td>@employee.EmployeeShortName</td>
-                <td>@employee.EmployeeDesignation?.DesignationName</td>
+                <td>@project.ProjectName</td>
+                <td>@project.DesignCode</td>
+
                 @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
                 {
                     int Year = DateTime.Today.Year;
@@ -52,21 +46,16 @@
                     {
                         Week = 52;
                     }
+                    List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByProjectId(project.ProjectId, Year, Week).Result;
                     <td>
-                        @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(Year, Week) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(Year, Week)))
+                        @foreach (ResourceBlock block in blocks)
                         {
-                            <ManualResourceCell ResourceType=EManualResourceType.Project Id="employee.EmployeeId" Week="Week" Year="Year" Projects="ActiveProjects" />
-                        }
-                        else
-                        {
-                            <span>N/A</span>
+                            <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
                         }
                     </td>
                 }
             </tr>
         }
-
-
 
     </table>
 </div>
@@ -75,24 +64,19 @@
 @code {
     private int CurrentWeek { get; set; }
     private int NumberOfWeeks { get; set; } = 12;
+    private EManualResourceType ResourceType = EManualResourceType.Employee;
 
-    protected override void OnInitialized()
-    {
-        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
-        base.OnInitialized();
-    }
-
-    List<Employee> ActiveEmployees { get; set; } = [];
     List<Project> ActiveProjects { get; set; } = [];
 
     int cellWidth = 85;
     string cellStyle = "width: 85px;";
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
+        CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
+        base.OnInitialized();
         cellWidth = (95 * 16) / NumberOfWeeks;
         cellStyle = $"width: {cellWidth}px; ";
-        ActiveProjects = manager.ProjectDB.GetAllAsync().Result;
-        ActiveEmployees = manager.EmployeeDB.GetAllActiveAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
+        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result;
     }
 }
