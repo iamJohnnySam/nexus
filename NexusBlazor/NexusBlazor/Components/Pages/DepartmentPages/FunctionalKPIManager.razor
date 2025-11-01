@@ -1,4 +1,5 @@
 ﻿@page "/department/functional_kpi"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject IJSRuntime JS
@@ -57,7 +58,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var kpi in KPIs)
+                @foreach (var kpi in manager.FunctionalKpiDB.AllItems)
                 {
                     <tr class="@((SelectedKPI?.FunctionalKpiId == kpi.FunctionalKpiId) ? "table-primary" : "")">
                         <td style="color: white">@kpi.FunctionalKpiId</td>
@@ -77,7 +78,6 @@
 </div>
 
 @code {
-    private List<FunctionalKpi> KPIs = [];
     private FunctionalKpi SelectedKPI = new()
     {
         KpiName = string.Empty,
@@ -85,14 +85,14 @@
         KpiEffectiveFrom = DateTime.Now.Year
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadKPIs();
+        manager.FunctionalKpiDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadKPIs()
+    public void Dispose()
     {
-        KPIs = await manager.FunctionalKpiDB.GetAllAsync();
+        manager.FunctionalKpiDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(FunctionalKpi kpi)
@@ -113,7 +113,6 @@
         if (!confirmed) return;
 
         await manager.FunctionalKpiDB.DeleteAsync(kpi);
-        await LoadKPIs();
         ResetForm();
     }
 
@@ -128,7 +127,6 @@
             await manager.FunctionalKpiDB.UpdateAsync(SelectedKPI);
         }
 
-        await LoadKPIs();
         ResetForm();
     }
 

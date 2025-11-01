@@ -1,4 +1,5 @@
-﻿@inject Manager manager
+﻿@implements IDisposable
+@inject Manager manager
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -16,7 +17,7 @@
                     <label class="form-label">Project (@SelectedReviewItem!.ProjectId)</label>
                     <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ProjectId">
                         <option value=0>-- Select Project --</option>
-                        @foreach (var p in Projects)
+                        @foreach (var p in manager.ProjectDB.AllItems)
                         {
                             <option value="@p.ProjectId">@p.ProjectName</option>
                         }
@@ -27,7 +28,7 @@
                     <label class="form-label">Review Point</label>
                     <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ReviewPointId">
                         <option value="">-- Select Review Point --</option>
-                        @foreach (var rp in ReviewPoints)
+                        @foreach (var rp in manager.ReviewPointDB.AllItems)
                         {
                             <option value="@rp.ReviewPointId">@rp.ReviewDescription</option>
                         }
@@ -58,7 +59,7 @@
                     <label class="form-label">Responsible</label>
                     <InputSelect class="form-control" @bind-Value="SelectedReviewItem.ReviewResponsibleID">
                         <option value="">-- Select User --</option>
-                        @foreach (var u in Users)
+                        @foreach (var u in manager.EmployeeDB.AllItems)
                         {
                             <option value="@u.EmployeeId">@u.EmployeeName</option>
                         }
@@ -92,25 +93,18 @@
     [Parameter]
     public EventCallback OnItemUpdate { get; set; }
 
-    private List<Project> Projects = [];
-    private List<ReviewPoint> ReviewPoints = [];
-    private List<Employee> Users = [];
-
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ReviewPointDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnInitializedAsync()
+    public void Dispose()
     {
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        Projects = await manager.ProjectDB.GetAllAsync();
-        ReviewPoints = await manager.ReviewPointDB.GetAllAsync();
-        Users = await manager.EmployeeDB.GetAllActiveAsync();
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ReviewPointDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(ReviewItem item)
@@ -134,7 +128,6 @@
         if (!confirmed) return;
 
         await manager.ReviewItemDB.DeleteAsync(item);
-        await LoadData();
         ResetForm();
     }
 
@@ -149,7 +142,6 @@
             await manager.ReviewItemDB.UpdateAsync(SelectedReviewItem);
         }
         await OnItemUpdate.InvokeAsync();
-        await LoadData();
         ResetForm();
     }
 

@@ -1,4 +1,5 @@
 ﻿@page "/configuration/product"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject IJSRuntime JS
@@ -39,7 +40,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var product in Products)
+                @foreach (var product in manager.ProductDB.AllItems)
                 {
                     <tr class="@((SelectedProduct?.ProductId == product.ProductId) ? "table-primary" : "")">
                         <td style="color: white">@product.ProductId</td>
@@ -56,20 +57,19 @@
 </div>
 
 @code {
-    private List<Product> Products = [];
     private Product SelectedProduct = new()
     {
         ProductName = string.Empty
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadProducts();
+        manager.ProductDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadProducts()
+    public void Dispose()
     {
-        Products = await manager.ProductDB.GetAllAsync();
+        manager.ProductDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Product product)
@@ -87,7 +87,6 @@
         if (!confirmed) return;
 
         await manager.ProductDB.DeleteAsync(product);
-        await LoadProducts();
         ResetForm();
     }
 
@@ -101,8 +100,6 @@
         {
             await manager.ProductDB.UpdateAsync(SelectedProduct);
         }
-
-        await LoadProducts();
         ResetForm();
     }
 

@@ -35,16 +35,16 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
 
         return project;
     }
-    public async override Task<List<Project>> GetAllAsync(string? orderBy = null, bool descending = false)
+    internal async override Task GetAllAsync()
     {
-        var projects = await base.GetAllAsync(orderBy, descending);
+        await base.GetAllAsync();
 
-        foreach (var project in projects)
+        foreach (var project in AllItems)
         {
             await GetProjectObjects(project);
         }
 
-        return projects.OrderByDescending(p => p.IsTrackedProject)
+        AllItems = AllItems.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
@@ -52,7 +52,7 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
     }
     public async Task<List<Project>> GetAllActiveAsync()
     {
-        List<Project> projects = await GetByColumnAsync("IsActive", true, "ProjectName", true);
+        List<Project> projects = await GetByColumnAsync("IsActive", true);
 
         foreach (var project in projects)
         {
@@ -67,7 +67,7 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
     }
     public async Task<List<Project>> GetAllTrackedAsync()
     {
-        List<Project> projects = await GetByColumnAsync("IsTrackedProject", true, "ProjectName", true);
+        List<Project> projects = await GetByColumnAsync("IsTrackedProject", true);
 
         foreach (var project in projects)
         {
@@ -99,9 +99,9 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
                            .ThenBy(p => p.DesignCode)
                            .ToList();
     }
-    public async Task<List<string>> GetAllProjectNamesAsync()
+    public List<string> GetAllProjectNamesAsync()
     {
-        return [.. (await GetAllAsync()).Select(item => item?.GetType().GetProperty("ProjectName")?.GetValue(item)?.ToString()).Where(projectName => projectName != null)];
+        return [.. AllItems.Select(item => item?.GetType().GetProperty("ProjectName")?.GetValue(item)?.ToString()).Where(projectName => projectName != null)];
     }
     public async Task<List<string>> GetAllActiveProjectNamesAsync()
     {

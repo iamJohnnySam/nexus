@@ -21,7 +21,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var customer in Customers)
+                    @foreach (var customer in manager.CustomerDB.AllItems)
                     {
                         <tr class="@((SelectedCustomer?.CustomerId == customer.CustomerId) ? "table-primary" : "")">
                             <td style="color: white">@customer.CustomerId</td>
@@ -60,20 +60,19 @@
 </div>
 
 @code {
-    private List<Customer> Customers = [];
     private Customer SelectedCustomer = new()
     {
         CustomerName = string.Empty
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadCustomers();
+        manager.CustomerDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadCustomers()
+    public void Dispose()
     {
-        Customers = await manager.CustomerDB.GetAllSortedAsync();
+        manager.CustomerDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Customer customer)
@@ -91,7 +90,6 @@
         if (!confirmed) return;
 
         await manager.CustomerDB.DeleteAsync(customer);
-        await LoadCustomers();
         ResetForm();
     }
 
@@ -105,8 +103,6 @@
         {
             await manager.CustomerDB.UpdateAsync(SelectedCustomer);
         }
-
-        await LoadCustomers();
         ResetForm();
     }
 

@@ -1,4 +1,5 @@
 ﻿@page "/configuration/module"
+@implements IDisposable
 @attribute [Authorize]
 @using DataModels.Tools
 @inject Manager manager
@@ -59,7 +60,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var module in Modules)
+                @foreach (var module in manager.ProductModuleDB.AllItems)
                 {
                     <tr class="@((SelectedModule?.ModuleId == module.ModuleId) ? "table-primary" : "")">
                         <td style="color: white">@module.ModuleId</td>
@@ -78,20 +79,19 @@
 </div>
 
 @code {
-    private List<ProductModule> Modules = [];
     private ProductModule SelectedModule = new()
     {
         ModuleName = string.Empty
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadModules();
+        manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadModules()
+    public void Dispose()
     {
-        Modules = await manager.ProductModuleDB.GetAllSortedAsync();
+        manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(ProductModule module)
@@ -111,7 +111,6 @@
         if (!confirmed) return;
 
         await manager.ProductModuleDB.DeleteAsync(module);
-        await LoadModules();
         ResetForm();
     }
 
@@ -125,8 +124,6 @@
         {
             await manager.ProductModuleDB.UpdateAsync(SelectedModule);
         }
-
-        await LoadModules();
         ResetForm();
     }
 

@@ -5,7 +5,7 @@
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>nexus | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 
 <div class="row" style="padding: 20px 30px 20px 30px;">
     <div class="col">
@@ -47,9 +47,9 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var project in AllActiveProjects)
+                @foreach (var project in manager.ProjectDB.AllItems)
                 {
-                    <tr class="@((CurrentProject?.ProjectId == project.ProjectId) ? "table-primary" : "")">
+                    <tr class="@((LoginInfo.CurrentProject.ProjectId == project.ProjectId) ? "table-primary" : "")">
                         <td style="color: white">@project.ProjectName</td>
                         <td style="color: white">@project.Customer?.CustomerName</td>
                         <td style="color: white">@project.Product?.ProductName</td>
@@ -80,31 +80,27 @@
         </table>
     </div>
     <div class="col">
-        <ProjectEdit SelectedProject="@CurrentProject" OnProjectUpdated="HandleProjectUpdate" />
+        <ProjectEdit SelectedProject="@LoginInfo.CurrentProject" />
     </div>
 </div>
 
 @code {
-    private List<Project> AllActiveProjects = [];
-    private Project CurrentProject;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await GetData();
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
-        base.OnInitialized();
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task GetData()
+    public void Dispose()
     {
-        AllActiveProjects = await manager.ProjectDB.GetAllAsync();
-
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void HandleProjectSelection(Project p)
     {
         LoginInfo.CurrentProject = p;
-        CurrentProject = p;
     }
 
     private async Task Delete(Project project)
@@ -123,11 +119,9 @@
 
         if (project.ProjectId == LoginInfo.CurrentProject!.ProjectId)
         {
-            LoginInfo.CurrentProject = await manager.ProjectDB.GetByIdAsync(1);
-            CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
+            LoginInfo.CurrentProject = (await manager.ProjectDB.GetByIdAsync(1))!;
         }
         await manager.ProjectDB.DeleteAsync(project);
-        await GetData();
         StateHasChanged();
     }
 
@@ -135,14 +129,6 @@
     {
         Project NewProject = ProjectDataAccess.GetNew();
         await manager.ProjectDB.InsertAsync(NewProject);
-        await GetData();
         LoginInfo.CurrentProject = NewProject;
-        CurrentProject = NewProject;
-    }
-
-    private async void HandleProjectUpdate()
-    {
-        await GetData();
-        CurrentProject = LoginInfo.CurrentProject!;
     }
 }

@@ -25,14 +25,13 @@ public class TimelineItemDataAccess(string connectionString, EmployeeDataAccess 
         }
     }
 
-    public async override Task<List<TimelineItem>> GetAllAsync(string? orderBy = null, bool descending = false)
+    internal async override Task GetAllAsync()
     {
-        var timelineItems = await base.GetAllAsync(orderBy, descending);
-        foreach (var timelineItem in timelineItems)
+        await base.GetAllAsync();
+        foreach (var timelineItem in AllItems)
         {
             await GetObjects(timelineItem);
         }
-        return timelineItems;
     }
 
     public async Task<List<TimelineItem>> GetByProjectIdAsync(int id)

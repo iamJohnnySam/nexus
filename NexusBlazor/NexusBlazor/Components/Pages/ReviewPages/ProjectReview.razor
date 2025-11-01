@@ -4,7 +4,7 @@
 @inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Review | @CurrentProject</PageTitle>
+<PageTitle>nexus | Review | @LoginInfo.CurrentProject</PageTitle>
 <ProjectSelectionRowComponent Title="Project Review" OnProjectChange="HandleProjectChange" />
 
 <div style="padding: 10px 20px 10px 30px;">
@@ -20,7 +20,7 @@
         <tbody>
             @foreach (Configuration configuration in Configurations)
             {
-                <ReviewRow ThisConfiguration="configuration" ProjectId="CurrentProject.ProjectId" OnItemSelected="ItemSelected" />
+                <ReviewRow ThisConfiguration="configuration" ProjectId="LoginInfo.CurrentProject.ProjectId" OnItemSelected="ItemSelected" />
             }
         </tbody>
     </table>
@@ -30,9 +30,8 @@
 
 
 
-@code{
-
-    private Project CurrentProject { get; set; } = new();
+@code
+{
     private List<Configuration> Configurations { get; set; } = [];
 
     public bool ShowOverlay { get; set; } = false;
@@ -42,12 +41,17 @@
     {
         await LoadData();
         await base.OnInitializedAsync();
-    }   
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     private async Task LoadData()
     {
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
-        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
+        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(LoginInfo.CurrentProject.ProjectId);
         StateHasChanged();
     }
 

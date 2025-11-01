@@ -1,4 +1,6 @@
-﻿@inject Manager manager
+﻿@implements IDisposable
+
+@inject Manager manager
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
@@ -27,6 +29,11 @@
                     else
                     {
                         @parentTask.Title
+                    }
+                    @if (parentTask.Description != string.Empty)
+                    {
+                        <br />
+                        <span style="color: gray;">@parentTask.Description</span>
                     }
                 </td>
                 <td style="padding-right:10px; width:17%;">
@@ -87,6 +94,11 @@
                             {
                                 @subTask.Title
                             }
+                            @if (subTask.Description != string.Empty)
+                            {
+                                <br />
+                                <span style="color: gray;">@subTask.Description</span>
+                            }
                         </td>
                         <td style="padding-right:10px; width:17%;">
                             @if ((subTask.Deadline - DateTime.Today).Days < 0)
@@ -140,6 +152,11 @@
                                 {
                                     @subTask.Title
                                 }
+                                @if (subTask.Description != string.Empty)
+                                {
+                                    <br />
+                                    <span style="color: gray;">@subTask.Description</span>
+                                }
                             </td>
                             <td style="padding-right:10px; width:17%;">
                                 @if ((subTask.Deadline - DateTime.Today).Days < 0)
@@ -191,7 +208,6 @@
     [Parameter]
     public bool ShowExpanded { get; set; } = false;
 
-    public List<Employee> ResponsiblePersons { get; set; } = [];
     public List<TaskItem> IncompleteParentTaskItems { get; set; } = [];
     public List<TaskItem> SubTasks { get; set; } = [];
 
@@ -218,26 +234,22 @@
             StateHasChanged();
         }
     }
-    
-
 
     protected override async Task OnInitializedAsync()
     {
-        ResponsiblePersons = (await manager.EmployeeDB.GetAllActiveAsync()).OrderBy(name => name.EmployeeName).ToList();
-        await base.OnInitializedAsync();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        await LoadData();
     }
 
-    protected override async Task OnParametersSetAsync()
+    public void Dispose()
     {
-        await LoadData();
-        await base.OnParametersSetAsync();
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadData()
     {
         IncompleteParentTaskItems = (await manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId));
         SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId);
-        StateHasChanged();
     }
 
     private void EditTask(TaskItem task)

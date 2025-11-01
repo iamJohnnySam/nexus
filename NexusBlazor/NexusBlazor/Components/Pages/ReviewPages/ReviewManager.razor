@@ -97,15 +97,16 @@
         ReviewDescription = string.Empty
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadData();
+        manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ReviewPointDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadData()
+    public void Dispose()
     {
-        Modules = await manager.ProductModuleDB.GetAllAsync();
-        ReviewPoints = await manager.ReviewPointDB.GetAllAsync();
+        manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ReviewPointDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(ReviewPoint rp)
@@ -125,7 +126,6 @@
         if (!confirmed) return;
 
         await manager.ReviewPointDB.DeleteAsync(rp);
-        await LoadData();
         ResetForm();
     }
 
@@ -143,7 +143,6 @@
         }
         PreviouslySelectedModuleId = SelectedReviewPoint.ModuleId;
         PreviouslySelectedCategory = SelectedReviewPoint.ReviewCategory;
-        await LoadData();
         ResetForm();
         if (reviewDescriptionText?.Element != null)
         {

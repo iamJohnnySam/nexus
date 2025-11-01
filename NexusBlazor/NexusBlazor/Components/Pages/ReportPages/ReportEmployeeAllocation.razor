@@ -1,4 +1,5 @@
-﻿@using DataModels.Tools
+﻿@implements IDisposable
+@using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject Manager manager
 
@@ -28,7 +29,7 @@
         </tr>
 
 
-        @foreach (Employee employee in ActiveEmployees)
+        @foreach (Employee employee in manager.EmployeeDB.AllActive)
         {
             <tr>
                 <td>@employee.EmployeeShortName</td>
@@ -82,10 +83,13 @@
     {
         CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
         base.OnInitialized();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    List<Employee> ActiveEmployees { get; set; } = [];
-    List<Project> ActiveProjects { get; set; } = [];
+    public void Dispose()
+    {
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     int cellWidth = 85;
     string cellStyle = "width: 85px;";
@@ -94,6 +98,5 @@
     {
         cellWidth = (95 * 16) / NumberOfWeeks;
         cellStyle = $"width: {cellWidth}px; ";
-        ActiveEmployees = manager.EmployeeDB.GetAllActiveAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
     }
 }

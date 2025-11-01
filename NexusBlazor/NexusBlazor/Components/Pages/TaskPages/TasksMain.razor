@@ -1,22 +1,23 @@
 ﻿@page "/tasks"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Tasks | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Tasks | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 
 <ProjectSelectionRowComponent Title="Project Task Manager" OnProjectChange="HandleProjectChange" />
 
 
 <div class="fixed-bottom" style="padding: 10px 0px 10px 30px; background-color: #222529;">
     <hr style="border-top: 1px solid white" />
-    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" AllActiveEmployees="Employees" />
+    <NewTask ProjectId=LoginInfo.CurrentProject.ProjectId ParentTaskId=0 OnTaskAdded="HandleTaskAdded" AllActiveEmployees="manager.EmployeeDB.AllActive" />
 </div>
 
 
 <div style="padding: 10px 10px 100px 30px;">
-    <TaskList CurrentProject="CurrentProject" OnTaskSelected="OnTaskSelected" OnTaskUpdated="OnTaskUpdate" SelectedParentTaskId="SelectedParentTaskId" />
+    <TaskList CurrentProject="LoginInfo.CurrentProject" OnTaskSelected="OnTaskSelected" OnTaskUpdated="OnTaskUpdate" SelectedParentTaskId="SelectedParentTaskId" />
 </div>
 
 <TaskEditorOverlay SelectedItem="SelectedTask" OnItemUpdate="OnTaskUpdate" ShowOverlay="showOverlay" />
@@ -24,17 +25,21 @@
 
 
 @code {
-    public List<Employee> Employees { get; set; } = [];
-    public Project CurrentProject { get; set; } = new();
     private TaskItem? SelectedTask {get;set;} = null;
     bool showOverlay = false;
     int SelectedParentTaskId { get; set; } = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        Employees = await manager.EmployeeDB.GetAllActiveAsync();
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         base.OnInitialized();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     async void OnTaskDelete()
@@ -50,10 +55,9 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleProjectChange(string projectName)
+    private void HandleProjectChange(string projectName)
     {
         SelectedParentTaskId = 0;
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
         SelectedTask = null;
     }
 
@@ -67,7 +71,7 @@
 
     private async void HandleTaskAdded(TaskItem task)
     {
-        task.ProjectId = CurrentProject.ProjectId;
+        task.ProjectId = LoginInfo.CurrentProject.ProjectId;
         await manager.TaskItemDB.InsertAsync(task);
         SelectedTask = null;
         await InvokeAsync(StateHasChanged);

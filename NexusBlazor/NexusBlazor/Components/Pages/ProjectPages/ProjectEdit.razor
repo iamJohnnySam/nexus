@@ -17,7 +17,7 @@
             <label class="form-label">Customer</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.CustomerId">
                 <option value="">-- Select Customer --</option>
-                @foreach (var customer in Customers)
+                @foreach (var customer in manager.CustomerDB.AllItems)
                 {
                     <option value="@customer.CustomerId">@customer.CustomerName</option>
                 }
@@ -28,7 +28,7 @@
             <label class="form-label">Product</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.ProductId">
                 <option value="">-- Select Product --</option>
-                @foreach (var product in Products)
+                @foreach (var product in manager.ProductDB.AllItems)
                 {
                     <option value="@product.ProductId">@product.ProductName</option>
                 }
@@ -84,7 +84,7 @@
             <label class="form-label">Primary Designer</label>
             <InputSelect class="form-control" @bind-Value="SelectedProject.PrimaryDesignerId">
                 <option value=0>-- No Designer --</option>
-                @foreach (var employee in Employees)
+                @foreach (var employee in manager.EmployeeDB.AllItems)
                 {
                     <option value="@employee.EmployeeId">@employee.EmployeeName</option>
                 }
@@ -105,9 +105,6 @@
 </div>
 
 @code {
-    private List<Customer> Customers = [];
-    private List<Product> Products = [];
-    private List<Employee> Employees = [];
 
     [Parameter]
     public EventCallback<Project> OnProjectUpdated { get; set; }
@@ -119,16 +116,18 @@
         Priority = EProjectPriority.Normal
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadData();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.CustomerDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProductDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadData()
+    public void Dispose()
     {
-        Customers = await manager.CustomerDB.GetAllAsync();
-        Products = await manager.ProductDB.GetAllAsync();
-        Employees = (await manager.EmployeeDB.GetAllAsync()).OrderBy(p => p.EmployeeName).ToList();
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.CustomerDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProductDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Project p)
@@ -157,7 +156,6 @@
         if (!confirmed) return;
 
         await manager.ProjectDB.DeleteAsync(p);
-        await LoadData();
         ResetForm();
     }
 
@@ -173,7 +171,6 @@
         }
 
         await OnProjectUpdated.InvokeAsync();
-        await LoadData();
         ResetForm();
     }
 

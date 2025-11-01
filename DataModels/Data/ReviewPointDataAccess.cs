@@ -11,14 +11,14 @@ namespace DataModels.Data;
 public class ReviewPointDataAccess(string connectionString) : DataAccess<ReviewPoint>(connectionString, ReviewPoint.Metadata)
 {
     ProductModuleDataAccess ProductModuleDB = new ProductModuleDataAccess(connectionString);
-    public override async Task<List<ReviewPoint>> GetAllAsync (string? orderBy = null, bool descending = false)
+    internal override async Task GetAllAsync()
     {
-        List<ReviewPoint> points = await base.GetAllAsync(orderBy, descending);
-        foreach (ReviewPoint point in points)
+        await base.GetAllAsync();
+        foreach (ReviewPoint point in AllItems)
         {
             point.Module = await ProductModuleDB.GetByIdAsync(point.ModuleId);
         }
-        return points.OrderBy(rank => rank.Module!.Rank).ThenBy(cat => cat.ReviewCategory).ToList();
+        AllItems = AllItems.OrderBy(rank => rank.Module!.Rank).ThenBy(cat => cat.ReviewCategory).ToList();
     }
     public async Task<List<ReviewPoint>> GetByProductModuleIdAsync(int ProductModuleId)
     {

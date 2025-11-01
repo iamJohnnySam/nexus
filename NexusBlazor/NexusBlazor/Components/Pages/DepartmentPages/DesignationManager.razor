@@ -1,4 +1,5 @@
 ﻿@page "/department/designation"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject IJSRuntime JS
@@ -41,7 +42,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var d in Designations)
+                @foreach (var d in manager.DesignationDB.AllItems)
                 {
                     <tr class="@((SelectedDesignation?.DesignationId == d.DesignationId) ? "table-primary" : "")">
                         <td style="color: white">@d.DesignationId</td>
@@ -59,20 +60,19 @@
 </div>
 
 @code {
-    private List<Designation> Designations = [];
     private Designation SelectedDesignation = new Designation
     {
         DesignationName = ""
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadDesignations();
+        manager.DesignationDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadDesignations()
+    public void Dispose()
     {
-        Designations = await manager.DesignationDB.GetAllAsync();
+        manager.DesignationDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Designation d)
@@ -91,7 +91,6 @@
         if (!confirmed) return;
 
         await manager.DesignationDB.DeleteAsync(d);
-        await LoadDesignations();
         ResetForm();
     }
 
@@ -105,7 +104,6 @@
         {
             await manager.DesignationDB.UpdateAsync(SelectedDesignation);
         }
-        await LoadDesignations();
         ResetForm();
     }
 

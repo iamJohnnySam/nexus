@@ -1,11 +1,12 @@
 ﻿@page "/configuration"
+@implements IDisposable
 @attribute [Authorize]
 
 @inject Manager manager
 @inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Configuration | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Configuration | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 <ProjectSelectionRowComponent Title="Project Configuration" OnProjectChange="HandleProjectChange" />
 
 <div style="padding: 10px 20px 10px 30px;">
@@ -39,7 +40,7 @@
             @if(SelectedModuleToAdd != 0)
             {
                 <div style="margin-top:10px;">
-                    <button class="modern-button" style="width: 100%" @onclick="() => AddConfig(AllModules.FirstOrDefault(module => module.ModuleId == SelectedModuleToAdd)!)">
+                    <button class="modern-button" style="width: 100%" @onclick="() => AddConfig(manager.ProductModuleDB.AllItems.FirstOrDefault(module => module.ModuleId == SelectedModuleToAdd)!)">
                         Add @OtherModules.FirstOrDefault(module => module.ModuleId == SelectedModuleToAdd)?.ModuleName
                     </button>
                 </div>
@@ -64,10 +65,8 @@
 
 
 @code{
-    private Project CurrentProject { get; set; }
     private List<Configuration> Configurations { get; set; } = [];
     private string EditorToShow { get; set; } = "None";
-    private List<ProductModule> AllModules { get; set; } = [];
     private Dictionary<int, string> Modules = [];
     private List<ProductModule> OtherModules { get; set; } = [];
 
@@ -84,20 +83,27 @@
         showDetailOverlay = false;
         await LoadData();
 
-        AllModules = await manager.ProductModuleDB.GetAllAsync();
-        foreach (ProductModule module in AllModules)
+        foreach (ProductModule module in manager.ProductModuleDB.AllItems)
         {
             Modules.Add(module.ModuleId, module.ModuleName);
         }
 
         await base.OnInitializedAsync();
+
+        manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }   
+
+    public void Dispose()
+    {
+        manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     private async Task LoadData()
     {
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
-        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(CurrentProject.ProjectId);
-        OtherModules = await manager.ProductModuleDB.GetAllAsync();
+        Configurations = await manager.ConfigurationDB.GetByProjectIdAsync(LoginInfo.CurrentProject.ProjectId);
+        OtherModules = new List<ProductModule>(manager.ProductModuleDB.AllItems);
         OtherModules.RemoveAll(module => Configurations.Any(cfg => cfg.ProductModuleId == module.ModuleId));
         StateHasChanged();
     }

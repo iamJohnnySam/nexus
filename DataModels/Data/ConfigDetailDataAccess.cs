@@ -18,14 +18,13 @@ public class ConfigDetailDataAccess(string connectionString, ConfigurationDataAc
         item.Specification = await SpecificationDB.GetByIdAsync(item.SpecificationId);
     }
 
-    public override async Task<List<ConfigDetail>> GetAllAsync(string? orderBy = null, bool descending = false)
+    internal override async Task GetAllAsync()
     {
-        var items = await base.GetAllAsync(orderBy, descending);
-        foreach (ConfigDetail item in items)
+        await base.GetAllAsync();
+        foreach (ConfigDetail item in AllItems)
         {
             await GetItems(item);
         }
-        return items;
     }
 
     public override async Task<ConfigDetail?> GetByIdAsync(object id)

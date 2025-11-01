@@ -117,4 +117,12 @@ public class TaskItemDataAccess(string connectionString, EmployeeDataAccess empl
                        WHERE TaskId = @TaskId;";
         await ExecuteAsync(sql, p);
     }
+    public override async Task UpdateAsync(TaskItem p)
+    {
+        if(p.Deadline < p.StartedOn)
+        {
+            p.Deadline = p.StartedOn;
+        }
+        await base.UpdateAsync(p);
+    }
 }

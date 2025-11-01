@@ -1,4 +1,5 @@
 ﻿@page "/simulation/scenario"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject LoginInformation LoginInfo
@@ -6,7 +7,7 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Simulation Scenario | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Simulation Scenario | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 
 <ProjectSelectionRowComponent Title="Simulation Scenario Manager" OnProjectChange="HandleProjectChange" />
 
@@ -32,7 +33,7 @@
                         {
                             <tr class="@((SelectedScenario?.SimulationScenarioId == scenario.SimulationScenarioId) ? "table-primary" : "")">
                                 <td style="color: white">@scenario.SimulationScenarioId</td>
-                                <td style="color: white">@Projects.FirstOrDefault(p => p.ProjectId == scenario.ProjectId)?.DesignCode</td>
+                                <td style="color: white">@manager.ProjectDB.AllItems.FirstOrDefault(p => p.ProjectId == scenario.ProjectId)?.DesignCode</td>
                                 <td style="color: white">@scenario.SimulationName</td>
                                 <td style="color: white">@scenario.SimulationStationIds.Count</td>
                                 <td style="color: white">@scenario.SimulationManipulatorIds.Count</td>
@@ -62,7 +63,7 @@
                         <label class="form-label">Project</label>
                         <InputSelect class="form-control" @bind-Value="SelectedScenario!.ProjectId" disabled=@true>
                             <option value="">-- Select Project --</option>
-                            @foreach (var project in Projects)
+                            @foreach (var project in manager.ProjectDB.AllItems)
                             {
                                 <option value="@project.ProjectId">@project.ProjectName</option>
                             }
@@ -91,9 +92,7 @@
 </div>
 
 @code {
-    private Project CurrentProject;
     private List<SimulationScenario> Scenarios = [];
-    private List<Project> Projects = [];
 
     private SimulationScenario SelectedScenario = new()
     {
@@ -104,18 +103,24 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+       LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadData()
     {
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
-        Projects = await manager.ProjectDB.GetAllAsync();
-        Scenarios = await manager.SimulationScenarioDB.GetByProjectId(CurrentProject.ProjectId);
+        Scenarios = await manager.SimulationScenarioDB.GetByProjectId(LoginInfo.CurrentProject.ProjectId);
         SelectedScenario = new SimulationScenario
         {
             XMLFile = string.Empty,
             SimulationName = "New Simulation",
-            ProjectId = CurrentProject.ProjectId
+            ProjectId = LoginInfo.CurrentProject.ProjectId
         };
     }
 

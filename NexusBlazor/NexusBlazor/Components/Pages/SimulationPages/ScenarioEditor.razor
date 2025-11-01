@@ -5,10 +5,10 @@
 @inject Manager manager
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Tasks | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Tasks | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 
 <h1 style="padding: 10px 20px 0px 30px;">Simulation Scenario Editor</h1>
-<h3 style="padding: 10px 20px 0px 30px;">Project @CurrentProject.DesignCode (@CurrentProject.ProjectCode) @CurrentProject.ProjectName | @ThisScenario.SimulationName</h3>
+<h3 style="padding: 10px 20px 0px 30px;">Project @LoginInfo.CurrentProject.DesignCode (@LoginInfo.CurrentProject.ProjectCode) @LoginInfo.CurrentProject.ProjectName | @ThisScenario.SimulationName</h3>
 
 <div style="padding: 10px 10px 100px 30px;">
     <h4>Stations</h4>
@@ -29,7 +29,6 @@
     [SupplyParameterFromQuery(Name = "id")] 
     public string? scenarioIdString { get; set; }
 
-    Project CurrentProject;
     SimulationScenario ThisScenario;
     int scenarioId;
 
@@ -62,6 +61,11 @@
             return;
         }
 
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 }

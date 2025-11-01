@@ -1,4 +1,5 @@
-﻿@inject Manager manager
+﻿@implements IDisposable
+@inject Manager manager
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -45,7 +46,7 @@
                     <label class="form-label">Responsible</label>
                     <InputSelect class="form-control" @bind-Value="SelectedItem.ResponsibleId">
                         <option value=0>-- Select Responsible --</option>
-                        @foreach (var employee in Employees)
+                        @foreach (var employee in manager.EmployeeDB.AllItems)
                         {
                             <option value="@employee.EmployeeId">@employee.EmployeeName</option>
                         }
@@ -94,23 +95,15 @@
     [Parameter]
     public EventCallback OnItemUpdate { get; set; }
 
-    private List<Employee> Employees = [];
 
-
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-        StateHasChanged();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnInitializedAsync()
+    public void Dispose()
     {
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        Employees = (await manager.EmployeeDB.GetAllAsync()).OrderBy(name => name.EmployeeName).ToList(); 
-        StateHasChanged();
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async Task Delete()

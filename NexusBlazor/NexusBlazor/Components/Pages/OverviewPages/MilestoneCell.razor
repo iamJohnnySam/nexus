@@ -8,8 +8,13 @@
         @foreach (Milestone milestone in MilestonesOpen)
         {
             <tr>
-                <td style="width:30%" @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName</td>
-                <td style="white-space: pre-wrap;">@milestone.Comments</td>
+                <td @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName
+                    @if (milestone.Comments != string.Empty)
+                    {
+                        <br />
+                        <span style="color: gray;">@milestone.Comments</span>
+                    }
+                </td>
                 <td style="padding-right:10px; width:12%;">@milestone.PlannedDate.ToString("yyyy-MM-dd")</td>
                 <td style="width:12%; padding-right:10px;">
                     @if (milestone.OnHold)
@@ -46,8 +51,13 @@
         @foreach (Milestone milestone in MilestonesClosed)
         {
             <tr>
-                <td style="width:30%" @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName</td>
-                <td style="white-space: pre-wrap;">@milestone.Comments</td>
+                <td @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName
+                    @if (milestone.Comments != string.Empty)
+                    {
+                        <br />
+                        <span style="color: gray;">@milestone.Comments</span>
+                    }
+                </td>
                 <td style="padding-right:10px; width:12%;">@milestone.PlannedDate.ToString("yyyy-MM-dd")</td>
                 <td style="width:12%; padding-right:10px;">@milestone.ActualDate.ToString("yyyy-MM-dd")</td>
                 <td style="width:15%">
@@ -90,6 +100,16 @@
 
     public List<Milestone> MilestonesOpen { get; set; } = [];
     public List<Milestone> MilestonesClosed { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        manager.MilestoneDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.MilestoneDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     protected override async Task OnParametersSetAsync()
     {

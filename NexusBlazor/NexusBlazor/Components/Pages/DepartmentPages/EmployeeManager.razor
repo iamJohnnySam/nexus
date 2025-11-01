@@ -1,4 +1,5 @@
 ﻿@page "/department/employee"
+@implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
 @inject IJSRuntime JS
@@ -30,7 +31,7 @@
                 <label class="form-label">Grade</label>
                 <InputSelect class="form-control" @bind-Value="SelectedEmployee.GradeId">
                     <option value="">-- Select Grade --</option>
-                    @foreach (var grade in Grades)
+                    @foreach (var grade in manager.GradeDB.AllItems)
                     {
                         <option value="@grade.GradeId">@grade.GradeName</option>
                     }
@@ -41,7 +42,7 @@
                 <label class="form-label">Designation</label>
                 <InputSelect class="form-control" @bind-Value="SelectedEmployee.DesignationId">
                     <option value="">-- Select Designation --</option>
-                    @foreach (var des in Designations)
+                    @foreach (var des in manager.DesignationDB.AllItems)
                     {
                         <option value="@des.DesignationId">@des.DesignationName</option>
                     }
@@ -67,7 +68,7 @@
                 <label class="form-label">Replaced Employee</label>
                 <InputSelect class="form-control" @bind-Value="SelectedEmployee.ReplacedEmployeeId">
                     <option value=0>-- None --</option>
-                    @foreach (var emp in Employees.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
+                    @foreach (var emp in manager.EmployeeDB.AllItems.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
                     {
                         <option value="@emp.EmployeeId">@emp.EmployeeName</option>
                     }
@@ -78,7 +79,7 @@
                 <label class="form-label">Line Manager</label>
                 <InputSelect class="form-control" @bind-Value="SelectedEmployee.LineManagerId">
                     <option value=0>-- None --</option>
-                    @foreach (var emp in Employees.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
+                    @foreach (var emp in manager.EmployeeDB.AllItems.Where(e => e.EmployeeId != SelectedEmployee.EmployeeId))
                     {
                         <option value="@emp.EmployeeId">@emp.EmployeeName</option>
                     }
@@ -110,19 +111,19 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var e in Employees)
+                @foreach (var e in manager.EmployeeDB.AllItems)
                 {
                     <tr class="@((SelectedEmployee?.EmployeeId == e.EmployeeId) ? "table-primary" : "")">
                         <td style="color: white">@e.EmployeeId</td>
                         <td style="color: white">@e.EmployeeNumber</td>
                         <td style="color: white">@e.EmployeeName</td>
-                        <td style="color: white">@Grades.FirstOrDefault(g => g.GradeId == e.GradeId)?.GradeName</td>
-                        <td style="color: white">@Designations.FirstOrDefault(d => d.DesignationId == e.DesignationId)?.DesignationName</td>
+                        <td style="color: white">@manager.GradeDB.AllItems.FirstOrDefault(g => g.GradeId == e.GradeId)?.GradeName</td>
+                        <td style="color: white">@manager.DesignationDB.AllItems.FirstOrDefault(d => d.DesignationId == e.DesignationId)?.DesignationName</td>
                         <td style="color: white">@e.JoinDate.ToShortDateString()</td>
                         <td style="color: white">@e.LeaveDate?.ToShortDateString()</td>
                         <td style="color: white">@e.IsActive</td>
-                        <td style="color: white">@Employees.FirstOrDefault(emp => emp.EmployeeId == e.ReplacedEmployeeId)?.EmployeeName</td>
-                        <td style="color: white">@Employees.FirstOrDefault(emp => emp.EmployeeId == e.LineManagerId)?.EmployeeName</td>
+                        <td style="color: white">@manager.EmployeeDB.AllItems.FirstOrDefault(emp => emp.EmployeeId == e.ReplacedEmployeeId)?.EmployeeName</td>
+                        <td style="color: white">@manager.EmployeeDB.AllItems.FirstOrDefault(emp => emp.EmployeeId == e.LineManagerId)?.EmployeeName</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(e)">Edit</button>
                             <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(e)">Delete</button>
@@ -135,9 +136,6 @@
 </div>
 
 @code {
-    private List<Employee> Employees = [];
-    private List<Grade> Grades = [];
-    private List<Designation> Designations = [];
     private Employee SelectedEmployee = new()
     {
         EmployeeName = string.Empty,
@@ -145,16 +143,18 @@
         JoinDate = DateTime.Today
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadData();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.DesignationDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.GradeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadData()
+    public void Dispose()
     {
-        Grades = await manager.GradeDB.GetAllAsync();
-        Designations = await manager.DesignationDB.GetAllAsync();
-        Employees = await manager.EmployeeDB.GetAllAsync();
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.DesignationDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.GradeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Employee e)
@@ -180,7 +180,6 @@
         if (!confirmed) return;
 
         await manager.EmployeeDB.DeleteAsync(e);
-        await LoadData();
         ResetForm();
     }
 
@@ -195,7 +194,6 @@
             await manager.EmployeeDB.UpdateAsync(SelectedEmployee);
         }
 
-        await LoadData();
         ResetForm();
     }
 
@@ -204,7 +202,7 @@
         SelectedEmployee = new Employee
         {
             EmployeeName = string.Empty,
-            GradeId = Grades.FirstOrDefault()?.GradeId ?? 0,
+            GradeId = manager.GradeDB.AllItems.FirstOrDefault()?.GradeId ?? 0,
             IsActive = true,
             JoinDate = DateTime.Today
         };

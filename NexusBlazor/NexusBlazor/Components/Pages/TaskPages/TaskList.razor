@@ -78,7 +78,7 @@
     private List<TaskItem> CompleteParentTaskItems { get; set; } = [];
 
     private Dictionary<int, List<TaskItem>> SubTaskItems { get; set; } = [];
-    private List<Employee> AllEmployees { get; set; } = [];
+    private List<Employee> AllEmployees => manager.EmployeeDB.AllActive;
 
     [Parameter]
     public int SelectedParentTaskId { get; set; } = 0;
@@ -87,9 +87,18 @@
     string hideCollapsible = "content-hidden";
 
 
+    protected override void OnInitialized()
+    {
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        AllEmployees = manager.EmployeeDB.GetAllActiveAsync().Result;
         await RefreshTasks();
         base.OnParametersSet();
     }

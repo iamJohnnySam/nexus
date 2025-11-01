@@ -8,19 +8,6 @@ namespace NexusBlazor.Components.Logic;
 
 public static class Helpers
 {
-    public static async Task<Project> GetCurrentProject(Manager manager, LoginInformation LoginInfo)
-    {
-        if (LoginInfo.CurrentProject != null)
-        {
-            return LoginInfo.CurrentProject;
-        }
-        else
-        {
-            LoginInfo.CurrentProject = (await manager.ProjectDB.GetByIdAsync(1))!;
-            return LoginInfo.CurrentProject;
-        }
-    }
-
     public static async Task<Employee?> GetCurrentEmployee(Manager manager, LoginInformation LoginInfo, AuthenticationStateProvider AuthStateProvider)
     {
         if (LoginInfo.CurrentEmployee == null)
@@ -36,7 +23,6 @@ public static class Helpers
             }
             else
             {
-                Console.WriteLine("Not auth");
                 return null;
             }
         }

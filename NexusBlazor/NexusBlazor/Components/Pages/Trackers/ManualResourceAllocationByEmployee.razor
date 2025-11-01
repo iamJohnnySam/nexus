@@ -35,7 +35,7 @@
         </tr>
 
 
-        @foreach (Employee employee in ActiveEmployees)
+        @foreach (Employee employee in manager.EmployeeDB.AllActive)
         {
             <tr>
                 <td>@employee.EmployeeShortName</td>
@@ -55,7 +55,7 @@
                     <td>
                         @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(Year, Week) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(Year, Week)))
                         {
-                            <ManualResourceCell ResourceType=EManualResourceType.Project Id="employee.EmployeeId" Week="Week" Year="Year" Projects="ActiveProjects" />
+                            <ManualResourceCell ResourceType=EManualResourceType.Project Id="employee.EmployeeId" Week="Week" Year="Year" Projects="manager.ProjectDB.AllItems" />
                         }
                         else
                         {
@@ -80,10 +80,15 @@
     {
         CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
         base.OnInitialized();
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    List<Employee> ActiveEmployees { get; set; } = [];
-    List<Project> ActiveProjects { get; set; } = [];
+    public void Dispose()
+    {
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     int cellWidth = 85;
     string cellStyle = "width: 85px;";
@@ -92,7 +97,5 @@
     {
         cellWidth = (95 * 16) / NumberOfWeeks;
         cellStyle = $"width: {cellWidth}px; ";
-        ActiveProjects = manager.ProjectDB.GetAllAsync().Result;
-        ActiveEmployees = manager.EmployeeDB.GetAllActiveAsync().Result.OrderBy(p => p.EmployeeDesignation!.DesignationName).ThenByDescending(p => p.EmployeeGrade!.GradeScore).ToList();
     }
 }

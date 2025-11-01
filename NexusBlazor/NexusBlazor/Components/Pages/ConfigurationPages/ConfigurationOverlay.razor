@@ -39,7 +39,7 @@
                     <label class="form-label">Module</label>
                     <InputSelect class="form-control" @bind-Value="SelectedConfiguration.ProductModuleId">
                         <option value=0>-- Select Module --</option>
-                        @foreach (var module in ProductModules)
+                        @foreach (var module in manager.ProductModuleDB.AllItems)
                         {
                             <option value="@module.ModuleId">@module.ModuleName</option>
                         }
@@ -87,29 +87,16 @@
     public EventCallback OnItemUpdate { get; set; }
 
     private List<Project> Projects = [];
-    private List<ProductModule> ProductModules = [];
 
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-        StateHasChanged();
+        manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnInitializedAsync()
+    public void Dispose()
     {
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        Projects = (await manager.ProjectDB.GetAllAsync())
-                   .OrderByDescending(p => p.IsTrackedProject)
-                   .ThenByDescending(p => p.IsActive)
-                   .ThenByDescending(p => p.ProjectCode)
-                   .ThenBy(p => p.DesignCode)
-                   .ToList();
-        ProductModules = await manager.ProductModuleDB.GetAllAsync();
-        StateHasChanged();
+        manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async Task Delete(ReviewItem item)
@@ -118,7 +105,6 @@
         if (!confirmed) return;
 
         await manager.ReviewItemDB.DeleteAsync(item);
-        await LoadData();
         ResetForm();
     }
 
@@ -133,7 +119,6 @@
             await manager.ConfigurationDB.UpdateAsync(SelectedConfiguration);
         }
         await OnItemUpdate.InvokeAsync();
-        await LoadData();
         ResetForm();
     }
 

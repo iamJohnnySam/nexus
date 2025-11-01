@@ -26,7 +26,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var spec in Specifications)
+                        @foreach (var spec in manager.SpecificationDB.AllItems)
                         {
                             <tr class="@((SelectedSpecification?.SpecificationId == spec.SpecificationId) ? "table-primary" : "")">
                                 <td style="color: white">@spec.SpecificationId</td>
@@ -68,7 +68,7 @@
                         <label class="form-label">Product Module</label>
                         <InputSelect class="form-control" @bind-Value="SelectedSpecification!.ProductModuleId">
                             <option value=0>-- Select Module --</option>
-                            @foreach (var module in ProductModules)
+                            @foreach (var module in manager.ProductModuleDB.AllItems)
                             {
                                 <option value="@module.ModuleId">@module.ModuleName</option>
                             }
@@ -135,22 +135,21 @@
 @code {
     int LastSelectedProductModuleId = 0;
 
-    private List<Specification> Specifications = [];
-    private List<ProductModule> ProductModules = [];
     private Specification SelectedSpecification = new()
     {
         SpecificationName = string.Empty
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadData();
+        manager.SpecificationDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadData()
+    public void Dispose()
     {
-        Specifications = await manager.SpecificationDB.GetAllAsync();
-        ProductModules = await manager.ProductModuleDB.GetAllAsync();
+        manager.SpecificationDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void Edit(Specification spec)
@@ -173,7 +172,6 @@
         if (!confirmed) return;
 
         await manager.SpecificationDB.DeleteAsync(spec);
-        await LoadData();
         ResetForm();
     }
 
@@ -189,7 +187,6 @@
         }
         LastSelectedProductModuleId = SelectedSpecification.ProductModuleId;
 
-        await LoadData();
         ResetForm();
     }
 

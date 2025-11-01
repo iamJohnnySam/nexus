@@ -118,6 +118,8 @@ public class SqliteLogger
             cmd.Parameters.AddWithValue("$UserName", _userName);
             cmd.ExecuteNonQueryAsync();
         }
+
+        Console.WriteLine($"{type}: {timestamp} - {message}");
     }
 
     // === PUBLIC METHODS ===

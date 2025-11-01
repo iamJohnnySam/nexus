@@ -1,4 +1,5 @@
 ﻿@page "/admin/project"
+@implements IDisposable
 @attribute [Authorize (Roles = "Admin")]
 @using DataModels.Tools
 @inject Manager manager
@@ -6,7 +7,7 @@
 
 <div style="padding: 10px 20px 10px 20px;">
     <h1>Admin Panel: Project</h1>
-    <AdminTable TItem="Project" Metadata="Metadata" Items="Items" OnSelected="RowClicked" />
+    <AdminTable TItem="Project" Metadata="Metadata" Items="manager.ProjectDB.AllItems" OnSelected="RowClicked" />
 </div>
 @if (viewForm)
 {
@@ -16,14 +17,18 @@
 
 @code {
     private bool viewForm = false;
-    private List<Project> Items = [];
     private Project Item = new();
 
     private TableMetadata Metadata = Project.Metadata;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        Items = await manager.ProjectDB.GetAllAsync();
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async void onInsert(Project item)

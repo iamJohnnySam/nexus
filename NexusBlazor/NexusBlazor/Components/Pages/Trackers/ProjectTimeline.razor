@@ -4,17 +4,19 @@
 @inject LoginInformation LoginInfo
 @rendermode InteractiveServer
 
-<PageTitle>nexus | Project Timeline | @CurrentProject.ProjectName</PageTitle>
+<PageTitle>nexus | Project Timeline | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 <ProjectSelectionRowComponent Title="Project Timeline" />
 
 
 
 @code {
-    public Project CurrentProject { get; set; }
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        CurrentProject = await Helpers.GetCurrentProject(manager, LoginInfo);
-        base.OnInitialized();
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 }

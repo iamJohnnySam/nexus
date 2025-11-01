@@ -31,14 +31,13 @@ public class ConfigurationDataAccess(string connectionString, ProjectDataAccess 
         return items.OrderBy(rank => rank.ProductModule!.Rank).ToList();
     }
 
-    public override async Task<List<Configuration>> GetAllAsync(string? orderBy = null, bool descending = false)
+    internal override async Task GetAllAsync()
     {
-        var items = await base.GetAllAsync(orderBy, descending);
-        foreach (Configuration item in items)
+        await base.GetAllAsync();
+        foreach (Configuration item in AllItems)
         {
             await GetItems(item);
         }
-        return items.OrderBy(rank => rank.ProductModule!.Rank).ToList();
     }
 
     public override async Task<Configuration?> GetByIdAsync(object id)

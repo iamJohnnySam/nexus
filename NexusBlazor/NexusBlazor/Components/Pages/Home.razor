@@ -14,14 +14,14 @@
 <AuthorizeView>
     <Authorized>
         <section class="projects" id="projects">
-            @if (projects == null)
+            @if (manager.ProjectDB.AllItems == null)
             {
                 <div class="project-card">
                     <div class="project-title">Loading Projects...</div>
                     <div class="project-desc">...</div>
                 </div>
             }
-            else if (projects.Count == 0)
+            else if (manager.ProjectDB.AllItems.Count == 0)
             {
                 <div class="project-card">
                     <div class="project-title">NO PROJECTS AVAILABLE</div>
@@ -30,7 +30,7 @@
             }
             else
             {
-                @foreach (var project in projects)
+                @foreach (var project in manager.ProjectDB.AllItems)
                 {
                     <ProjectCardComponent ThisProject=project />
                 }
@@ -41,7 +41,6 @@
 
 
 @code {
-    private List<Project> projects = [];
 
     public Employee? LoggedInEmployee { get; set; }
 
@@ -52,8 +51,13 @@
         Logger.SetSessionContext(sessionId, user);
         Logger.InfoAsync("Session started", interaction: "Program startup");
 
-        projects = (await manager.ProjectDB.GetAllAsync()).OrderByDescending(status => status.POStatus).ThenBy(name => name.ProjectCode).ToList();
         LoggedInEmployee = await Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider);
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
 }

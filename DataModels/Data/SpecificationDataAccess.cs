@@ -12,14 +12,14 @@ public class SpecificationDataAccess(string connectionString, ProductModuleDataA
 {
     ProductModuleDataAccess ProductModuleDB = productModuleDB;
 
-    public override async Task<List<Specification>> GetAllAsync(string? orderBy = null, bool descending = false)
+    internal override async Task GetAllAsync()
     {
-        var items = await base.GetAllAsync(orderBy, descending);
-        foreach (Specification item in items)
+        await base.GetAllAsync();
+        foreach (Specification item in AllItems)
         {
             item.ProductModule = await ProductModuleDB.GetByIdAsync(item.ProductModuleId);
         }
-        return [.. items.OrderBy(rank => rank.ProductModule!.Rank).ThenBy(rank => rank.ProductModule!.ModuleId).ThenBy(rank => rank.Rank)];
+        AllItems = [.. AllItems.OrderBy(rank => rank.ProductModule!.Rank).ThenBy(rank => rank.ProductModule!.ModuleId).ThenBy(rank => rank.Rank)];
     }
 
     public override async Task<Specification?> GetByIdAsync(object id)

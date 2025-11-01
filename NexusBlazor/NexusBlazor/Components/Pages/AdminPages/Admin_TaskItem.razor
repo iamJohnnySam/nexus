@@ -1,4 +1,5 @@
 ﻿@page "/admin/taskitem"
+@implements IDisposable
 @attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
 @using DataModels.Tools
@@ -6,24 +7,28 @@
 
 <div style="padding: 10px 20px 10px 20px;">
     <h1>Admin Panel: Task Item</h1>
-    <AdminTable TItem="TaskItem" Metadata="Metadata" Items="Items" OnSelected="RowClicked" OnDelete="onDelete" />
+    <AdminTable TItem="TaskItem" Metadata="Metadata" Items="manager.TaskItemDB.AllItems" OnSelected="RowClicked" OnDelete="manager.TaskItemDB.DeleteAsync" />
 </div>
 @if (viewForm)
 {
-    <AdminForm TItem="TaskItem" Metadata="Metadata" OnClose="() => viewForm = false" OnDelete="onDelete" OnUpdate="onUpdate"
+    <AdminForm TItem="TaskItem" Metadata="Metadata" OnClose="() => viewForm = false" OnDelete="manager.TaskItemDB.DeleteAsync" OnUpdate="manager.TaskItemDB.UpdateAsync"
         Item="Item"/>
 }
 
 @code {
     private bool viewForm = false;
-    private List<TaskItem> Items = [];
     private TaskItem Item = new();
 
     private TableMetadata Metadata = TaskItem.Metadata;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        Items = await manager.TaskItemDB.GetAllAsync();
+        manager.TaskItemDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.TaskItemDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void RowClicked(TaskItem item)
@@ -31,15 +36,5 @@
         viewForm = true;
         StateHasChanged();
         Item = item;
-    }
-
-    private async void onUpdate(TaskItem item)
-    {
-        await manager.TaskItemDB.UpdateAsync(item);
-    }
-
-    private async void onDelete(TaskItem item)
-    {
-        await manager.TaskItemDB.DeleteAsync(item);
     }
 }

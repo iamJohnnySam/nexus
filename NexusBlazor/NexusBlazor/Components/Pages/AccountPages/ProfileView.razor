@@ -15,7 +15,7 @@
     }
     <p><strong>Employee:</strong> @ThisEmployee?.EmployeeName</p>
     <p><strong>Employee ID:</strong> @LoginInfo.CurrentEmployeeId</p>
-    <p><strong>Current Project:</strong> @ThisProject?.ProjectName</p>
+    <p><strong>Current Project:</strong> @LoginInfo.CurrentProject.ProjectName</p>
 
     <br />
     <br />
@@ -34,7 +34,16 @@
 @code {
     System.Security.Claims.ClaimsPrincipal user = new();
     public Employee? ThisEmployee { get; set; }
-    public Project? ThisProject { get; set; }
+
+    protected override void OnInitialized()
+    {
+        LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,6 +51,5 @@
         user = authState.User;
 
         ThisEmployee = Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider).Result;
-        ThisProject = Helpers.GetCurrentProject(manager, LoginInfo).Result;
     }
 }
