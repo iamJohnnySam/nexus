@@ -82,7 +82,7 @@ public class LoginInformation : INotifyPropertyChanged
         this.manager = manager;
 
         var sessionId = Guid.NewGuid().ToString();
-        logger.InfoAsync($"New session started: {sessionId}");
+        logger.Info($"New session started: {sessionId}");
         User = httpContextAccessor.HttpContext?.User;
         logger.SetSessionContext(sessionId, User?.Identity?.Name ?? "Anonymous");
     }

@@ -24,7 +24,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         {
             if(allItems.Count == 0)
             {
-                logger.InfoAsync("AllItems accessed but is currently empty.");
+                logger.Info("AllItems accessed but is currently empty.");
                 Task.Run(async () => await GetAllAsync()).Wait();
             }
             return allItems;
@@ -32,7 +32,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         set
         {
             allItems = value;
-            logger.InfoAsync($"AllItems updated. New count: {allItems.Count}");
+            logger.Info($"AllItems updated. New count: {allItems.Count}");
             OnPropertyChanged();
         }
     }
@@ -79,6 +79,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
             else if (pkProp.PropertyType == typeof(long))
                 pkProp.SetValue(entity, newId);
         }
+        logger.Info(message: $"Inserted new {typeof(T).Name} with ID {newId}.", interaction: "SQLite");
     }
     internal virtual async Task GetAllAsync()
     {
@@ -86,15 +87,18 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         await connection.OpenAsync();
         var sql = SqlFactory.BuildSelect(Metadata, orderBy: Metadata.SortColumn, descending: Metadata.SortDescending);
         AllItems = [.. (await connection.QueryAsync<T>(sql))];
+        logger.Info(message: $"Loaded {AllItems.Count} items of type {typeof(T).Name}.", interaction: "SQLite");
     }
-    public virtual async Task<T?> GetByIdAsync(object id)
+    public virtual async Task<T?> GetByIdAsync(int id)
     {
         string primaryKey = SqlFactory.GetKeyColumn(Metadata);
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
-        return await connection.QuerySingleOrDefaultAsync<T>(
+        var result = await connection.QuerySingleOrDefaultAsync<T>(
             SqlFactory.BuildSelect(Metadata, $"{primaryKey} = @{primaryKey}"),
             new Dictionary<string, object> { { primaryKey, id } });
+        logger.Info(message: $"Retrieved {typeof(T).Name} with ID {id}.", interaction: "SQLite");
+        return result;
     }
     public async Task<List<T>> GetByColumnAsync<TValue>(string columnName, TValue value)
     {
@@ -104,7 +108,9 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         sql += $" ORDER BY {Metadata.SortColumn} {(Metadata.SortDescending ? "DESC" : "ASC")}";
 
         using var connection = new SqliteConnection(connectionString);
-        return [.. (await connection.QueryAsync<T>(sql, new { Value = value }))];
+        List<T> result = [.. (await connection.QueryAsync<T>(sql, new { Value = value }))];
+        logger.Info(message: $"Retrieved {result.Count} items of type {typeof(T).Name} where {columnName} = {value}.", interaction: "SQLite");
+        return result;
     }
     public async Task<T?> GetOneByColumnAsync<TValue>(string columnName, TValue value)
     {
@@ -114,7 +120,9 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         sql += $" ORDER BY {Metadata.SortColumn} {(Metadata.SortDescending ? "DESC" : "ASC")}";
 
         using var connection = new SqliteConnection(connectionString);
-        return await connection.QueryFirstOrDefaultAsync<T>(sql, new { Value = value });
+        var result = await connection.QueryFirstOrDefaultAsync<T>(sql, new { Value = value });
+        logger.Info(message: $"Retrieved item of type {typeof(T).Name} where {columnName} = {value}.", interaction: "SQLite");
+        return result;
     }
     public virtual async Task UpdateAsync(T entity)
     {
@@ -123,6 +131,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         await connection.ExecuteAsync(SqlFactory.BuildUpdate(Metadata), entity);
 
         AsyncHelper.RunInBackground(ReloadCachedData);
+        logger.Info(message: $"Updated {typeof(T).Name} entity.", interaction: "SQLite");
     }
     public virtual async Task DeleteAsync(T id)
     {
@@ -131,29 +140,32 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         await connection.ExecuteAsync(SqlFactory.BuildDelete(Metadata), id);
 
         AsyncHelper.RunInBackground(ReloadCachedData);
+        logger.Info(message: $"Deleted {typeof(T).Name} entity.", interaction: "SQLite");
     }
     internal async Task<List<T>> QueryAsync(string sql, object? parameters = null)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
-        logger.InfoAsync($"Executing QueryAsync with SQL: {sql}");
-        return [.. (await connection.QueryAsync<T>(sql, parameters))];
+        List<T> result = [.. (await connection.QueryAsync<T>(sql, parameters))];
+        logger.Info(message: $"Executed QueryAsync with SQL: {sql}, returned {result.Count} results", interaction: "SQLite");
+        return result;
     }
     internal async Task<T?> QueryFirstOrDefaultAsync(string sql, object? parameters = null)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
-        logger.InfoAsync($"Executing QueryFirstOrDefaultAsync with SQL: {sql}");
-        return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+        var result = await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+        logger.Info(message: $"Executed QueryFirstOrDefaultAsync with SQL: {sql}", interaction: "SQLite");
+        return result;
     }
     internal virtual async Task ExecuteAsync(string sql, object? parameters = null, bool updateCache = true)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await connection.ExecuteAsync(sql, parameters);
-        logger.InfoAsync($"Executed SQL: {sql}");
         if (updateCache)
             AsyncHelper.RunInBackground(ReloadCachedData);
+        logger.Info(message: $"Executed ExecuteAsync with SQL: {sql}", interaction: "SQLite");
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)

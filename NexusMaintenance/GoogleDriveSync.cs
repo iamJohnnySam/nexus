@@ -77,7 +77,7 @@ public class GoogleDriveSync
         string tempCopy = Path.Combine(Path.GetTempPath(), tempFile);
 
         File.Copy(dbPath, tempCopy, true);
-        logger.InfoAsync($"Database copied to {tempCopy}");
+        logger.Info($"Database copied to {tempCopy}");
 
         // Replace with your actual Google Drive "Backups" folder ID
         string backupsFolderId = "1Sp6bAlSCZm3QWYDk3OxZ3GmnrkJcjrSM";
@@ -88,7 +88,7 @@ public class GoogleDriveSync
             Parents = new List<string> { backupsFolderId } // ✅ Uploads directly into Backups folder
         };
 
-        logger.InfoAsync($"Starting Upload of {tempFile}");
+        logger.Info($"Starting Upload of {tempFile}");
         using (var stream = new FileStream(tempCopy, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
         {
             var request = driveService.Files.Create(fileMetadata, stream, "application/octet-stream");
@@ -103,10 +103,10 @@ public class GoogleDriveSync
         }
         catch (IOException)
         {
-            logger.ErrorAsync($"Warning: Could not delete temp file {tempCopy}.");
+            logger.Error($"Warning: Could not delete temp file {tempCopy}.");
         }
 
-        logger.InfoAsync($"✅ Uploaded {Path.GetFileName(tempCopy)} to Google Drive folder 'Nexus/Backups'.");
+        logger.Info($"✅ Uploaded {Path.GetFileName(tempCopy)} to Google Drive folder 'Nexus/Backups'.");
     }
 
     public static async Task UploadDatabaseToDriveAsync(string filePath)

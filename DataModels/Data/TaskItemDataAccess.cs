@@ -78,6 +78,7 @@ public class TaskItemDataAccess(string connectionString) : DataAccess<TaskItem>(
 
         return tasks;
     }
+
     private async Task<List<TaskItem>> GetAllIncompleteParentTasks(int projectID)
     {
         string query = "SELECT * FROM TaskItem WHERE ProjectId = @ProjectId AND (ParentTaskId IS NULL OR ParentTaskId = 0) AND IsCompleted = 0";

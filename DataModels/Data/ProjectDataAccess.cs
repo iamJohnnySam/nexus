@@ -49,7 +49,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
         project.Product = await ProductDB.GetByIdAsync(project.ProductId);
         project.PrimaryDesigner = await EmployeeDB.GetByIdAsync(project.PrimaryDesignerId);
     }
-    public async override Task<Project?> GetByIdAsync(object projectId)
+    public async override Task<Project?> GetByIdAsync(int projectId)
     {
         var project = await base.GetByIdAsync(projectId);
 

@@ -27,7 +27,7 @@ public class ConfigDetailDataAccess(string connectionString, ConfigurationDataAc
         }
     }
 
-    public override async Task<ConfigDetail?> GetByIdAsync(object id)
+    public override async Task<ConfigDetail?> GetByIdAsync(int id)
     {
         var item = await base.GetByIdAsync(id);
         if (item != null)

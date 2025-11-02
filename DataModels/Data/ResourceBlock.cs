@@ -11,6 +11,7 @@ public class ResourceBlock
 {
     public int ResourceBlockId { get; set; }
     public int EmployeeId { get; set; }
+    public Employee? Employee { get; set; } = null;
     public int ProjectId { get; set; }
     public int Year { get; set; }
     public int Week { get; set; }

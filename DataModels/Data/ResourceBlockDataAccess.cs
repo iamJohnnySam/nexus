@@ -1,7 +1,9 @@
 ﻿using DataModels.DataTools;
+using DataModels.Tools;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,13 +12,69 @@ namespace DataModels.Data;
 
 public class ResourceBlockDataAccess(string connectionString) : DataAccess<ResourceBlock>(connectionString, ResourceBlock.Metadata)
 {
-    public async Task<List<ResourceBlock>> GetResourceBlockByEmployeeId(int employeeId, int year, int week)
+    public Dictionary<int, ResourceBlockLink> EmployeeResourceBlocks { get; set; } = [];
+    public Dictionary<int, ResourceBlockLink> ProjectResourceBlocks { get; set; } = [];
+
+    private int GetEmployeeLinkKey(int employeeId, int year, int week) => (employeeId * 10000) + (year * 100) + week;
+    private int GetProjectLinkKey(int projectId, int year, int week) => (projectId * 10000) + (year * 100) + week;
+
+    public async Task<ResourceBlockLink> GetEmployeeResourceBlockLink(int employeeId, int year, int week)
+    {
+        (year , week) = CalendarLogic.WeekValidation(year, week);
+        int key = GetEmployeeLinkKey(employeeId, year, week);
+        if (!EmployeeResourceBlocks.ContainsKey(key))
+        {
+            EmployeeResourceBlocks[key] = new ResourceBlockLink(await GetResourceBlockByEmployeeId(employeeId, year, week));
+        }
+        return EmployeeResourceBlocks[key];
+    }
+
+    public async Task<ResourceBlockLink> GetProjectResourceBlockLink(int projectId, int year, int week)
+    {
+        (year, week) = CalendarLogic.WeekValidation(year, week);
+        int key = GetProjectLinkKey(projectId, year, week);
+        if (!ProjectResourceBlocks.ContainsKey(key))
+        {
+            ProjectResourceBlocks[key] = new ResourceBlockLink(await GetResourceBlockByProjectId(projectId, year, week));
+        }
+        return ProjectResourceBlocks[key];
+    }
+
+    private async Task UpdateCache(ResourceBlock item)
+    {
+        int EmployeeKey = GetEmployeeLinkKey(item.EmployeeId, item.Year, item.Week);
+        if (EmployeeResourceBlocks.ContainsKey(EmployeeKey))
+            EmployeeResourceBlocks[EmployeeKey].Blocks = await GetResourceBlockByEmployeeId(item.EmployeeId, item.Year, item.Week);
+        int ProjectKey = GetProjectLinkKey(item.ProjectId, item.Year, item.Week);
+        if (ProjectResourceBlocks.ContainsKey(ProjectKey))
+            ProjectResourceBlocks[ProjectKey].Blocks = await GetResourceBlockByProjectId(item.ProjectId, item.Year, item.Week);
+    }
+
+    public override async Task InsertAsync(ResourceBlock item)
+    {
+        await base.InsertAsync(item);
+        await UpdateCache(item);
+    }
+
+    public override async Task UpdateAsync(ResourceBlock item)
+    {
+        await base.UpdateAsync(item);
+        await UpdateCache(item);
+    }
+
+    public override async Task DeleteAsync(ResourceBlock item)
+    {
+        await base.DeleteAsync(item);
+        await UpdateCache(item);
+    }
+
+    private async Task<List<ResourceBlock>> GetResourceBlockByEmployeeId(int employeeId, int year, int week)
     {
         var sql = "SELECT * FROM ResourceBlock WHERE EmployeeId = @employeeId AND Year = @year AND Week = @week";
         return await QueryAsync(sql, new { employeeId, year, week });
     }
 
-    public async Task<List<ResourceBlock>> GetResourceBlockByProjectId(int projectId, int year, int week)
+    private async Task<List<ResourceBlock>> GetResourceBlockByProjectId(int projectId, int year, int week)
     {
         var sql = "SELECT * FROM ResourceBlock WHERE ProjectId = @projectId AND Year = @year AND Week = @week";
         return await QueryAsync(sql, new { projectId, year, week });

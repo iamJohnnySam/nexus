@@ -41,7 +41,7 @@
 @code {
     protected override void OnInitialized()
     {
-        Logger.InfoAsync("Home Screen Loaded", interaction: "Program startup");
+        Logger.Info("Home Screen Loaded", interaction: "Program startup");
         manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 

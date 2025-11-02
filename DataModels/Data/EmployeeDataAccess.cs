@@ -18,6 +18,7 @@ public class EmployeeDataAccess(string connectionString) : DataAccess<Employee>(
 
     // Cached Lists
     private List<Employee> allActiveEmployees = [];
+    private Dictionary<int, Employee> EmployeeCache = [];
     public List<Employee> AllActive
     {
         get
@@ -104,13 +105,31 @@ public class EmployeeDataAccess(string connectionString) : DataAccess<Employee>(
         }
     }
 
-    public async override Task<Employee?> GetByIdAsync(object id)
+    public async override Task<Employee?> GetByIdAsync(int id)
     {
-        Employee? emp = await base.GetByIdAsync(id);
-        await GetObjects(emp);
-
-        return emp;
+        if (!EmployeeCache.ContainsKey(id))
+        {
+            EmployeeCache[id] = (await base.GetByIdAsync(id))!;
+            await GetObjects(EmployeeCache[id]);
+        }
+        return EmployeeCache[id];
     }
+
+    public override async Task UpdateAsync(Employee e)
+    {
+        EmployeeCache[e.EmployeeId] = e;
+        await base.UpdateAsync(e);
+    }
+
+    public override Task DeleteAsync(Employee e)
+    {
+        if (EmployeeCache.ContainsKey(e.EmployeeId))
+        {
+            EmployeeCache.Remove(e.EmployeeId);
+        }
+        return base.DeleteAsync(e);
+    }
+
     public async Task<List<Employee>> GetAllActiveEmployeesByDesignationId(int id)
     {
         List<Employee> employees = await QueryAsync("SELECT * FROM Employee WHERE IsActive = 1 AND DesignationId = @id", new { id });

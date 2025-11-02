@@ -38,21 +38,8 @@
                 @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
                 {
                     int Year = DateTime.Today.Year;
-                    if (i > 52)
-                    {
-                        Year += 1;
-                    }
-                    int Week = i % 52;
-                    if (Week == 0)
-                    {
-                        Week = 52;
-                    }
-                    List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByProjectId(project.ProjectId, Year, Week).Result;
                     <td>
-                        @foreach (ResourceBlock block in blocks)
-                        {
-                            <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
-                        }
+                        <ReportProjectBlocks ProjectId="project.ProjectId" Week="i" Year="Year" />
                     </td>
                 }
             </tr>

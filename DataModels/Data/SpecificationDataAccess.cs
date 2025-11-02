@@ -22,7 +22,7 @@ public class SpecificationDataAccess(string connectionString, ProductModuleDataA
         AllItems = [.. AllItems.OrderBy(rank => rank.ProductModule!.Rank).ThenBy(rank => rank.ProductModule!.ModuleId).ThenBy(rank => rank.Rank)];
     }
 
-    public override async Task<Specification?> GetByIdAsync(object id)
+    public override async Task<Specification?> GetByIdAsync(int id)
     {
         var item = await base.GetByIdAsync(id);
         if (item != null)

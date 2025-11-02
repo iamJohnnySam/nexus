@@ -1,9 +1,10 @@
-﻿@using DataModels.Tools
+﻿@implements IDisposable
+@using DataModels.Tools
 @using NexusBlazor.Components.Logic
 @inject IJSRuntime JS
 @inject Manager manager
 
-@foreach (ResourceBlock block in ResourceBlocks)
+@foreach (ResourceBlock block in link.Blocks)
 {
     <div class="row">
         <div class="col">
@@ -23,34 +24,23 @@
 }
 <div class="row">
     <div class="col">
-        @if(FilterDesignation == EDesignation.None)
+        @if (link.Blocks.Count == 0)
         {
             if (ResourceType == EManualResourceType.Employee)
             {
-                if (ResourceBlocks.Count == 0)
-                {
-                    <button class="hidden-modern-button" @onclick=CopyEmployeeResourcesFromLastWeek>Copy over</button>
-                }
+                <button class="hidden-modern-button" @onclick=CopyEmployeeResourcesFromLastWeek>Copy over</button>
             }
             else if (ResourceType == EManualResourceType.Project)
             {
-                if (ResourceBlocks.Count == 0)
-                {
-                    <button class="hidden-modern-button" @onclick=CopyProjectResourcesFromLastWeek>Copy over</button>
-                }
+                <button class="hidden-modern-button" @onclick=CopyProjectResourcesFromLastWeek>Copy over</button>
             }
         }
     </div>
-    @if(FilterDesignation == EDesignation.None)
-    {
-        <div class="col-2">
-            <buttton class="add_button" @onclick=AddBlock>+</buttton>
-        </div>
-    }
-    else
-    {
-        <div class="col-2"></div>
-    }
+
+    <div class="col-2">
+        <buttton class="add_button" @onclick=AddBlock>+</buttton>
+    </div>
+
 </div>
 
 @code {
@@ -66,85 +56,44 @@
     [Parameter]
     public required int Week { get; set; }
 
-    public List<Employee> Employees { get; set; } = [];
-
     [Parameter]
     public List<Project> Projects { get; set; } = [];
 
-    [Parameter]
-    public EDesignation FilterDesignation { get; set; } = EDesignation.None;
+    private List<Employee> Employees = [];
 
+    ResourceBlockLink link;
 
-    public List<ResourceBlock> ResourceBlocks { get; set; } = [];
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Week > 52)
-        {
-            Year += 1;
-        }
-        Week = Week % 52;
-        if (Week == 0)
-        {
-            Week = 52;
-        }
-        await GetItems();
-        await base.OnParametersSetAsync();
-    }
-
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         if(ResourceType == EManualResourceType.Employee)
         {
+            link = await manager.ResourceBlockDB.GetProjectResourceBlockLink(Id, Year, Week);
             Employees = manager.EmployeeDB.GetAllEmployeesActiveWithin(Year, Week).Result.OrderBy(p => p.EmployeeName).ToList();
         }
-        return base.OnInitializedAsync();
+        else if(ResourceType == EManualResourceType.Project)
+        {
+            link = await manager.ResourceBlockDB.GetEmployeeResourceBlockLink(Id, Year, Week);
+        }
+
+        base.OnInitialized();
+        link.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    async Task GetItems()
+    public void Dispose()
     {
-        if (ResourceType == EManualResourceType.Employee)
-        {
-            switch (FilterDesignation)
-            {
-                case EDesignation.None:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetResourceBlockByProjectId(Id, Year, Week)).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-                case EDesignation.Mechanical:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Mechanical Design Engineer" })).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-                case EDesignation.Electrical:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Electrical Engineer" })).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-                case EDesignation.Automation:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Automation Engineer", "Product Development Engineer" })).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-                case EDesignation.Software:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Software Engineer" })).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-                case EDesignation.Product:
-                    ResourceBlocks = (await manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(Id, Year, Week, new[] { "Automation Engineer (Product)", "Mechanical Design Engineer (Product)" })).OrderBy(p => p.EmployeeId).ToList();
-                    break;
-            }
-        }
-        else if (ResourceType == EManualResourceType.Project)
-        {
-            ResourceBlocks = (await manager.ResourceBlockDB.GetResourceBlockByEmployeeId(Id, Year, Week)).OrderBy(p => p.ProjectId).ToList();
-        }
+        link.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     async void EmployeeUpdate(ResourceBlock block, int employeeId)
     {
         block.EmployeeId = employeeId;
         await manager.ResourceBlockDB.UpdateAsync(block);
-        StateHasChanged();
     }
 
     async void ProjectUpdate(ResourceBlock block, int projectId)
     {
         block.ProjectId = projectId;
         await manager.ResourceBlockDB.UpdateAsync(block);
-        StateHasChanged();
     }
 
     async void AddBlock()
@@ -171,8 +120,6 @@
             };
         }
         await manager.ResourceBlockDB.InsertAsync(newBlock);
-        GetItems();
-        await InvokeAsync(StateHasChanged);
     }
 
     async void RemoveBlock(ResourceBlock block)
@@ -180,8 +127,6 @@
         var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this block?");
         if (!confirm) return;
         await manager.ResourceBlockDB.DeleteAsync(block);
-        GetItems();
-        await InvokeAsync(StateHasChanged);
     }
 
     async void CopyEmployeeResourcesFromLastWeek()
@@ -200,8 +145,6 @@
         }
 
         await manager.ResourceBlockDB.CopyProjectResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
-        await GetItems();
-        StateHasChanged();
     }
 
     async void CopyProjectResourcesFromLastWeek()
@@ -220,7 +163,5 @@
         }
 
         await manager.ResourceBlockDB.CopyEmployeeResourceBlocksFromWeek(Id, Year, Week, copyYear, copyWeek);
-        await GetItems();
-        StateHasChanged();
     }
 }

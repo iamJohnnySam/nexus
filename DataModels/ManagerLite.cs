@@ -30,6 +30,6 @@ public class ManagerLite
         // Employee
         EmployeeDB = new(_connectionString);
         ProjectDB = new(_connectionString);
-        new SqliteLogger().InfoAsync($"Manager Lite Created");
+        new SqliteLogger().Info($"Manager Lite Created");
     }
 }

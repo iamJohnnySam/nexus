@@ -111,7 +111,7 @@ public class Manager
         SupplierDB = new(_connectionString);
         FlowElementDB = new(_connectionString);
 
-        new SqliteLogger().InfoAsync($"Manager Created");
+        new SqliteLogger().Info($"Manager Created");
     }
 
     private void InitializeDatabase()

@@ -36,29 +36,10 @@
                 <td>@employee.EmployeeDesignation?.DesignationName</td>
                 @for (int i = CurrentWeek; i < CurrentWeek + NumberOfWeeks; i++)
                 {
-                    int Year = DateTime.Today.Year;
-                    if (i > 52)
-                    {
-                        Year += 1;
-                    }
-                    int Week = i % 52;
-                    if (Week == 0)
-                    {
-                        Week = 52;
-                    }
                     <td>
-                        @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(Year, Week) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(Year, Week)))
+                        @if (employee.JoinDate <= CalendarLogic.GetFirstMondayOfWeek(CurrentYear, i) && (employee.LeaveDate == null || employee.LeaveDate >= CalendarLogic.GetFirstMondayOfWeek(CurrentYear, i)))
                         {
-                            List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByEmployeeId(employee.EmployeeId, Year, Week).Result;
-                            @foreach (ResourceBlock block in blocks)
-                            {
-                                if(block.ProjectId == 0)
-                                {
-                                    continue;
-                                }
-                                Project project = manager.ProjectDB.GetByIdAsync(block.ProjectId).Result!;
-                                <div>@project.DesignCode (@project.ProjectCode)</div>
-                            }
+                            <ReportEmployeeBlocks EmployeeId="employee.EmployeeId" Week="i" Year="CurrentYear" />
                         }
                         else
                         {
@@ -76,14 +57,22 @@
 
 
 @code {
+    private int CurrentYear { get; set; }
     private int CurrentWeek { get; set; }
     private int NumberOfWeeks { get; set; } = 12;
 
+    int cellWidth = 85;
+    string cellStyle = "width: 85px;";
+
     protected override void OnInitialized()
     {
+        CurrentYear = DateTime.Now.Year;
         CurrentWeek = CalendarLogic.WeekOfYear(DateTime.Now);
         base.OnInitialized();
         manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        cellWidth = (95 * 16) / NumberOfWeeks;
+        cellStyle = $"width: {cellWidth}px; ";
+
     }
 
     public void Dispose()
@@ -91,12 +80,5 @@
         manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    int cellWidth = 85;
-    string cellStyle = "width: 85px;";
-
-    protected override void OnParametersSet()
-    {
-        cellWidth = (95 * 16) / NumberOfWeeks;
-        cellStyle = $"width: {cellWidth}px; ";
-    }
+    
 }

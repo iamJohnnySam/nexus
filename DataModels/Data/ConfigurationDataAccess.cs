@@ -40,7 +40,7 @@ public class ConfigurationDataAccess(string connectionString, ProjectDataAccess 
         }
     }
 
-    public override async Task<Configuration?> GetByIdAsync(object id)
+    public override async Task<Configuration?> GetByIdAsync(int id)
     {
         var item = await base.GetByIdAsync(id);
         if (item != null)

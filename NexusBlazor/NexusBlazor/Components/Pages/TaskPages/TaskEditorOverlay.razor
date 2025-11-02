@@ -17,7 +17,7 @@
                 {
                     <div class="mb-3">
                         <label class="form-label">Parent Task</label><br />
-                        <label class="form-label">@manager.TaskItemDB.GetByIdAsync(SelectedItem.ParentTaskId!).Result!.Title</label>
+                        <label class="form-label">@manager.TaskItemDB.GetByIdAsync(SelectedItem.ParentTaskId ?? 0).Result!.Title</label>
                     </div>
                 }
 

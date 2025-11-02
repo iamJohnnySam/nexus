@@ -1,0 +1,33 @@
+﻿@inject Manager manager
+@implements IDisposable
+
+@foreach (ResourceBlock block in link.Blocks)
+{
+    if (block.ProjectId == 0)
+    {
+        continue;
+    }
+    Project project = manager.ProjectDB.GetByIdAsync(block.ProjectId).Result!;
+    <div>@project.DesignCode (@project.ProjectCode)</div>
+}
+
+@code {
+    [Parameter] public required int EmployeeId { get; set; }
+    [Parameter] public required int Year { get; set; }
+    [Parameter] public required int Week { get; set; }
+
+    ResourceBlockLink link;
+
+    protected override async Task OnInitializedAsync()
+    {
+        link = await manager.ResourceBlockDB.GetEmployeeResourceBlockLink(EmployeeId, Year, Week);
+        base.OnInitialized();
+        link.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+
+    }
+
+    public void Dispose()
+    {
+        link.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+}

@@ -32,13 +32,7 @@
                 <TaskItemsCell SelectedProject="project" ShowExpanded="@true" />
             </div>
             <div class="col-1">
-                @{
-                    List<ResourceBlock> blocks = manager.ResourceBlockDB.GetResourceBlockByProjectId(project.ProjectId, Year, Week).Result;
-                }
-                @foreach (ResourceBlock block in blocks)
-                {
-                    <div>@manager.EmployeeDB.GetByIdAsync(block.EmployeeId).Result!.EmployeeShortName</div>
-                }
+                <ReportProjectBlocks ProjectId="project.ProjectId" Year="Year" Week="Week" />
             </div>
         </div>
 
