@@ -3,7 +3,6 @@
 
 @inject LoginInformation LoginInfo
 @inject Manager manager
-@inject AuthenticationStateProvider AuthStateProvider
 
 <div style="padding: 10px 30px 10px 30px;">
     <h3>Profile</h3>
@@ -13,7 +12,7 @@
     {
         <p><strong>Employee not found</strong></p>
     }
-    <p><strong>Employee:</strong> @ThisEmployee?.EmployeeName</p>
+    <p><strong>Employee:</strong> @LoginInfo.CurrentEmployee?.EmployeeName</p>
     <p><strong>Employee ID:</strong> @LoginInfo.CurrentEmployeeId</p>
     <p><strong>Current Project:</strong> @LoginInfo.CurrentProject.ProjectName</p>
 
@@ -21,10 +20,12 @@
     <br />
 
     <h4>Cookie Information</h4>
-    <p><strong>Employee:</strong> @user.Identity.Name</p>
+    <p><strong>Employee:</strong> @LoginInfo.User?.Identity?.Name</p>
+
     <br />
+
     <h5>Claims</h5>
-    @foreach (var claim in user.Claims)
+    @foreach (var claim in LoginInfo.User?.Claims)
     {
         <p><strong>@claim.Type:</strong> @claim.Value</p>
     }
@@ -32,9 +33,6 @@
 
 
 @code {
-    System.Security.Claims.ClaimsPrincipal user = new();
-    public Employee? ThisEmployee { get; set; }
-
     protected override void OnInitialized()
     {
         LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
@@ -43,13 +41,5 @@
     public void Dispose()
     {
         LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        user = authState.User;
-
-        ThisEmployee = Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider).Result;
     }
 }

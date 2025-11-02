@@ -110,7 +110,8 @@
 
     private async Task HandleProjectChange(string projectName)
     {
-        await manager.ProjectDB.SelectProjectFromName(projectName, LoginInfo);
+        Project project = await manager.ProjectDB.SelectProjectFromName(projectName);
+        LoginInfo.CurrentProject = project;
         await LoadData();
     }
 

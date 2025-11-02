@@ -1,4 +1,5 @@
 ﻿@page "/manual_resource_allocation_weekly_print/{Year:int}/{Week:int}"
+@implements IDisposable
 @attribute [Authorize]
 @using DataModels.Tools
 @using NexusBlazor.Components.Logic
@@ -34,7 +35,7 @@
             <th>Comments</th>
         </tr>
 
-        @foreach (Project project in ActiveProjects)
+        @foreach (Project project in manager.ProjectDB.ActiveTracked)
         {
             ResourceBlocks_ME = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Mechanical Design Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
             ResourceBlocks_EE = (manager.ResourceBlockDB.GetFilteredResourceBlockByProjectId(project.ProjectId, Year, Week, new[] { "Electrical Engineer" })).Result.OrderBy(p => p.EmployeeId).ToList();
@@ -88,7 +89,6 @@
     [Parameter] public int Week { get; set; }
 
     private string thisWeek = "52";
-    List<Project> ActiveProjects { get; set; } = [];
     public List<ResourceBlock> ResourceBlocks_ME { get; set; } = [];
     public List<ResourceBlock> ResourceBlocks_EE { get; set; } = [];
     public List<ResourceBlock> ResourceBlocks_PD { get; set; } = [];
@@ -102,7 +102,13 @@
         thisWeek = Week.ToString();
 
         base.OnInitialized();
-        ActiveProjects = manager.ProjectDB.GetAllActiveTrackedAsync().Result;
+
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void ChangeWeek(int week)

@@ -1,4 +1,4 @@
-﻿
+﻿@implements IDisposable
 @using DataModels.Tools
 @using NexusBlazor.Components.Pages.OverviewPages
 @using NexusBlazor.Components.Pages.Trackers
@@ -6,7 +6,7 @@
 @inject Manager manager
 
 <div style="padding: 10px 20px 10px 20px;">
-    @foreach(Project project in ActiveProjects)
+    @foreach(Project project in manager.ProjectDB.ActiveTracked)
     {
         <div class="row" style="padding-bottom:10px">
             <div class="col-3"><h4>@project.ProjectName</h4></div>
@@ -26,10 +26,10 @@
 
         <div class="row">
             <div class="col-6">
-                <MilestoneCell CurrentProject="project" ShowExpanded="@true" />
+                <MilestoneCell SelectedProject="project" ShowExpanded="@true" />
             </div>
             <div class="col">
-                <TaskItemsCell CurrentProject="project" ShowExpanded="@true" />
+                <TaskItemsCell SelectedProject="project" ShowExpanded="@true" />
             </div>
             <div class="col-1">
                 @{
@@ -47,7 +47,6 @@
 </div>
 
 @code {
-    public List<Project> ActiveProjects { get; set; } = [];
     public int SelectedProjectId { get; set; } = 0;
     public Milestone SelectedMilestone { get; set; } = new();
     public TaskItem SelectedTask { get; set; } = new();
@@ -80,10 +79,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
         await base.OnInitializedAsync();
 
         Year = DateTime.Today.Year;
         Week = CalendarLogic.WeekOfYear(DateTime.Now);
+
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+
 }

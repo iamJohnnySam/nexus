@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class EmployeeDataAccess(string connectionString, GradeDataAccess gradeDB, DesignationDataAccess designationDB) : DataAccess<Employee>(connectionString, Employee.Metadata)
+public class EmployeeDataAccess(string connectionString) : DataAccess<Employee>(connectionString, Employee.Metadata)
 {
-    private GradeDataAccess GradeDB { get; } = gradeDB;
-    private DesignationDataAccess DesignationDB { get; } = designationDB;
+    private GradeDataAccess GradeDB { get; } = new(connectionString);
+    private DesignationDataAccess DesignationDB { get; } = new(connectionString);
 
 
     // Cached Lists

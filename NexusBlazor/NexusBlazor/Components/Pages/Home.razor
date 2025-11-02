@@ -2,8 +2,6 @@
 @inject Manager manager
 @inject LoginInformation LoginInfo
 @inject SqliteLogger Logger
-@inject IHttpContextAccessor HttpContextAccessor
-@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <PageTitle>nexus by iamJohnnySam</PageTitle>
@@ -41,17 +39,9 @@
 
 
 @code {
-
-    public Employee? LoggedInEmployee { get; set; }
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var sessionId = Guid.NewGuid().ToString();
-        var user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Anonymous";
-        Logger.SetSessionContext(sessionId, user);
-        Logger.InfoAsync("Session started", interaction: "Program startup");
-
-        LoggedInEmployee = await Helpers.GetCurrentEmployee(manager, LoginInfo, AuthStateProvider);
+        Logger.InfoAsync("Home Screen Loaded", interaction: "Program startup");
         manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 

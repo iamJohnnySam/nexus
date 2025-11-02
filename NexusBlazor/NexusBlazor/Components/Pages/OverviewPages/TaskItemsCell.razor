@@ -7,7 +7,7 @@
 
 <div style="padding: 5px 5px;">
     <table style="width:100%">
-        @foreach (TaskItem parentTask in IncompleteParentTaskItems)
+        @foreach (TaskItem parentTask in projectLink!.IncompleteParentTasks)
         {
             List<TaskItem> subTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(parentTask.TaskId).Result;
             bool subTasksComplete = false;
@@ -140,7 +140,7 @@
             {
                 if (CurrentParentTaskId == parentTask.TaskId)
                 {
-                    foreach (TaskItem subTask in SubTasks)
+                    foreach (TaskItem subTask in parentTaskLink!.SubTasks)
                     {
                         <tr>
                             <td style="padding-left:30px;" @onclick="() => EditTask(subTask)">
@@ -200,7 +200,7 @@
 
 @code {
     [Parameter]
-    public required Project CurrentProject { get; set; }
+    public required Project SelectedProject { get; set; }
 
     [Parameter]
     public EventCallback<TaskItem> OnTaskItemEdit { get; set; }
@@ -208,8 +208,8 @@
     [Parameter]
     public bool ShowExpanded { get; set; } = false;
 
-    public List<TaskItem> IncompleteParentTaskItems { get; set; } = [];
-    public List<TaskItem> SubTasks { get; set; } = [];
+    TaskItemProjectLink? projectLink;
+    TaskItemParentTaskLink? parentTaskLink;
 
     private int CurrentParentTaskId { get; set; } = 0;
 
@@ -222,34 +222,31 @@
             manager.TaskItemDB.InsertAsync(new TaskItem
             {
                 Title = value,
-                ProjectId = CurrentProject.ProjectId,
+                ProjectId = SelectedProject.ProjectId,
                 ParentTaskId = CurrentParentTaskId,
                 CreatedOn = DateTime.Now,
                 Deadline = parent.Deadline,
                 IsCompleted = false,
                 ResponsibleId = parent.ResponsibleId
             }).Wait();
-
-            SubTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId).Result;
-            StateHasChanged();
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
+        projectLink = await manager.TaskItemDB.GetProjectLink(SelectedProject.ProjectId);
+        projectLink.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
         manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
-        await LoadData();
     }
 
     public void Dispose()
     {
+        if(parentTaskLink is not null)
+        {
+            parentTaskLink.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        }
+        projectLink!.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
         manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
-    }
-
-    private async Task LoadData()
-    {
-        IncompleteParentTaskItems = (await manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId));
-        SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId);
     }
 
     private void EditTask(TaskItem task)
@@ -266,9 +263,12 @@
         else
         {
             CurrentParentTaskId = task.TaskId;
-            SubTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(CurrentParentTaskId);
         }
-        StateHasChanged();
+
+        if(parentTaskLink is not null)
+            parentTaskLink!.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        parentTaskLink = await manager.TaskItemDB.GetParentTaskLink(CurrentParentTaskId);
+        parentTaskLink!.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private async void CompleteTask(TaskItem task)
@@ -278,6 +278,5 @@
 
         task.IsCompleted = true;
         await manager.TaskItemDB.UpdateAsync(task);
-        await LoadData();
     }
 }

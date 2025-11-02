@@ -5,7 +5,7 @@
 
 <div style="padding: 5px 5px;">
     <table style="width:100%">
-        @foreach (Milestone milestone in MilestonesOpen)
+        @foreach (Milestone milestone in link!.IncompleteItems)
         {
             <tr>
                 <td @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName
@@ -33,7 +33,7 @@
                 <td style="width:15%">
                     @if (milestone.ResponsibleId != 0)
                     {
-                        @if(milestone.ResponsibleId == Helpers.GetCurrentEmployee(manager, LoginInfo, auth).Result?.EmployeeId)
+                        @if (milestone.ResponsibleId == LoginInfo.CurrentEmployeeId)
                         {
                             <span style="color: yellow">@manager.EmployeeDB.GetByIdAsync(milestone.ResponsibleId).Result?.EmployeeShortName</span>
                         }
@@ -48,7 +48,7 @@
     </table>
     <br />
     <table style="width:100%">
-        @foreach (Milestone milestone in MilestonesClosed)
+        @foreach (Milestone milestone in link!.CompletedItems)
         {
             <tr>
                 <td @onclick="() => EditMilestone(milestone)">@milestone.MilestoneName
@@ -85,7 +85,7 @@
 
 @code {
     [Parameter]
-    public required Project CurrentProject { get; set; }
+    public required Project SelectedProject { get; set; }
 
     [Parameter]
     public EventCallback<Milestone> OnMilestoneEdit { get; set; }
@@ -98,29 +98,24 @@
     private int i = 0;
     private bool expandButton = false;
 
-    public List<Milestone> MilestonesOpen { get; set; } = [];
-    public List<Milestone> MilestonesClosed { get; set; } = [];
+    MilestoneProjectLink? link;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        link = await manager.MilestoneDB.GetProjectLink(SelectedProject.ProjectId);
+        link!.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
         manager.MilestoneDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
+        link!.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
         manager.MilestoneDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        await LoadData();
         i = 0;
-    }
-
-    private async Task LoadData()
-    {
-        MilestonesOpen = (await manager.MilestoneDB.GetOpenByProjectIdAsync(CurrentProject.ProjectId)).OrderBy(planned => planned.PlannedDate).ToList();
-        MilestonesClosed = (await manager.MilestoneDB.GetCompletedByProjectIdAsync(CurrentProject.ProjectId)).OrderByDescending(planned => planned.ActualDate).ToList();
     }
 
     private async Task EditMilestone(Milestone milestone)

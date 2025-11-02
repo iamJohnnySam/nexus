@@ -2,16 +2,16 @@
 @rendermode InteractiveServer
 
 <div>
-    @foreach (TaskItem taskItem in IncompleteParentTaskItems)
+    @foreach (TaskItem taskItem in link.IncompleteParentTasks)
     {
         <div @onclick="() => ParentTaskSelected(taskItem)">
             <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
             <div>
 
-                @if (SubTaskItems.ContainsKey(taskItem.TaskId))
+                @if (link.SubTasks.ContainsKey(taskItem.TaskId))
                 {
                     <div class="@(SelectedParentTaskId == taskItem.TaskId ? showCollapsible : hideCollapsible)">
-                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
+                        @foreach (TaskItem subTaskItem in link.SubTasks[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
                         {
                             <div>
                                 <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
@@ -21,30 +21,30 @@
                 }
                 @if (SelectedParentTaskId == taskItem.TaskId)
                 {
-                    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
+                    <NewTask ProjectId=SelectedProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
                     <hr />
                 }
             </div>
         </div>
     }
 </div>
-@if(CompleteParentTaskItems.Count > 0)
+@if(link.CompletedParentTasks.Count > 0)
 {
     <br />
     <hr />
     <br />
 }
 <div>
-    @foreach (TaskItem taskItem in CompleteParentTaskItems)
+    @foreach (TaskItem taskItem in link.CompletedParentTasks)
     {
         <div @onclick="() => ParentTaskSelected(taskItem)">
             <TaskRow InputTask=taskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
             <div>
 
-                @if (SubTaskItems.ContainsKey(taskItem.TaskId))
+                @if (link.SubTasks.ContainsKey(taskItem.TaskId))
                 {
                     <div class="@(SelectedParentTaskId == taskItem.TaskId ? showCollapsible : hideCollapsible)">
-                        @foreach (TaskItem subTaskItem in SubTaskItems[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
+                        @foreach (TaskItem subTaskItem in link.SubTasks[taskItem.TaskId].OrderBy(asc => asc.IsCompleted))
                         {
                             <div>
                                 <TaskRow InputTask=subTaskItem OnTaskUpdated="HandleTaskUpdate" AllEmployees="@AllEmployees" OnTaskSelected="TaskSelected" />
@@ -54,7 +54,7 @@
                 }
                 @if (SelectedParentTaskId == taskItem.TaskId)
                 {
-                    <NewTask ProjectId=CurrentProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
+                    <NewTask ProjectId=SelectedProject.ProjectId ParentTaskId=taskItem.TaskId OnTaskAdded="HandleTaskAdded" AllActiveEmployees="AllEmployees" />
                 }
             </div>
         </div>
@@ -69,60 +69,36 @@
     public EventCallback OnTaskUpdated { get; set; }
 
     [Parameter]
-    public required Project CurrentProject { get; set; }
+    public required Project SelectedProject { get; set; }
 
     [Parameter]
     public bool ShowIncompleteOnly { get; set; } = false;
 
-    private List<TaskItem> IncompleteParentTaskItems { get; set; } = [];
-    private List<TaskItem> CompleteParentTaskItems { get; set; } = [];
-
-    private Dictionary<int, List<TaskItem>> SubTaskItems { get; set; } = [];
     private List<Employee> AllEmployees => manager.EmployeeDB.AllActive;
 
     [Parameter]
     public int SelectedParentTaskId { get; set; } = 0;
 
+    TaskItemProjectLink link;
+
     string showCollapsible = "content-show";
     string hideCollapsible = "content-hidden";
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        link = await manager.TaskItemDB.GetProjectLink(SelectedProject.ProjectId);
+
+        link.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
         manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
+       link.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
         manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await RefreshTasks();
-        base.OnParametersSet();
-    }
-
-    private async Task RefreshTasks()
-    {
-        IncompleteParentTaskItems = await manager.TaskItemDB.GetAllIncompleteParentTasks(CurrentProject.ProjectId);
-
-        if (!ShowIncompleteOnly)
-        {
-            CompleteParentTaskItems = await manager.TaskItemDB.GetAllCompleteParentTasks(CurrentProject.ProjectId);
-        }
-
-        SubTaskItems = [];
-        Dictionary<int, List<TaskItem>> subTaskTemp = manager.TaskItemDB.GetAllSubTasks(CurrentProject.ProjectId).Result;
-        foreach (KeyValuePair<int, List<TaskItem>> subTask in subTaskTemp)
-        {
-            if (!SubTaskItems.ContainsKey(subTask.Key))
-            {
-                SubTaskItems[subTask.Key] = new List<TaskItem>();
-            }
-            SubTaskItems[subTask.Key].AddRange(subTask.Value);
-        }
-        StateHasChanged();
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     void ParentTaskSelected(TaskItem task)
@@ -137,24 +113,21 @@
 
     async void HandleTaskUpdate()
     {
-        await RefreshTasks();
         await OnTaskUpdated.InvokeAsync();
     }
 
     async void HandleTaskAdded(TaskItem task)
     {
-        task.ProjectId = CurrentProject.ProjectId;
+        task.ProjectId = SelectedProject.ProjectId;
         await manager.TaskItemDB.InsertAsync(task);
         if (task.ParentTaskId == 0)
         {
             SelectedParentTaskId = 0;
         }
-        await RefreshTasks();
     }
 
     private async void HandleToggleShowComplete(bool showIncomplete)
     {
         ShowIncompleteOnly = !showIncomplete;
-        await RefreshTasks();
     }
 }

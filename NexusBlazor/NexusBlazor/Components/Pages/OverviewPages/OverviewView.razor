@@ -1,4 +1,5 @@
 ﻿@page "/overview"
+@implements IDisposable
 @attribute [Authorize]
 
 @using DataModels.Tools
@@ -20,7 +21,7 @@
         <div class="col-1"></div>
     </div>
     <br />
-    @foreach(Project project in ActiveProjects)
+    @foreach(Project project in manager.ProjectDB.ActiveTracked)
     {
         <div class="row" style="padding-bottom:10px" @onclick="() => ProjectSelected(project)">
             <div class="col-3"><h4>@project.ProjectName</h4></div>
@@ -40,7 +41,7 @@
 
         <div class="row">
             <div class="col-6">
-                <MilestoneCell CurrentProject="project" OnMilestoneEdit="EditMilestone" />
+                <MilestoneCell SelectedProject="project" OnMilestoneEdit="EditMilestone" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
                     <div class="row">
@@ -56,7 +57,7 @@
                 }
             </div>
             <div class="col">
-                <TaskItemsCell CurrentProject="project" OnTaskItemEdit="EditTaskItem" />
+                <TaskItemsCell SelectedProject="project" OnTaskItemEdit="EditTaskItem" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
                     <div style="text-align:center; padding-top:10px;">
@@ -83,7 +84,6 @@
 }
 
 @code {
-    public List<Project> ActiveProjects { get; set; } = [];
     public int SelectedProjectId { get; set; } = 0;
     public Milestone SelectedMilestone { get; set; } = new();
     public TaskItem SelectedTask { get; set; } = new();
@@ -108,7 +108,6 @@
                 Deadline = DateTime.Now.AddDays(1),
                 IsCompleted = false
             }).Wait();
-            StateHasChanged();
         }
     }
 
@@ -125,17 +124,25 @@
                 IsCompleted = false,
                 OnHold = false
             }).Wait();
-            StateHasChanged();
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        ActiveProjects = await manager.ProjectDB.GetAllActiveTrackedAsync();
         await base.OnInitializedAsync();
 
         Year = DateTime.Today.Year;
         Week = CalendarLogic.WeekOfYear(DateTime.Now);
+        manager.ProjectDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.MilestoneDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.TaskItemDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.ProjectDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.MilestoneDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.TaskItemDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
     private void EditMilestone(Milestone milestone)
@@ -144,7 +151,6 @@
         SelectedProjectId = milestone.ProjectId;
         ShowMilestoneOverlay = true;
         ShowTaskOverlay = false;
-        StateHasChanged();
     }
 
 
@@ -154,7 +160,6 @@
         SelectedProjectId = task.ProjectId;
         ShowMilestoneOverlay = false;
         ShowTaskOverlay = true;
-        StateHasChanged();
     }
 
     private void ProjectSelected(Project project)
@@ -166,7 +171,6 @@
     {
         ShowMilestoneOverlay = false;
         ShowTaskOverlay = false;
-        StateHasChanged();
     }
 
     private void AddMilestone(Project project)
@@ -182,6 +186,5 @@
         SelectedProjectId = project.ProjectId;
         ShowMilestoneOverlay = true;
         ShowTaskOverlay = false;
-        StateHasChanged();
     }
 }

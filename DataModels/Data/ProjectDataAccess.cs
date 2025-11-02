@@ -1,5 +1,4 @@
-﻿using DataModels.Administration;
-using DataModels.DataTools;
+﻿using DataModels.DataTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,16 +7,42 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class ProjectDataAccess(string connectionString, CustomerDataAccess customerDB, ProductDataAccess productDB, EmployeeDataAccess employeeDB) : DataAccess<Project>(connectionString, Project.Metadata)
+public class ProjectDataAccess(string connectionString) : DataAccess<Project>(connectionString, Project.Metadata)
 {
-    private CustomerDataAccess CustomerDB { get; } = customerDB;
-    private ProductDataAccess ProductDB { get; } = productDB;
-    private EmployeeDataAccess EmployeeDB { get; } = employeeDB;
+    private CustomerDataAccess CustomerDB { get; } = new(connectionString);
+    private ProductDataAccess ProductDB { get; } = new(connectionString);
+    private EmployeeDataAccess EmployeeDB { get; } = new(connectionString);
+
+    // Cached Data
+    private List<Project> activeTracked = [];
+    public List<Project> ActiveTracked
+    {
+        get
+        {
+            if(activeTracked.Count == 0)
+            {
+                Task.Run(async () => await GetAllActiveTrackedAsync()).Wait();
+            }
+            return activeTracked;
+        }
+        set
+        {
+            activeTracked = value;
+            OnPropertyChanged();
+        }
+    }
 
     public static Project GetNew()
     {
         return new Project { ProjectName = "Untitled Project" };
     }
+    
+    internal override async Task ReloadCachedData()
+    {
+        await base.ReloadCachedData();
+        await GetAllActiveTrackedAsync();
+    }
+
     public async Task GetProjectObjects(Project project)
     {
         project.Customer = await CustomerDB.GetByIdAsync(project.CustomerId);
@@ -80,7 +105,7 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
                            .ThenBy(p => p.DesignCode)
                            .ToList();
     }
-    public async Task<List<Project>> GetAllActiveTrackedAsync()
+    public async Task GetAllActiveTrackedAsync()
     {
 
         var sql = @"SELECT * FROM Project 
@@ -93,7 +118,7 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
             await GetProjectObjects(project);
         }
 
-        return projects.OrderByDescending(p => p.IsTrackedProject)
+        ActiveTracked = projects.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
@@ -107,9 +132,9 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
     {
         return CompileProjectNames(await (GetAllActiveAsync()));
     }
-    public async Task<List<string>> GetAllActiveTrackedProjectNamesAsync()
+    public List<string> GetAllActiveTrackedProjectNames()
     {
-        return CompileProjectNames(await (GetAllActiveTrackedAsync()));
+        return CompileProjectNames(ActiveTracked);
     }
     private static List<string> CompileProjectNames(List<Project> projects)
     {
@@ -128,14 +153,13 @@ public class ProjectDataAccess(string connectionString, CustomerDataAccess custo
         name += project.ProjectName;
         return name;
     }
-    public async Task<Project> SelectProjectFromName(string projectName, LoginInformation LoginInfo)
+    public async Task<Project> SelectProjectFromName(string projectName)
     {
         Project project = await GetOneByColumnAsync("ProjectName", projectName) ?? throw new Exception($"Project with name '{projectName}' not found.");
 
         if (project != null)
         {
             await GetProjectObjects(project);
-            LoginInfo.CurrentProject = project;
         }
         else
         {

@@ -60,13 +60,13 @@ public class Manager
         // Employee
         DesignationDB = new(_connectionString);
         GradeDB = new(_connectionString);
-        EmployeeDB = new(_connectionString, GradeDB, DesignationDB);
+        EmployeeDB = new(_connectionString);
         LoginDB = new(_connectionString);
 
         CustomerDB = new(_connectionString);
         ProductDB = new(_connectionString);
 
-        ProjectDB = new(_connectionString, CustomerDB, ProductDB, EmployeeDB);
+        ProjectDB = new(_connectionString);
 
 
         if (ProjectDB.GetByIdAsync(1).Result == null)
@@ -81,7 +81,7 @@ public class Manager
         
 
         // Tasks
-        TaskItemDB = new(_connectionString, EmployeeDB);
+        TaskItemDB = new(_connectionString);
 
         ProjectStageDB = new(_connectionString);
 

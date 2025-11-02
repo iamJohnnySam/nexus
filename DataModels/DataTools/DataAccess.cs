@@ -61,7 +61,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         await GetAllAsync();
     }
 
-    public async Task InsertAsync(T entity)
+    public virtual async Task InsertAsync(T entity)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
@@ -79,8 +79,6 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
             else if (pkProp.PropertyType == typeof(long))
                 pkProp.SetValue(entity, newId);
         }
-
-        AsyncHelper.RunInBackground(ReloadCachedData);
     }
     internal virtual async Task GetAllAsync()
     {
@@ -124,10 +122,9 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
         await connection.OpenAsync();
         await connection.ExecuteAsync(SqlFactory.BuildUpdate(Metadata), entity);
 
-        // OnPropertyChanged();
         AsyncHelper.RunInBackground(ReloadCachedData);
     }
-    public virtual async Task DeleteAsync(object id)
+    public virtual async Task DeleteAsync(T id)
     {
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
