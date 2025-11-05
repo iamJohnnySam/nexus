@@ -1,0 +1,243 @@
+﻿@inject Manager manager
+@implements IDisposable
+@inject IJSRuntime JS
+
+<tr>
+    <td @onclick="() => EditTask(ParentTask)">
+        @if (SelectedParentTaskId == ParentTask.TaskId || (ShowExpanded && parentTaskLink.SubTasks.Count > 0))
+        {
+            <strong>@ParentTask.Title</strong>
+        }
+        else
+        {
+            @ParentTask.Title
+        }
+        @if (ParentTask.Description != string.Empty)
+        {
+            <br />
+            <span style="color: gray;white-space: pre-wrap;">@ParentTask.Description</span>
+        }
+    </td>
+    <td style="padding-right:10px; width:17%;">
+        @if ((ParentTask.Deadline - DateTime.Today).Days < 0)
+        {
+            <span style="color: palevioletred">@ParentTask.Deadline.ToString("yyyy-MM-dd")</span>
+        }
+        else
+        {
+            @ParentTask.Deadline.ToString("yyyy-MM-dd")
+        }
+    </td>
+    <td style="width:17%">
+        @if (ParentTask.ResponsibleId != 0)
+        {
+            if (ParentTask.Responsible == null)
+            {
+                @manager.EmployeeDB.GetByIdAsync(ParentTask.ResponsibleId).Result?.EmployeeShortName
+            }
+            else
+            {
+                @ParentTask.Responsible.EmployeeShortName
+                ;
+            }
+        }
+    </td>
+
+    @if (parentTaskLink.SubTasksComplete && !ShowExpanded)
+    {
+        <td style="width: 6%" @onclick="() => CompleteTask(ParentTask)">✔</td>
+    }
+    else
+    {
+        <td></td>
+    }
+
+    @if (SelectedParentTaskId == ParentTask.TaskId)
+    {
+        <td style="width: 6%" @onclick="() => SelectTask(ParentTask)">▲</td>
+    }
+    else
+    {
+        <td style="width: 6%" @onclick="() => SelectTask(ParentTask)">▼</td>
+    }
+</tr>
+
+
+@if (ShowExpanded)
+{
+    foreach (TaskItem subTask in parentTaskLink.SubTasks)
+    {
+        <tr>
+            <td style="padding-left:30px;" @onclick="() => EditTask(subTask)">
+                @if (subTask.IsCompleted)
+                {
+                    <s>@subTask.Title</s>
+                }
+                else
+                {
+                    @subTask.Title
+                }
+                @if (subTask.Description != string.Empty)
+                {
+                    <br />
+                    <span style="color: gray;white-space: pre-wrap;">@subTask.Description</span>
+                }
+            </td>
+            <td style="padding-right:10px; width:17%;">
+                @if ((subTask.Deadline - DateTime.Today).Days < 0)
+                {
+                    <span style="color: palevioletred">@subTask.Deadline.ToString("yyyy-MM-dd")</span>
+                }
+                else
+                {
+                    @subTask.Deadline.ToString("yyyy-MM-dd")
+                }
+            </td>
+            <td style="width:17%">
+                @if (subTask.ResponsibleId != 0)
+                {
+                    if (subTask.Responsible == null)
+                    {
+                        @manager.EmployeeDB.GetByIdAsync(subTask.ResponsibleId).Result?.EmployeeShortName
+                    }
+                    else
+                    {
+                        @subTask.Responsible.EmployeeShortName
+                        ;
+                    }
+                }
+            </td>
+            @if (!ShowExpanded)
+            {
+                <td style="width: 6%" @onclick="() => CompleteTask(subTask)">@(subTask.IsCompleted ? "" : "✔")</td>
+            }
+            else
+            {
+                <td></td>
+            }
+            <td>-</td>
+        </tr>
+    }
+}
+else
+{
+    if (SelectedParentTaskId == ParentTask.TaskId)
+    {
+        foreach (TaskItem subTask in parentTaskLink!.SubTasks)
+        {
+            <tr>
+                <td style="padding-left:30px;" @onclick="() => EditTask(subTask)">
+                    @if (subTask.IsCompleted)
+                    {
+                        <s>@subTask.Title</s>
+                    }
+                    else
+                    {
+                        @subTask.Title
+                    }
+                    @if (subTask.Description != string.Empty)
+                    {
+                        <br />
+                        <span style="color: gray;white-space: pre-wrap;">@subTask.Description</span>
+                    }
+                </td>
+                <td style="padding-right:10px; width:17%;">
+                    @if ((subTask.Deadline - DateTime.Today).Days < 0)
+                    {
+                        <span style="color: palevioletred">@subTask.Deadline.ToString("yyyy-MM-dd")</span>
+                    }
+                    else
+                    {
+                        @subTask.Deadline.ToString("yyyy-MM-dd")
+                    }
+                </td>
+                <td style="width:17%">
+                    @if (subTask.ResponsibleId != 0)
+                    {
+                        if (subTask.Responsible == null)
+                        {
+                            @manager.EmployeeDB.GetByIdAsync(subTask.ResponsibleId).Result?.EmployeeShortName
+                        }
+                        else
+                        {
+                            @subTask.Responsible.EmployeeShortName
+                            ;
+                        }
+                    }
+                </td>
+                <td style="width: 6%" @onclick="() => CompleteTask(subTask)">@(subTask.IsCompleted ? "" : "✔")</td>
+                <td>-</td>
+            </tr>
+        }
+        <tr>
+            <td colspan="4">
+                <InputText @bind-Value="NewTaskTitle" />
+            </td>
+            <td>-</td>
+        </tr>
+    }
+}
+
+@code {
+    [Parameter] public required TaskItem ParentTask { get; set; }
+    [Parameter] public bool ShowExpanded { get; set; } = false;
+    [Parameter] public int SelectedParentTaskId { get; set; }
+    [Parameter] public int SelectedProjectId { get; set; }
+
+    [Parameter] public EventCallback<TaskItem> OnTaskItemSelect { get; set; }
+    [Parameter] public EventCallback<TaskItem> OnTaskItemEdit { get; set; }
+
+    TaskItemParentTaskLink parentTaskLink;
+
+    public string NewTaskTitle
+    {
+        get { return ""; }
+        set
+        {
+            TaskItem parent = manager.TaskItemDB.GetByIdAsync(SelectedParentTaskId).Result!;
+            manager.TaskItemDB.InsertAsync(new TaskItem
+            {
+                Title = value,
+                ProjectId = SelectedProjectId,
+                ParentTaskId = SelectedParentTaskId,
+                CreatedOn = DateTime.Now,
+                Deadline = parent.Deadline,
+                IsCompleted = false,
+                ResponsibleId = parent.ResponsibleId
+            }).Wait();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        parentTaskLink = await manager.TaskItemDB.GetParentTaskLink(ParentTask.TaskId);
+        manager.TaskItemDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.EmployeeDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        parentTaskLink.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.TaskItemDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    async Task SelectTask(TaskItem task)
+    {
+        await OnTaskItemSelect.InvokeAsync(task);
+    }
+
+    private void EditTask(TaskItem task)
+    {
+        OnTaskItemEdit.InvokeAsync(task);
+    }
+
+    private async void CompleteTask(TaskItem task)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to mark this task as completed?");
+        if (!confirm) return;
+
+        task.IsCompleted = true;
+        await manager.TaskItemDB.UpdateAsync(task);
+    }
+}

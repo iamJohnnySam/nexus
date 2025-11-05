@@ -14,6 +14,7 @@ public class Project
     public string? PartNumber { get; set; }
     public EProjectPriority Priority { get; set; } = EProjectPriority.Normal;
     public ESalesStatus POStatus { get; set; }
+    public int ProjectYear { get; set; } = DateTime.Today.Year;
     public int ProductId { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsTrackedProject { get; set; } = true;

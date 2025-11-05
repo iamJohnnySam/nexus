@@ -112,7 +112,7 @@ public class TaskItemDataAccess(string connectionString) : DataAccess<TaskItem>(
         List<TaskItem> AllTasks = await QueryTaskList(query, new { ProjectId = projectID });
         return BundleSubTasks(AllTasks);
     }
-    public async Task<List<TaskItem>> GetAllSubTasksOfParentTask(int parentTaskId)
+    private async Task<List<TaskItem>> GetAllSubTasksOfParentTask(int parentTaskId)
     {
         string query = "SELECT * FROM TaskItem WHERE ParentTaskId = @ParentTaskId";
         return await QueryTaskList(query, new { ParentTaskId = parentTaskId });

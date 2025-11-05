@@ -108,9 +108,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
     public async Task GetAllActiveTrackedAsync()
     {
 
-        var sql = @"SELECT * FROM Project 
-                        WHERE IsActive = 1 AND IsTrackedProject = 1
-                        ORDER BY ProjectName ASC;";
+        var sql = @"SELECT * FROM Project WHERE IsActive = 1 AND IsTrackedProject = 1 ORDER BY ProjectName ASC;";
         List<Project> projects = await QueryAsync(sql);
 
         foreach (var project in projects)

@@ -91,12 +91,16 @@
         await base.OnInitializedAsync();
 
         manager.ProductModuleDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.ConfigurationDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+        manager.SpecificationDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
         LoginInfo.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }   
 
     public void Dispose()
     {
         manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.ConfigurationDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        manager.SpecificationDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
         LoginInfo.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 

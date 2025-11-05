@@ -13,11 +13,11 @@
         </td>
         @if (!ThisConfiguration.IsRequired)
         {
-            <td colspan="5" style="color:darkgray;">Not Required</td>
+            <td colspan="4" style="color:darkgray;">Not Required</td>
         }
         else
         {
-            <td colspan="5">No Specifications Found</td>
+            <td colspan="4">No Specifications Found</td>
         }
         <td>
             <button class="modern-button" @onclick="EditConfiguration">Edit</button>
@@ -46,14 +46,14 @@
             </td>
             @if (configDetail == null)
             {
-                <td colspan="3">
+                <td colspan="2">
                     <span style="color: red;">Not Defined</span><br />
                     @foreach (string item in specification.ConfigurationOptions.Split(","))
                     {
                         <span class="badge bg-secondary" style="margin-left:5px">@item.Trim()</span>
                     }
                 </td>
-                <td>
+                <td style="width:200px">
                     <button class="modern-button" @onclick="() => AddDetail(specification.SpecificationId)">Add</button>
                     @if(specification.DefaultOption != string.Empty)
                     {
@@ -63,9 +63,13 @@
             }
             else
             {
-                <td style="white-space: pre-wrap;">@configDetail.SpecificationDetail</td>
-                <td style="white-space: pre-wrap;">
-                    @configDetail.Comments
+                <td>
+                    <span style="white-space: pre-wrap;">@configDetail.SpecificationDetail</span>
+                    @if(@configDetail.Comments != string.Empty)
+                    {
+                        <br />
+                        <span style="color: gray; white-space: pre-wrap;">@configDetail.Comments</span>
+                    }
                 </td>
                 <td>@configDetail.Revision</td>
                 <td><button class="modern-button" @onclick="() => EditDetail(configDetail)">Edit</button></td>

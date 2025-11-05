@@ -35,50 +35,76 @@
             </InputSelect>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Design Code</label>
-            <InputText class="form-control" @bind-Value="SelectedProject.DesignCode" />
+        <div class="row">
+            <div class="col">
+                <div class="mb-3">
+                    <label class="form-label">Design Code</label>
+                    <InputText class="form-control" @bind-Value="SelectedProject.DesignCode" />
+                </div>
+            </div>
+            <div class="col">
+                <div class="mb-3">
+                    <label class="form-label">Project Code</label>
+                    <InputText class="form-control" @bind-Value="SelectedProject.ProjectCode" />
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Part Number</label>
-            <InputText class="form-control" @bind-Value="SelectedProject.PartNumber" />
+        <div class="row">
+            <div class="col">
+                <div class="mb-3">
+                    <label class="form-label">Part Number</label>
+                    <InputText class="form-control" @bind-Value="SelectedProject.PartNumber" />
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="mb-3">
+                    <label class="form-label">Project Delivery Year</label>
+                    <InputNumber class="form-control" @bind-Value="SelectedProject.ProjectYear" />
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Project Code</label>
-            <InputText class="form-control" @bind-Value="SelectedProject.ProjectCode" />
+        <div class="row">
+            <div class="col">
+                <div class="mb-3">
+                    <label class="form-label">Priority</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
+                        @foreach (var priority in Enum.GetValues(typeof(EProjectPriority)))
+                        {
+                            <option value="@priority">@priority</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="col">
+                <div class="mb-3">
+                    <label class="form-label">PO Status</label>
+                    <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
+                        @foreach (var status in Enum.GetValues(typeof(ESalesStatus)))
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Priority</label>
-            <InputSelect class="form-control" @bind-Value="SelectedProject.Priority">
-                @foreach (var priority in Enum.GetValues(typeof(EProjectPriority)))
-                {
-                    <option value="@priority">@priority</option>
-                }
-            </InputSelect>
+        <div class="row">
+            <div class="col">
+                <div class="form-check mb-2">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
+                    <label class="form-check-label">Is Active</label>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-check mb-2">
+                    <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsTrackedProject" />
+                    <label class="form-check-label">Is Tracked</label>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">PO Status</label>
-            <InputSelect class="form-control" @bind-Value="SelectedProject.POStatus">
-                @foreach (var status in Enum.GetValues(typeof(ESalesStatus)))
-                {
-                    <option value="@status">@status</option>
-                }
-            </InputSelect>
-        </div>
-
-        <div class="form-check mb-2">
-            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsActive" />
-            <label class="form-check-label">Is Active</label>
-        </div>
-
-        <div class="form-check mb-2">
-            <InputCheckbox class="form-check-input" @bind-Value="SelectedProject.IsTrackedProject" />
-            <label class="form-check-label">Is Tracked</label>
-        </div>
+        
 
         <div class="mb-3">
             <label class="form-label">Primary Designer</label>
@@ -142,6 +168,7 @@
             ProjectCode = p.ProjectCode,
             PartNumber = p.PartNumber,
             Priority = p.Priority,
+            ProjectYear = p.ProjectYear,
             POStatus = p.POStatus,
             IsActive = p.IsActive,
             IsTrackedProject = p.IsTrackedProject,

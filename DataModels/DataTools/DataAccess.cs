@@ -17,22 +17,22 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
     public event PropertyChangedEventHandler? PropertyChanged;
     SqliteLogger logger = new SqliteLogger();
 
-    private List<T> allItems = [];
+    private List<T> allItemsCache = [];
     public List<T> AllItems
     {
         get
         {
-            if(allItems.Count == 0)
+            if(allItemsCache.Count == 0)
             {
                 logger.Info("AllItems accessed but is currently empty.");
                 Task.Run(async () => await GetAllAsync()).Wait();
             }
-            return allItems;
+            return allItemsCache;
         }
         set
         {
-            allItems = value;
-            logger.Info($"AllItems updated. New count: {allItems.Count}");
+            allItemsCache = value;
+            logger.Info($"AllItems updated. New count: {allItemsCache.Count}");
             OnPropertyChanged();
         }
     }
@@ -79,6 +79,7 @@ public class DataAccess<T> : INotifyPropertyChanged where T : class
             else if (pkProp.PropertyType == typeof(long))
                 pkProp.SetValue(entity, newId);
         }
+        allItemsCache = [];
         logger.Info(message: $"Inserted new {typeof(T).Name} with ID {newId}.", interaction: "SQLite");
     }
     internal virtual async Task GetAllAsync()

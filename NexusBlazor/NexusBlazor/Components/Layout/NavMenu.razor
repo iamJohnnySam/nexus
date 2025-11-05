@@ -15,71 +15,59 @@
                 </NotAuthorized>
                 <Authorized>
                     <div class="dropdown">
-                        <button class="dropButton">Overview</button>
+                        <button class="dropButton">Project</button>
                         <div class="dropdown-content">
                             <a href="/overview">Project Summary</a>
-                            <a href="/report">Report</a>
+                            <a href="/report">Project Summary Report</a>
+                            <a href="/projects">Project Manager</a>
+                            <a href="/configuration">Project Configuration</a>
+                            <a href="/tasks">Project Tasks</a>
+                            <a href="/review">Project Review</a>
                             <a href="/">----- Trackers -----</a>
                             <a href="/project_timeline">Project Timeline</a>
                             <a href="/manual_resource_allocation_by_project">Resource Allocation (Project)</a>
                             <a href="/manual_resource_allocation_by_employee">Resource Allocation (Employee)</a>
                             <a href="/manual_resource_allocation_weekly">Resource Allocation (Weekly)</a>
+                            <a href="/">----- Manager -----</a>
+                            <a href="/projects/customer">Customer Manager</a>
+                            <a href="/configuration/product">Product Manager</a>
+                            <a href="/configuration/module">Module Manager</a>
+                            <a href="/configuration/specification">Specification Manager</a>
+                            <a href="/review_manager">Review Manager</a>
                         </div>
                     </div>
+
                     <div class="dropdown">
-                <button class="dropButton">Projects</button>
-                <div class="dropdown-content">
-                    <a href="/projects">Project Overview</a>
-                    <a href="/configuration">Project Configuration</a>
-                    <a href="/">----- Manager -----</a>
-                    <a href="/projects/customer">Customer Manager</a>
-                    <a href="/configuration/product">Product Manager</a>
-                    <a href="/configuration/module">Module Manager</a>
-                    <a href="/configuration/specification">Specification Manager</a>
-                </div>
-            </div>
+                        <button class="dropButton">Hardware</button>
+                        <div class="dropdown-content">
+                            <a href="/simulation">Simulation</a>
+                            <a href="/simulation/scenario">Scenario Setup</a>
+                        </div>
+                    </div>
 
-            <div class="dropdown">
-                <button class="dropButton">Tasks</button>
-                <div class="dropdown-content">
-                    <a href="/tasks">Project Tasks</a>
-                    <a href="/review">Project Review</a>
-                    <a href="/">----- Manager -----</a>
-                    <a href="/review_manager">Review Manager</a>
-                </div>
-            </div>
+                    <div class="dropdown">
+                        <button class="dropButton">Documentation</button>
+                        <div class="dropdown-content">
+                            <a href="/writer">Writer</a>
+                        </div>
+                    </div>
 
-            <div class="dropdown">
-                <button class="dropButton">Hardware</button>
-                <div class="dropdown-content">
-                    <a href="/simulation">Simulation</a>
-                    <a href="/simulation/scenario">Scenario Setup</a>
-                </div>
-            </div>
+                    <div class="dropdown">
+                        <button class="dropButton">Department</button>
+                        <div class="dropdown-content">
+                            <a href="/department/organization_chart">Reporting Structure</a>
+                            <a href="/department/department_flow">Process Flow</a>
+                            <a href="/">----- Manager -----</a>
+                            <a href="/department/grade">Grade Manager</a>
+                            <a href="/department/designation">Designation Manager</a>
+                            <a href="/department/employee">Employee Manager</a>
+                            <a href="/department/jd">JD Manager</a>
+                            <a href="/department/functional_kpi">KPI Manager</a>
+                        </div>
+                    </div>
 
-            <div class="dropdown">
-                <button class="dropButton">Documentation</button>
-                <div class="dropdown-content">
-                    <a href="/writer">Writer</a>
-                </div>
-            </div>
-
-            <div class="dropdown">
-                <button class="dropButton">Department</button>
-                <div class="dropdown-content">
-                    <a href="/department/organization_chart">Reporting Structure</a>
-                    <a href="/department/department_flow">Process Flow</a>
-                    <a href="/">----- Manager -----</a>
-                    <a href="/department/grade">Grade Manager</a>
-                    <a href="/department/designation">Designation Manager</a>
-                    <a href="/department/employee">Employee Manager</a>
-                    <a href="/department/jd">JD Manager</a>
-                    <a href="/department/functional_kpi">KPI Manager</a>
-                </div>
-            </div>
-
-            <AuthorizeView Roles="Admin">
-                <Authorized>
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
                             <div class="dropdown">
                                 <button class="dropButton">Admin</button>
                                 <div class="dropdown-content">
@@ -97,22 +85,22 @@
                                     <a href="/admin/supplier">Supplier</a>
                                 </div>
                             </div>
-                </Authorized>
-            </AuthorizeView>
-
-            <div class="dropdown">
-                <button class="dropButton">@UserName</button>
-                <div class="dropdown-content">
-                    <a href="/profile">Profile</a>
-
-                    <AuthorizeView Roles="Admin">
-                        <Authorized>
-                            <a href="/sync">Sync</a>
                         </Authorized>
                     </AuthorizeView>
+
+                    <div class="dropdown">
+                        <button class="dropButton">@UserName</button>
+                        <div class="dropdown-content">
+                            <a href="/profile">Profile</a>
+
+                            <AuthorizeView Roles="Admin">
+                                <Authorized>
+                                    <a href="/sync">Sync</a>
+                                </Authorized>
+                            </AuthorizeView>
                             <a href="/logout">Logout</a>
-                </div>
-            </div>
+                        </div>
+                    </div>
                 </Authorized>
             </AuthorizeView>
         </nav>

@@ -66,6 +66,7 @@
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success">Save</button>
                     <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Delete">Delete</button>
                 </div>
             </EditForm>
         </div>
@@ -99,12 +100,13 @@
         manager.ProductModuleDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 
-    private async Task Delete(ReviewItem item)
+    private async Task Delete()
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this review item?");
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this Configuration item?");
         if (!confirmed) return;
 
-        await manager.ReviewItemDB.DeleteAsync(item);
+        await manager.ConfigurationDB.DeleteAsync(SelectedConfiguration);
+        await OnItemUpdate.InvokeAsync();
         ResetForm();
     }
 

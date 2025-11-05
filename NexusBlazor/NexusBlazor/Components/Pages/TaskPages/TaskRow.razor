@@ -101,19 +101,10 @@
     private bool IsTaskEdited { get; set; } = false;
     private bool ShowDescription { get; set; } = false;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         title = InputTask.Title;
         deadline = InputTask.Deadline;
-        List<TaskItem> subTasks = await manager.TaskItemDB.GetAllSubTasksOfParentTask(InputTask.TaskId);
-        if(subTasks.Count == 0)
-        {
-            subTasksComplete = true;
-        }
-        else
-        {
-            subTasksComplete = !subTasks.Any(obj => obj.IsCompleted == false);
-        }
     }
 
     private async Task TriggerUpdate()

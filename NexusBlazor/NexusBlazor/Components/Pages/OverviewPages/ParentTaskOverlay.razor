@@ -30,7 +30,7 @@
                 <InputDate class="form-control" @bind-Value="SelectedItem.StartedOn" />
             </div>
 
-            @if (SubTasksComplete)
+            @if (link.SubTasksComplete)
             {
                 <div class="mb-3">
                     <label class="form-label">Completed</label>
@@ -61,7 +61,7 @@
         </EditForm>
     </div>
     <div style="display: flex; justify-content: flex-end; padding:10px">
-        @if(SubTasks.Count == 0)
+        @if(link.SubTasks.Count == 0)
         {
             <button style="margin: 0px 10px;" class="modern-button btn-danger" @onclick="DeleteItem">Delete</button>
         }
@@ -77,22 +77,16 @@
     public EventCallback OnItemUpdate { get; set; }
 
     private Project? ThisProject;
+    TaskItemParentTaskLink link;
 
-    public List<TaskItem> SubTasks { get; set; } = [];
-    public bool SubTasksComplete { get; set; } = false;
-
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         ThisProject = manager.ProjectDB.GetByIdAsync(SelectedItem.ProjectId).Result;
-        SubTasks = manager.TaskItemDB.GetAllSubTasksOfParentTask(SelectedItem.TaskId).Result;
-        if (SubTasks.Count == 0)
-        {
-            SubTasksComplete = true;
-        }
-        else
-        {
-            SubTasksComplete = !SubTasks.Any(obj => obj.IsCompleted == false);
-        }
+
+        if(link != null)
+            link.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+        link = await manager.TaskItemDB.GetParentTaskLink(SelectedItem.TaskId);
+        link.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);  
     }
 
     protected override void OnInitialized()
@@ -102,6 +96,7 @@
 
     public void Dispose()
     {
+        link.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
         manager.EmployeeDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
     }
 

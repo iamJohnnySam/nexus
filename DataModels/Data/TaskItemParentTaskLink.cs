@@ -26,8 +26,23 @@ public class TaskItemParentTaskLink : INotifyPropertyChanged
 		}
 	}
 
+    public bool SubTasksComplete
+    {
+        get
+        {
+            if (SubTasks.Count == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return !SubTasks.Any(obj => obj.IsCompleted == false);
+            }
+        }
+    }
 
-	public TaskItemParentTaskLink(int parentTaskId)
+
+    public TaskItemParentTaskLink(int parentTaskId)
     {
         this.parentTaskId = parentTaskId;
     }
