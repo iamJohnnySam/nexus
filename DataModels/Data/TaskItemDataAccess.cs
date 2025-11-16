@@ -153,9 +153,20 @@ public class TaskItemDataAccess(string connectionString) : DataAccess<TaskItem>(
         {
             p.Deadline = p.StartedOn;
         }
-        await base.UpdateAsync(p);
+        bool update = false;
         if (completionBefore != p.IsCompleted)
+        {
+            update = true;
+            if (p.IsCompleted && p.CompletedOn == null)
+            {
+                p.CompletedOn = DateTime.Now;
+            }
+        }
+
+        await base.UpdateAsync(p);
+        if (update)
             await RefreshTasksForProjects(p.ProjectId, p.ParentTaskId == 0, completionBefore);
+
         await RefreshTasksForProjects(p.ProjectId, p.ParentTaskId == 0, p.IsCompleted);
         await RefreshTasksForParentTasks(p.ParentTaskId ?? 0);
     }

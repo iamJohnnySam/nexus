@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LayoutSimulator\LayoutSimulator.csproj" />
     <ProjectReference Include="..\NexusMaintenance\NexusMaintenance.csproj" />
   </ItemGroup>
 

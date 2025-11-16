@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Enums;
 
-public enum EManipulatorArmState
+public enum EMapCodes
 {
-    extended,
-    retracted
+    Empty = 0,
+    Available = 1,
+    Double = 2,
+    Cross = 3,
 }

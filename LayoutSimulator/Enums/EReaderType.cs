@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Enums;
 
-public interface ITarget
+public enum EReaderType
 {
+    Payload,
+    Cassette
 }

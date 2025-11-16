@@ -49,6 +49,11 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
         project.Product = await ProductDB.GetByIdAsync(project.ProductId);
         project.PrimaryDesigner = await EmployeeDB.GetByIdAsync(project.PrimaryDesignerId);
     }
+    public override async Task InsertAsync(Project project)
+    {
+        await base.InsertAsync(project);
+        ActiveTracked = [];
+    }
     public async override Task<Project?> GetByIdAsync(int projectId)
     {
         var project = await base.GetByIdAsync(projectId);
@@ -71,6 +76,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
 
         AllItems = AllItems.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.Priority)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
                            .ToList();
@@ -86,6 +92,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
 
         return projects.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.Priority)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
                            .ToList();
@@ -101,6 +108,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
 
         return projects.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.Priority)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
                            .ToList();
@@ -118,6 +126,7 @@ public class ProjectDataAccess(string connectionString) : DataAccess<Project>(co
 
         ActiveTracked = projects.OrderByDescending(p => p.IsTrackedProject)
                            .ThenByDescending(p => p.IsActive)
+                           .ThenByDescending(p => p.Priority)
                            .ThenByDescending(p => p.ProjectCode)
                            .ThenBy(p => p.DesignCode)
                            .ToList();

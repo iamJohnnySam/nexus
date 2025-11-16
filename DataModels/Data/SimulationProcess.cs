@@ -1,4 +1,5 @@
 ﻿using DataModels.Tools;
+using LayoutSimulator.Creator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,19 +8,13 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class SimulationProcess
+public class SimulationProcess : ProcessStruct
 {
-    public int SimulationProcessId { get; set; }
-    public string ProcessName { get; set; } = "Untitled Process";
-    public string? InputState { get; set; }
-    public string? OutputState { get; set; }
-    public string? Location { get; set; }
-    public int ProcessTime { get; set; } = 1;
     public static TableMetadata Metadata => new(
         typeof(SimulationProcess).Name,
         new Dictionary<string, EDataType>
         {
-            { nameof(SimulationProcessId), EDataType.Key },
+            { nameof(ProcessId), EDataType.Key },
             { nameof(ProcessName), EDataType.Text },
             { nameof(InputState), EDataType.Text },
             { nameof(OutputState), EDataType.Text },

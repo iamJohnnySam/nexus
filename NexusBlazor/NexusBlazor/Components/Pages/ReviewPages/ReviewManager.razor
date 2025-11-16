@@ -86,7 +86,7 @@
 
 @code {
     private InputText reviewDescriptionText;
-    private List<ReviewPoint> ReviewPoints = [];
+    private List<ReviewPoint> ReviewPoints => manager.ReviewPointDB.AllItems;
     private List<ProductModule> Modules = [];
     private int PreviouslySelectedModuleId = 0;
     private string PreviouslySelectedCategory = "General";

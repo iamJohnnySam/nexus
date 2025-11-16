@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Enums;
 
-public enum LayoutState
+public enum EManipulatorArmState
 {
-    ListeningCommands,
-    Stopped,
-    AutoRun,
-    Paused,
+    extended,
+    retracted
 }

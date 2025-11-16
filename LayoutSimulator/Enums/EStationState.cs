@@ -4,19 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Enums;
 
 public enum EStationState
 {
-    Idle,
     Off,
+    Idle,
     UnDocked,
     Opening,
     Closing,
     Mapping,
+    WaitingToBeAccessed,
     BeingAccessed,
-    Processing,
-    Extending,
-    Retracting,
-    Moving,
+    Processing
 }

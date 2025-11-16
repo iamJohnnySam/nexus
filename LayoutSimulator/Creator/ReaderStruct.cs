@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Creator;
 
-public enum EMapCodes
+public class ReaderStruct
 {
-    Empty = 0,
-    Available = 1,
-    Double = 2,
-    Cross = 3,
+
 }

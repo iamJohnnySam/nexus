@@ -8,9 +8,21 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class ReviewPointDataAccess(string connectionString) : DataAccess<ReviewPoint>(connectionString, ReviewPoint.Metadata)
+public class ReviewPointDataAccess : DataAccess<ReviewPoint>
 {
-    ProductModuleDataAccess ProductModuleDB = new ProductModuleDataAccess(connectionString);
+    private readonly ProductModuleDataAccess ProductModuleDB;
+
+    public ReviewPointDataAccess(string connectionString): base(connectionString, ReviewPoint.Metadata)
+    {
+        ProductModuleDB = new(connectionString);
+
+        foreach (ReviewPoint point in AllItems)
+        {
+            point.Module = ProductModuleDB.GetByIdAsync(point.ModuleId).Result;
+        }
+        AllItems = AllItems.OrderBy(rank => rank.Module!.Rank).ThenBy(cat => cat.ReviewCategory).ToList();
+    }
+
     internal override async Task GetAllAsync()
     {
         await base.GetAllAsync();

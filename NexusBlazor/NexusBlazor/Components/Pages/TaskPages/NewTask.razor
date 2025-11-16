@@ -64,7 +64,7 @@
     [Parameter]
     public EventCallback<TaskItem> OnTaskAdded { get; set; }
 
-    InputText TaskText;
+    InputText TaskText = new();
 
     private TaskItem NewTaskItem = new()
     {

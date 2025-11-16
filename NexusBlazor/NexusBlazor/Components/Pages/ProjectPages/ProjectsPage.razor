@@ -130,5 +130,6 @@
         Project NewProject = ProjectDataAccess.GetNew();
         await manager.ProjectDB.InsertAsync(NewProject);
         LoginInfo.CurrentProject = NewProject;
+        StateHasChanged();
     }
 }

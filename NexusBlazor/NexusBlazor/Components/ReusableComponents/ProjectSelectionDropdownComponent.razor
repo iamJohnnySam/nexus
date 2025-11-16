@@ -33,6 +33,7 @@
             Options = manager.ProjectDB.GetAllProjectNamesAsync();
         }
         _selected = ProjectDataAccess.CompileProjectName(LoginInfo.CurrentProject);
+        await base.OnInitializedAsync();
     }
 
     private async void OnSelectionChanged(ChangeEventArgs e)

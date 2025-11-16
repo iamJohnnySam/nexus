@@ -1,28 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LayoutSimulator.Models;
 
-public class Payload
+public class Payload: INotifyPropertyChanged
 {
     public event EventHandler<LogMessage>? OnLogEvent;
-    public event EventHandler<string>? OnPayloadStateChange;
+    public event EventHandler<string>? OnStateChanged;
 
-    public Payload(string payloadID, string payloadType, string lotID, int startingSlot)
+    public required string PayloadID { get; set; }
+    public required string PayloadType { get; set; }
+    public required string LotID { get; set; }
+    public required int SlotInLot { get; set; }
+
+
+    private string currentStationId = string.Empty;
+    public string CurrentStationId
     {
-        PayloadID = payloadID;
-        PayloadType = payloadType;
-        LotID = lotID;
-        StartingSlot = startingSlot;
+        get { return currentStationId; }
+        set
+        {
+            currentStationId = value;
+            OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} current station has been updated to {value}"));
+            OnPropertyChanged();
+        }
     }
 
-    public string PayloadID { get; set; }
-    public string PayloadType { get; private set; }
-    public string LotID { get; set; }
-    public int StartingSlot { get; set; }
+    private int currentSlotId;
+    public int CurrentSlotId
+    {
+        get { return currentSlotId; }
+        set
+        {
+            currentSlotId = value;
+            OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} current slot has been updated to {value}"));
+            OnPropertyChanged();
+        }
+    }
 
     private bool payloadErrorStaus = false;
     public bool PayloadErrorStaus
@@ -32,6 +51,7 @@ public class Payload
         {
             payloadErrorStaus = value;
             OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} error state updated to {value}"));
+            OnPropertyChanged();
         }
     }
 
@@ -42,9 +62,14 @@ public class Payload
         set
         {
             payloadState = value;
-            OnPayloadStateChange?.Invoke(this, value);
             OnLogEvent?.Invoke(this, new LogMessage($"Payload {PayloadID} state updated to {value}"));
+            OnStateChanged?.Invoke(this, payloadState);
+            OnPropertyChanged();
         }
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
 }

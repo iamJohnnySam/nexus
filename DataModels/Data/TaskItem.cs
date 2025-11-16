@@ -21,6 +21,7 @@ public class TaskItem
     public string Description { get; set; } = string.Empty;
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public DateTime StartedOn {  get; set; } = DateTime.Now;
+    public DateTime? CompletedOn { get; set; }
     public DateTime Deadline { get; set; } = DateTime.Now;
     public Employee? Responsible { get; set; }
     public int ResponsibleId { get; set; }
@@ -40,6 +41,7 @@ public class TaskItem
             { nameof(Description), EDataType.Text },
             { nameof(CreatedOn), EDataType.Date },
             { nameof(StartedOn), EDataType.Date },
+            { nameof(CompletedOn), EDataType.Date },
             { nameof(Deadline), EDataType.Date },
             { nameof(ResponsibleId), EDataType.Integer },
             { nameof(IsCompleted), EDataType.Boolean },

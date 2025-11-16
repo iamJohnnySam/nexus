@@ -10,10 +10,10 @@ namespace DataModels.Tools;
 public enum EProjectPriority
 {
     [Description("Not Started")]
-    NotStarted,
-    Low,
-    Normal,
-    High,
-    Completed,
-    Discarded
+    NotStarted = 0,
+    Low = 3,
+    Normal = 4,
+    High = 5,
+    Completed = 2,
+    Discarded = 1
 }

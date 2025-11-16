@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LayoutSimulator.Models;
+namespace LayoutSimulator.Enums;
 
-public enum EAccessibilityState
+public enum EDoorStatus
 {
-    Accessible,
-    NotAccessible
+    Open,
+    Closed,
+    Opening,
+    Closing
 }

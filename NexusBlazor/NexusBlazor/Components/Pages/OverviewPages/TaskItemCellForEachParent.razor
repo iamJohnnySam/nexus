@@ -238,6 +238,8 @@ else
         if (!confirm) return;
 
         task.IsCompleted = true;
+        task.CompletedOn = DateTime.Now;
         await manager.TaskItemDB.UpdateAsync(task);
+        StateHasChanged();
     }
 }

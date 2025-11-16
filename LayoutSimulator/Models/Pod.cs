@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 
 namespace LayoutSimulator.Models;
 
-public class Pod(string podID, int capacity, string payloadType)
+public class Pod()
 {
-    public Dictionary<int, Payload> slots = [];
-
-    public string PodID { get; set; } = podID;
-    public int Capacity { get; set; } = capacity;
-    public string PayloadType { get; set; } = payloadType;
+    public required string PodID { get; set; }
+    public required Cassette Cassette { get; set; }
 }

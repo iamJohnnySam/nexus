@@ -1,4 +1,5 @@
 ﻿using DataModels.Tools;
+using LayoutSimulator.Creator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,39 +8,10 @@ using System.Threading.Tasks;
 
 namespace DataModels.Data;
 
-public class SimulationManipulator
+public class SimulationManipulator : ManipulatorStruct
 {
     public int SimulationManipulatorId { get; set; }
-    public string ManipulatorName { get; set; } = "Untitled Manipulator";
-    public string ManipulatorIdentifier { get; set; } = "M";
-    public int ProductModuleId { get; set; }
-    private string EndEffectorsCSV { get; set; } = string.Empty;
-    public required List<string> EndEffectors
-    {
-        get
-        {
-            return [.. EndEffectorsCSV.Split(",")];
-        }
-        set
-        {
-            EndEffectorsCSV = String.Join(",", value);
-        }
-    }
-    private string LocationsCSV { get; set; } = string.Empty;
-    public required List<string> Locations
-    {
-        get
-        {
-            return [.. LocationsCSV.Split(",")];
-        }
-        set
-        {
-            LocationsCSV = String.Join(",", value);
-        }
-    }
-    public int MotionTime { get; set; }
-    public int ExtendTime { get; set; }
-    public int RetractTime { get; set; }
+    
 
     public static TableMetadata Metadata => new(
         typeof(SimulationManipulator).Name,
