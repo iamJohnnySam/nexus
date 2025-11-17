@@ -12,7 +12,7 @@ namespace LayoutSimulator.Models;
 public class EndEffector : INotifyPropertyChanged
 {
     public required string PayloadType { get; set; }
-    public required int PayloadSlots { get; set; }
+    public required uint PayloadSlots { get; set; }
     public List<Payload> Payloads { get; set; } = [];
 
     private EManipulatorArmState armState = EManipulatorArmState.retracted;

@@ -18,6 +18,7 @@ public class Layout : INotifyPropertyChanged
     public Dictionary<string, Station> Stations { get; set; } = [];
     public Dictionary<string, Manipulator> Manipulators { get; set; } = [];
     public Dictionary<string, Reader> Readers { get; set; } = [];
+    public Dictionary<int, Process> Processes { get; set; } = [];
 
     public List<Payload> WaitingPayloads { get; set; } = [];
 
@@ -69,6 +70,21 @@ public class Layout : INotifyPropertyChanged
         return pod;
     }
 
+    public void CreateProcess(ProcessStruct processStruct)
+    {
+        if (Processes.ContainsKey(processStruct.ProcessId))
+            throw new ErrorResponse(EErrorCode.ProgramError, $"Process with ID {processStruct.ProcessId} already exists.");
+
+        Processes.Add(processStruct.ProcessId, new Process()
+        {
+            ProcessName = processStruct.ProcessName,
+            InputState = processStruct.InputState,
+            OutputState = processStruct.OutputState,
+            ProcessTime = processStruct.ProcessTime,
+            NextLocation = processStruct.NextLocation
+        });
+    }
+
     public void AddStation(StationStruct stationStruct)
     {
         for(int i = 0; i < stationStruct.Count; i++)
@@ -98,6 +114,14 @@ public class Layout : INotifyPropertyChanged
                 locations.Add(stationStruct.AccessibleLocationsWithDoor[i], new Access(hasDoor: true, transitionTime: stationStruct.DoorTransitionTimes[i]));
             }
 
+            Dictionary<string, Process> stationProcesses = [];
+            foreach (int processId in stationStruct.ProcessIds)
+            {
+                if (!Processes.ContainsKey(processId))
+                    throw new ErrorResponse(EErrorCode.ProgramError, $"Process with ID {processId} does not exist.");
+                stationProcesses.Add(Processes[processId].ProcessName, Processes[processId]);
+            }
+
             Station station = new()
             {
                 StationId = stationId,
@@ -105,10 +129,46 @@ public class Layout : INotifyPropertyChanged
                 Cassette = cassette,
                 IsInputAndPodDockable = stationStruct.IsInputAndPodDockable,
                 IsOutputAndPodDockable = stationStruct.IsOutputAndPodDockable,
-                Locations = locations
-
+                Locations = locations,
+                Processs = stationProcesses
             };
             Stations.Add(stationId, station);
+        }
+    }
+
+    public void CreateManipulator(ManipulatorStruct manipulatorStruct)
+    {
+        for (int i = 0; i < manipulatorStruct.Count; i++)
+        {
+            int id = i;
+            while (Manipulators.ContainsKey($"{manipulatorStruct.ManipulatorIdentifier}{id}"))
+                id++;
+            string manipulatorId = $"{manipulatorStruct.ManipulatorIdentifier}{id}";
+            
+            Dictionary<int, EndEffector> endEffectors = [];
+            if( manipulatorStruct.EndEffectors.Count != manipulatorStruct.EndEffectorSlots.Count)
+                throw new ErrorResponse(EErrorCode.MissingArguments, "EndEffectors and EndEffectorSlots count must be the same.");
+
+            for (int j = 0; j < manipulatorStruct.EndEffectors.Count; j++)
+            {
+                EndEffector endEffector = new()
+                {
+                    PayloadType = manipulatorStruct.EndEffectors[j],
+                    PayloadSlots = manipulatorStruct.EndEffectorSlots[j],
+                };
+                endEffectors.Add(j, endEffector);
+            }
+
+            Manipulator manipulator = new()
+            {
+                ManipulatorId = manipulatorId,
+                EndEffectors = endEffectors,
+                Locations = manipulatorStruct.Locations,
+                MotionTime = (uint)manipulatorStruct.MotionTime,
+                ExtendTime = (uint)manipulatorStruct.ExtendTime,
+                RetractTime = (uint)manipulatorStruct.RetractTime,
+            };
+            Manipulators.Add(manipulatorId, manipulator);
         }
     }
 

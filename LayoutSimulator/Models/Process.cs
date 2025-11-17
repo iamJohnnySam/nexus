@@ -9,8 +9,8 @@ namespace LayoutSimulator.Models;
 public class Process
 {
     public required string ProcessName { get; set; }
-    public required string InputState { get; set; }
-    public required string OutputState { get; set; }
-    public required string NextLocation { get; set; }
+    public string? InputState { get; set; }
+    public string? OutputState { get; set; }
+    public string? NextLocation { get; set; }
     public float ProcessTime { get; set; }
 }

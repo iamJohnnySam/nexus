@@ -17,7 +17,7 @@ public class Cassette : INotifyPropertyChanged
     public required int Capacity { get; set; }
     public required string PayloadType { get; set; }
     public required bool IsMovableCassette { get; set; }
-    public int SlotMoveTime { get; set; }
+    public uint SlotMoveTime { get; set; }
 
     // OTHER PARAMETERS
     public Dictionary<int, Slot> Slots { get; private set; } = [];
@@ -160,7 +160,7 @@ public class Cassette : INotifyPropertyChanged
         if (!IsMovableCassette)
             throw new ErrorResponse(EErrorCode.CassetteNotMovable, "Cassette is not movable");
 
-        int slotsToMove = Math.Abs(CurrentSlot - slot);
+        uint slotsToMove = (uint)Math.Abs(CurrentSlot - slot);
         ReadyToAccess = false;
         InternalClock.Instance.ProcessWait(slotsToMove * SlotMoveTime);
         ReadyToAccess= true;

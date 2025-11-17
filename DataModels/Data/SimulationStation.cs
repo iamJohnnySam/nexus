@@ -31,9 +31,8 @@ public class SimulationStation : StationStruct
             { nameof(ProcessTime), EDataType.Integer },
             { nameof(SingleSlotAccess), EDataType.Boolean },
             { nameof(IndexTimePerSlot), EDataType.Integer },
-            { nameof(PodDockable), EDataType.Boolean },
-            { nameof(AutoPodLoad), EDataType.Boolean },
-            { nameof(AutoDoorControl), EDataType.Boolean },
+            { nameof(IsInputAndPodDockable), EDataType.Boolean },
+            { nameof(IsOutputAndPodDockable), EDataType.Boolean },
             { nameof(LowPriority), EDataType.Boolean },
             { nameof(SimulationCommandSpecificationId), EDataType.Integer }
         },

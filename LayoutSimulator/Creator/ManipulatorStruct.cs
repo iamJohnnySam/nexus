@@ -23,6 +23,18 @@ public class ManipulatorStruct
             EndEffectorsCSV = String.Join(",", value);
         }
     }
+    public string EndEffectorSlotsCSV { get; set; } = string.Empty;
+    public required List<uint> EndEffectorSlots
+    {
+        get
+        {
+            return [.. EndEffectorSlotsCSV.Split(",").Select(uint.Parse)];
+        }
+        set
+        {
+            EndEffectorSlotsCSV = String.Join(",", value);
+        }
+    }
     public string LocationsCSV { get; set; } = string.Empty;
     public required List<string> Locations
     {

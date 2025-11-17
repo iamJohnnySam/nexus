@@ -28,12 +28,16 @@
                         {
                             <tr class="@((SelectedReviewPoint?.ReviewPointId == rp.ReviewPointId) ? "table-primary" : "")">
                                 <td style="color: white">@rp.ReviewPointId</td>
-                                <td style="color: white">@Modules.FirstOrDefault(m => m.ModuleId == rp.ModuleId)?.ModuleName</td>
+                                <td style="color: white">@rp.Module!.ModuleName</td>
                                 <td style="color: white">@rp.ReviewCategory</td>
                                 <td style="color: white">@rp.ReviewDescription</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(rp)">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(rp)">Delete</button>
+                                    <AuthorizeView Roles="Admin">
+                                        <Authorized>
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(rp)">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(rp)">Delete</button>
+                                        </Authorized>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }
@@ -87,7 +91,7 @@
 @code {
     private InputText reviewDescriptionText;
     private List<ReviewPoint> ReviewPoints => manager.ReviewPointDB.AllItems;
-    private List<ProductModule> Modules = [];
+    private List<ProductModule> Modules => manager.ProductModuleDB.AllItems;
     private int PreviouslySelectedModuleId = 0;
     private string PreviouslySelectedCategory = "General";
 

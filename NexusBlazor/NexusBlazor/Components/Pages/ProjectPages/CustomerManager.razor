@@ -27,8 +27,13 @@
                             <td style="color: white">@customer.CustomerId</td>
                             <td style="color: white">@customer.CustomerName</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(customer)">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(customer)">Delete</button>
+                                <AuthorizeView Roles="Admin">
+                                    <Authorized>
+                                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(customer)">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(customer)">Delete</button>
+                                    </Authorized>
+                                </AuthorizeView>
+                                
                             </td>
                         </tr>
                     }

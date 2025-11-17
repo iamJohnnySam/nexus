@@ -18,7 +18,7 @@ public class SimulationProcess : ProcessStruct
             { nameof(ProcessName), EDataType.Text },
             { nameof(InputState), EDataType.Text },
             { nameof(OutputState), EDataType.Text },
-            { nameof(Location), EDataType.Text },
+            { nameof(NextLocation), EDataType.Text },
             { nameof(ProcessTime), EDataType.Integer }
         },
         nameof(ProcessName)

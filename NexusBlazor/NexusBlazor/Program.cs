@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using NexusBlazor.Components;
 using NexusBlazor.Components.Logic;
 using NexusMaintenance;
+using PersonalAssistant;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,20 @@ builder.Services.AddScoped<LoginInformation>();
 
 var app = builder.Build();
 
+
+// 2025.11.15 Telegram
+// Create instance
+var telegram = new TelegramManager();
+await telegram.StartAsync();
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    _ = telegram.StopAsync();
+});
+telegram.OnLogInfoEvent += (s, e) => app.Services.GetRequiredService<SqliteLogger>().Info("Telegram", e);
+telegram.OnLogWarnEvent += (s, e) => app.Services.GetRequiredService<SqliteLogger>().Warn("Telegram", e);
+telegram.OnLogErrorEvent += (s, e) => app.Services.GetRequiredService<SqliteLogger>().Error("Telegram", e);
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -63,4 +78,4 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(NexusBlazor.Client._Imports).Assembly);
 
-app.Run();
+await app.RunAsync();

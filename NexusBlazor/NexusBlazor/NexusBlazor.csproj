@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\DataModels\DataModels.csproj" />
     <ProjectReference Include="..\..\NexusMaintenance\NexusMaintenance.csproj" />
+    <ProjectReference Include="..\..\PersonalAssistant\PersonalAssistant.csproj" />
     <ProjectReference Include="..\NexusBlazor.Client\NexusBlazor.Client.csproj" />
 	  <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.20" />
   </ItemGroup>

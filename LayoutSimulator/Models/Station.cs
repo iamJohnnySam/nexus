@@ -1,4 +1,5 @@
 ﻿using LayoutSimulator.Enums;
+using LayoutSimulator.Helpers;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -194,6 +195,7 @@ public class Station : INotifyPropertyChanged
         foreach (Reservation reservation in reservations)
         {
             Cassette!.AddPayload(reservation);
+            Log.Instance.Info(new LogMessage(tID, $"Reservation {reservation.Id} sent to Cassette"));
         }
     }
 

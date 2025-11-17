@@ -18,9 +18,9 @@ public class Manipulator : INotifyPropertyChanged
     public required string ManipulatorId { get; set; }
     public required Dictionary<int, EndEffector> EndEffectors { get; set; }
     public required List<string> Locations { get; set; }
-    public required int MotionTime { get; set; }
-    public required int ExtendTime { get; set; }
-    public required int RetractTime { get; set; }
+    public required uint MotionTime { get; set; }
+    public required uint ExtendTime { get; set; }
+    public required uint RetractTime { get; set; }
 
 
     // OTHER PARAMS
