@@ -38,7 +38,60 @@ public class Cassette : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
+    protected internal int CurrentCapacity
+    {
+        get
+        {
+            int count = 0;
+            foreach (KeyValuePair<int, Slot> kvp in Slots)
+            {
+                if (kvp.Value.IsOccupied)
+                    count++;
+            }
+            return count;
+        }
+    }
+    protected internal bool AllSlotsHavePayloadsWithSamePayloadState
+    {
+        get
+        {
+            string payloadState = string.Empty;
+            foreach (KeyValuePair<int, Slot> kvp in Slots)
+            {
+                if (!kvp.Value.IsOccupied)
+                {
+                    if (payloadState == string.Empty)
+                        payloadState = kvp.Value.Payload!.PayloadState;
 
+                    if (kvp.Value.Payload!.PayloadState != payloadState)
+                        return false;
+                }
+            }
+            if (payloadState == string.Empty)
+                return false;
+            return true;
+        }
+    }
+    protected internal string? PayloadStateOfWafersInSlots
+    {
+        get
+        {
+            if (!AllSlotsHavePayloadsWithSamePayloadState)
+                return null;
+
+            string payloadState = string.Empty;
+            foreach (KeyValuePair<int, Slot> kvp in Slots)
+            {
+                if (kvp.Value.IsOccupied)
+                {
+                    return kvp.Value.Payload!.PayloadState;
+                }
+            }
+            if (payloadState == string.Empty)
+                return null;
+            return payloadState;
+        }
+    }
 
 
     public Cassette()
@@ -148,14 +201,13 @@ public class Cassette : INotifyPropertyChanged
         PayloadInterlock(reservation.Payload);
         Slots[reservation.SlotId].AddPayload(reservation.Payload, reservation);
     }
-
     protected internal Payload RemovePayload (Reservation reservation)
     {
         SlotInterlock(reservation.SlotId);
         return Slots[reservation.SlotId].RemovePayload(reservation);
     }
 
-    public void MoveToSlot(int slot)
+    protected internal void MoveToSlot(int slot)
     {
         if (!IsMovableCassette)
             throw new ErrorResponse(EErrorCode.CassetteNotMovable, "Cassette is not movable");
@@ -164,6 +216,17 @@ public class Cassette : INotifyPropertyChanged
         ReadyToAccess = false;
         InternalClock.Instance.ProcessWait(slotsToMove * SlotMoveTime);
         ReadyToAccess= true;
+    }
+
+    protected internal void UpdatePayloadState(string newPayloadState)
+    {
+        foreach (KeyValuePair<int, Slot> kvp in Slots)
+        {
+            if (kvp.Value.IsOccupied)
+            {
+                kvp.Value.Payload!.PayloadState = newPayloadState;
+            }
+        }
     }
 
 

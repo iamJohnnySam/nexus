@@ -13,5 +13,5 @@ public class ProcessStruct
     public string? InputState { get; set; }
     public string? OutputState { get; set; }
     public string? NextLocation { get; set; }
-    public int ProcessTime { get; set; } = 1;
+    public uint ProcessTime { get; set; } = 1;
 }

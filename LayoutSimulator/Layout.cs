@@ -70,7 +70,7 @@ public class Layout : INotifyPropertyChanged
         return pod;
     }
 
-    public void CreateProcess(ProcessStruct processStruct)
+    public void AddProcess(ProcessStruct processStruct)
     {
         if (Processes.ContainsKey(processStruct.ProcessId))
             throw new ErrorResponse(EErrorCode.ProgramError, $"Process with ID {processStruct.ProcessId} already exists.");
@@ -102,16 +102,16 @@ public class Layout : INotifyPropertyChanged
             };
 
             Dictionary<string, Access> locations = [];
-            foreach (string location in stationStruct.AccessibleLocationsWithoutDoor)
+            for (int j = 0; j < stationStruct.AccessibleLocationsWithoutDoor.Count; j++)
             {
-                locations.Add(location, new Access(hasDoor: false, transitionTime: 0));
+                locations.Add(stationStruct.AccessibleLocationsWithoutDoor[j], new Access(hasDoor: false, transitionTime: 0, accessiblePayloads: stationStruct.AccessiblePayloadsThroughtGap[j]));
             }
 
             if (stationStruct.AccessibleLocationsWithDoor.Count != stationStruct.DoorTransitionTimes.Count)
                 throw new ErrorResponse(EErrorCode.MissingArguments, $"There are {stationStruct.AccessibleLocationsWithDoor.Count} in the station and {stationStruct.DoorTransitionTimes.Count} door transition times.");
-            for (i = 0; i < stationStruct.AccessibleLocationsWithDoor.Count; i++)
+            for (int j = 0; j < stationStruct.AccessibleLocationsWithDoor.Count; j++)
             {
-                locations.Add(stationStruct.AccessibleLocationsWithDoor[i], new Access(hasDoor: true, transitionTime: stationStruct.DoorTransitionTimes[i]));
+                locations.Add(stationStruct.AccessibleLocationsWithDoor[j], new Access(hasDoor: true, transitionTime: stationStruct.DoorTransitionTimes[j], accessiblePayloads: stationStruct.AccessiblePayloadsThroughDoor[j]));
             }
 
             Dictionary<string, Process> stationProcesses = [];
@@ -130,13 +130,15 @@ public class Layout : INotifyPropertyChanged
                 IsInputAndPodDockable = stationStruct.IsInputAndPodDockable,
                 IsOutputAndPodDockable = stationStruct.IsOutputAndPodDockable,
                 Locations = locations,
-                Processs = stationProcesses
+                Processes = stationProcesses,
+                Processable = stationStruct.Processable,
+                HighPriority = stationStruct.HighPriority,
             };
             Stations.Add(stationId, station);
         }
     }
 
-    public void CreateManipulator(ManipulatorStruct manipulatorStruct)
+    public void AddManipulator(ManipulatorStruct manipulatorStruct)
     {
         for (int i = 0; i < manipulatorStruct.Count; i++)
         {

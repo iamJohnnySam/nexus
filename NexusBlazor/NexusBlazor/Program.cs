@@ -23,7 +23,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.MaxAge = TimeSpan.FromHours(4);
         options.AccessDeniedPath = "/access_denied";
     });
-builder.Services.AddAuthorizationCore();
+builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 
 // 2025.10.14 to get session information

@@ -1,0 +1,22 @@
+﻿@page "/simulation/simulate"
+@implements IDisposable
+@attribute [Authorize]
+@inject Manager manager
+@inject LoginInformation LoginInfo
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>nexus | Simulation Scenario | @LoginInfo.CurrentProject.ProjectName</PageTitle>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        manager.SimulationScenarioDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.SimulationScenarioDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+}

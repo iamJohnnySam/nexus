@@ -13,7 +13,7 @@ public class StationStruct
     public int ProductModuleId { get; set; }
     public required string PayloadType { get; set; }
     public string ProcessIdsCSV { get; set; } = string.Empty;
-    public required List<uint> ProcessIds
+    public List<uint> ProcessIds
     {
         get
         {
@@ -25,7 +25,7 @@ public class StationStruct
         }
     }
     public string AccessibleLocationsWithDoorCSV { get; set; } = string.Empty;
-    public required List<string> AccessibleLocationsWithDoor
+    public List<string> AccessibleLocationsWithDoor
     {
         get
         {
@@ -37,7 +37,7 @@ public class StationStruct
         }
     }
     public string AccessibleLocationsWithoutDoorCSV { get; set; } = string.Empty;
-    public required List<string> AccessibleLocationsWithoutDoor
+    public List<string> AccessibleLocationsWithoutDoor
     {
         get
         {
@@ -49,7 +49,7 @@ public class StationStruct
         }
     }
     public string DoorTransitionTimesCSV { get; set; } = string.Empty;
-    public required List<uint> DoorTransitionTimes
+    public List<uint> DoorTransitionTimes
     {
         get
         {
@@ -60,15 +60,37 @@ public class StationStruct
             DoorTransitionTimesCSV = String.Join(",", value);
         }
     }
+    public string AccessiblePayloadsThroughtGapCSV { get; set; } = string.Empty;
+    public List<int> AccessiblePayloadsThroughtGap
+    {
+        get
+        {
+            return [.. AccessiblePayloadsThroughtGapCSV.Split(",").Select(int.Parse)];
+        }
+        set
+        {
+            AccessiblePayloadsThroughtGapCSV = String.Join(",", value);
+        }
+    }
+    public string AccessiblePayloadsThroughDoorCSV { get; set; } = string.Empty;
+    public List<int> AccessiblePayloadsThroughDoor
+    {
+        get
+        {
+            return [.. AccessiblePayloadsThroughDoorCSV.Split(",").Select(int.Parse)];
+        }
+        set
+        {
+            AccessiblePayloadsThroughDoorCSV = String.Join(",", value);
+        }
+    }
     public int Capacity { get; set; } = 1;
     public bool Processable { get; set; } = false;
-    public bool SingleSlotAccess { get; set; } = false;
-    public uint ProcessTime { get; set; } = 1;
     public bool IsIndexable { get; set; } = false;
     public uint IndexTimePerSlot { get; set; } = 1;
     public bool IsInputAndPodDockable { get; set; } = false;
     public bool IsOutputAndPodDockable { get; set; } = false;
-    public bool LowPriority { get; set; } = false;
+    public bool HighPriority { get; set; } = false;
     public int SimulationCommandSpecificationId { get; set; }
     public int Count { get; set; } = 1;
 }

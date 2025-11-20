@@ -39,9 +39,10 @@ public class Access : INotifyPropertyChanged
         }
     }
 
+    public int AccessiblePayloads { get; set; }
     public uint DoorTransitionTime { get; set; }
 
-    public Access(bool hasDoor, uint transitionTime)
+    public Access(bool hasDoor, uint transitionTime, int accessiblePayloads)
     {
         HasDoor = hasDoor;
         if (HasDoor)
@@ -49,9 +50,10 @@ public class Access : INotifyPropertyChanged
         else
             DoorStatus = EDoorStatus.Open;
         DoorTransitionTime = transitionTime;
+        AccessiblePayloads = accessiblePayloads;
     }
 
-    public void OpenDoor()
+    public void OpenDoor(string tID)
     {
         if (HasDoor)
         {
@@ -65,7 +67,7 @@ public class Access : INotifyPropertyChanged
         }
     }
 
-    public void CloseDoor()
+    public void CloseDoor(string tID)
     {
         if (HasDoor)
         {

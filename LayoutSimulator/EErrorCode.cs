@@ -21,6 +21,8 @@ public enum EErrorCode
     SlotBlocked,
     NotAccessible,
     NotPodDockable,
+    NotProcessable,
+    ProcessNotAvailable,
     ActionWhileBusy,
     StationNotReachable,
     UnknownArmState,

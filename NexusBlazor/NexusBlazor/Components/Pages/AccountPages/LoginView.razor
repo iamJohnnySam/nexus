@@ -134,8 +134,8 @@
             LoginInfo.CurrentEmployeeId = userDetails.EmployeeId;
             LoginInfo.CurrentEmployee = await manager.EmployeeDB.GetByIdAsync(userDetails.EmployeeId);
 
-            StateHasChanged();
-            Navigation.NavigateTo("/");
+            await InvokeAsync(() => Navigation.NavigateTo("/"));
+
         }
         else
         {

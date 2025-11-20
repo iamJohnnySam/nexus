@@ -12,7 +12,7 @@ public class ManipulatorStruct
     public string ManipulatorIdentifier { get; set; } = "M";
     public int ProductModuleId { get; set; }
     public string EndEffectorsCSV { get; set; } = string.Empty;
-    public required List<string> EndEffectors
+    public List<string> EndEffectors
     {
         get
         {
@@ -24,7 +24,7 @@ public class ManipulatorStruct
         }
     }
     public string EndEffectorSlotsCSV { get; set; } = string.Empty;
-    public required List<uint> EndEffectorSlots
+    public List<uint> EndEffectorSlots
     {
         get
         {
@@ -36,7 +36,7 @@ public class ManipulatorStruct
         }
     }
     public string LocationsCSV { get; set; } = string.Empty;
-    public required List<string> Locations
+    public List<string> Locations
     {
         get
         {

@@ -17,4 +17,5 @@ public class Reservation
     public int SlotId { get { return Slot.SlotId; } }
     public required Payload Payload { get; set; }
     public string PayloadType { get { return Payload.PayloadType; } }
+    public string AccessFromLocation { get; set; } = string.Empty;
 }

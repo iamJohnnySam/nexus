@@ -28,12 +28,10 @@ public class SimulationStation : StationStruct
             { nameof(AccessibleLocationsWithoutDoorCSV), EDataType.Text },
             { nameof(DoorTransitionTimesCSV), EDataType.Text },
             { nameof(Processable), EDataType.Boolean },
-            { nameof(ProcessTime), EDataType.Integer },
-            { nameof(SingleSlotAccess), EDataType.Boolean },
             { nameof(IndexTimePerSlot), EDataType.Integer },
             { nameof(IsInputAndPodDockable), EDataType.Boolean },
             { nameof(IsOutputAndPodDockable), EDataType.Boolean },
-            { nameof(LowPriority), EDataType.Boolean },
+            { nameof(HighPriority), EDataType.Boolean },
             { nameof(SimulationCommandSpecificationId), EDataType.Integer }
         },
         nameof(FriendlyName)
