@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LayoutSimulator;
 
-public class Layout : INotifyPropertyChanged
+public class SimulatorLayout : INotifyPropertyChanged
 {
     public bool AutoMode { get; set; } = false;
     public Dictionary<string, Station> Stations { get; set; } = [];
@@ -31,7 +31,7 @@ public class Layout : INotifyPropertyChanged
             OnPropertyChanged(); }
     }
 
-    public Layout(bool autoMode)
+    public SimulatorLayout(bool autoMode)
     {
         AutoMode = autoMode;
     }
@@ -113,6 +113,8 @@ public class Layout : INotifyPropertyChanged
             {
                 locations.Add(stationStruct.AccessibleLocationsWithDoor[j], new Access(hasDoor: true, transitionTime: stationStruct.DoorTransitionTimes[j], accessiblePayloads: stationStruct.AccessiblePayloadsThroughDoor[j]));
             }
+            if (locations.Count == 0)
+                throw new ErrorResponse(EErrorCode.MissingArguments, "Station must have at least one accessible location.");
 
             Dictionary<string, Process> stationProcesses = [];
             foreach (int processId in stationStruct.ProcessIds)

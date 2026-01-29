@@ -32,15 +32,16 @@
                     }
                     else
                     {
-                @manager.EmployeeDB.GetByIdAsync(project.PrimaryDesignerId).Result?.EmployeeShortName
+                        @manager.EmployeeDB.GetByIdAsync(project.PrimaryDesignerId).Result?.EmployeeShortName
                     }
                     )</strong></div>
-            <div class="col">Pending Tasks</div>
+            <div class="col"></div>
             <div class="col-1">Week @Week Resources</div>
         </div>
 
         <div class="row">
             <div class="col-6">
+                Milestones
                 <MilestoneCell SelectedProject="project" OnMilestoneEdit="EditMilestone" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
@@ -50,13 +51,17 @@
                                 <InputText @bind-Value="NewMilestoneTitle" />
                             </div>
                         </div>
-                        <div class="col-2">
-                            <div style="text-align:center; padding-top:10px;"><button class="modern-button" @onclick="() => AddMilestone(project)">Add & Edit Milestone</button></div>
+                        <div class="col-3">
+                            <div style="text-align:center; padding-top:10px;">
+                                <button class="modern-button" @onclick="() => AddMilestone(project)">Add & Edit</button>
+                                <button class="modern-button" @onclick="() => BulkAddMilestone(project)">Bulk Add</button>
+                            </div>
                         </div>
                     </div>
                 }
             </div>
             <div class="col">
+                Action Items
                 <TaskItemsCell SelectedProject="project" OnTaskItemEdit="EditTaskItem" />
                 @if (SelectedProjectId == project.ProjectId)
                 {
@@ -69,7 +74,6 @@
                 <ManualResourceCell ResourceType="EManualResourceType.Employee" Id="project.ProjectId" Year="DateTime.Now.Year" Week="CalendarLogic.WeekOfYear(DateTime.Now)" />
             </div>
         </div>
-
         <hr />
     }
 </div>
@@ -82,14 +86,19 @@
 {
     <ParentTaskOverlay SelectedItem="SelectedTask" OnItemUpdate="ItemUpdated" />
 }
+@if (ShowMilestoneTemplatesOverlay)
+{
+    <MilestoneAdderOverlay SelectedProjectId="SelectedProjectId" />
+}
 
 @code {
-    public int SelectedProjectId { get; set; } = 0;
-    public Milestone SelectedMilestone { get; set; } = new();
-    public TaskItem SelectedTask { get; set; } = new();
+    private int SelectedProjectId { get; set; } = 0;
+    private Milestone SelectedMilestone { get; set; } = new();
+    private TaskItem SelectedTask { get; set; } = new();
 
-    public bool ShowMilestoneOverlay { get; set; } = false;
-    public bool ShowTaskOverlay { get; set; } = false;
+    private bool ShowMilestoneOverlay { get; set; } = false;
+    private bool ShowMilestoneTemplatesOverlay { get; set; } = false;
+    private bool ShowTaskOverlay { get; set; } = false;
 
     private int Year { get; set; } = DateTime.Today.Year;
     private int Week { get; set; } = CalendarLogic.WeekOfYear(DateTime.Now);
@@ -150,6 +159,7 @@
         SelectedMilestone = milestone;
         SelectedProjectId = milestone.ProjectId;
         ShowMilestoneOverlay = true;
+        ShowMilestoneTemplatesOverlay = false;
         ShowTaskOverlay = false;
     }
 
@@ -159,6 +169,7 @@
         SelectedTask = task;
         SelectedProjectId = task.ProjectId;
         ShowMilestoneOverlay = false;
+        ShowMilestoneTemplatesOverlay = false;
         ShowTaskOverlay = true;
     }
 
@@ -170,6 +181,7 @@
     private void ItemUpdated()
     {
         ShowMilestoneOverlay = false;
+        ShowMilestoneTemplatesOverlay = false;
         ShowTaskOverlay = false;
     }
 
@@ -185,6 +197,15 @@
         };
         SelectedProjectId = project.ProjectId;
         ShowMilestoneOverlay = true;
+        ShowMilestoneTemplatesOverlay = false;
+        ShowTaskOverlay = false;
+    }
+
+    private void BulkAddMilestone(Project project)
+    {
+        SelectedProjectId = project.ProjectId;
+        ShowMilestoneOverlay = false;
+        ShowMilestoneTemplatesOverlay = true;
         ShowTaskOverlay = false;
     }
 }

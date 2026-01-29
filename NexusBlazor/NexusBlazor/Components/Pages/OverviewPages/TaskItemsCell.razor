@@ -8,9 +8,12 @@
     <table style="width:100%">
         @foreach (TaskItem parentTask in projectLink!.IncompleteParentTasks)
         {
-            <TaskItemCellForEachParent ParentTask="parentTask" ShowExpanded="ShowExpanded" SelectedParentTaskId="CurrentParentTaskId" SelectedProjectId="SelectedProject.ProjectId"
-            OnTaskItemSelect="SelectTask"
-            OnTaskItemEdit="EditTask"/>
+            <TaskItemCellForEachParent ParentTask="parentTask" 
+                ShowExpanded="ShowExpanded" 
+                SelectedParentTaskId="CurrentParentTaskId" 
+                SelectedProjectId="SelectedProject.ProjectId"
+                OnTaskItemSelect="SelectTask"
+                OnTaskItemEdit="EditTask"/>
         }
     </table>
 </div>

@@ -20,7 +20,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "NexusAuthCookie";
         options.LoginPath = "/login";
         options.LogoutPath = "/logout";
-        options.Cookie.MaxAge = TimeSpan.FromHours(4);
+        options.Cookie.MaxAge = TimeSpan.FromHours(8);
         options.AccessDeniedPath = "/access_denied";
     });
 builder.Services.AddAuthorization();

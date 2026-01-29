@@ -17,7 +17,9 @@ public class StationStruct
     {
         get
         {
-            return [.. ProcessIdsCSV.Split(",").Select(uint.Parse)];
+            return [.. ProcessIdsCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))
+    .Select(uint.Parse)];
         }
         set
         {
@@ -29,7 +31,8 @@ public class StationStruct
     {
         get
         {
-            return [.. AccessibleLocationsWithDoorCSV.Split(",")];
+            return [.. AccessibleLocationsWithDoorCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))];
         }
         set
         {
@@ -41,7 +44,8 @@ public class StationStruct
     {
         get
         {
-            return [.. AccessibleLocationsWithoutDoorCSV.Split(",")];
+            return [.. AccessibleLocationsWithoutDoorCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))];
         }
         set
         {
@@ -53,7 +57,9 @@ public class StationStruct
     {
         get
         {
-            return [.. DoorTransitionTimesCSV.Split(",").Select(uint.Parse)];
+            return [.. DoorTransitionTimesCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))
+    .Select(uint.Parse)];
         }
         set
         {
@@ -65,7 +71,9 @@ public class StationStruct
     {
         get
         {
-            return [.. AccessiblePayloadsThroughtGapCSV.Split(",").Select(int.Parse)];
+            return [.. AccessiblePayloadsThroughtGapCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))
+    .Select(int.Parse)];
         }
         set
         {
@@ -77,7 +85,9 @@ public class StationStruct
     {
         get
         {
-            return [.. AccessiblePayloadsThroughDoorCSV.Split(",").Select(int.Parse)];
+            return [.. AccessiblePayloadsThroughDoorCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))
+    .Select(int.Parse)];
         }
         set
         {

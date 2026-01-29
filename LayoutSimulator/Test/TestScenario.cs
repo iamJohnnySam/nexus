@@ -9,9 +9,9 @@ namespace LayoutSimulator.Test;
 
 public static class TestScenario
 {
-    public static Layout GetAutoTestLayout()
+    public static SimulatorLayout GetAutoTestLayout()
     {
-        Layout layout = new(true);
+        SimulatorLayout layout = new(true);
 
         // PROCESSES
         layout.AddProcess(new ProcessStruct

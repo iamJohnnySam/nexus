@@ -44,11 +44,9 @@ public class MilestoneDataAccess(string connectionString) : DataAccess<Milestone
     }
     public override async Task UpdateAsync(Milestone milestone)
     {
-        bool completionBefore = (await GetByIdAsync(milestone.ProjectId))!.IsCompleted;
         await base.UpdateAsync(milestone);
-        if (completionBefore != milestone.IsCompleted)
-            await UpdateProjectMilestones(milestone.ProjectId, completionBefore);
-        await UpdateProjectMilestones(milestone.ProjectId, milestone.IsCompleted);
+        await UpdateProjectMilestones(milestone.ProjectId, true);
+        await UpdateProjectMilestones(milestone.ProjectId, false);
     }
     public override async Task DeleteAsync(Milestone milestone)
     {

@@ -103,7 +103,7 @@ public class Station : INotifyPropertyChanged
         CurrentLocation = Locations!.Keys.First();
 
         if (!PodDockable && Cassette == null)
-            throw new ErrorResponse(EErrorCode.PodNotAvailable, $"Station {StationId} does not contain expected cassette");
+            throw new ErrorResponse(EErrorCode.PodNotAvailable, $"Station {StationId} does not contain expected cassette.");
     }
 
     private void CheckPod()

@@ -1,0 +1,133 @@
+﻿@implements IDisposable
+@inject Manager manager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="overlay-window-large">
+    <div class="row">
+        <div class="col scrollable-area">
+            <div class="mb-4">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Check</th>
+                            <th>ID</th>
+                            <th>Milestone</th>
+                            <th>Days</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mt in MilestoneTemplates)
+                        {
+                            <tr class="@((SelectedMilestoneTemplate?.MilestoneTemplateId == mt.MilestoneTemplateId) ? "table-primary" : "")">
+                                <td style="color: white"><InputCheckbox class="form-check-input" @bind-Value="SelectedMilestoneTemplate.IsSelected" /></td>
+                                <td style="color: white">@mt.MilestoneTemplateId</td>
+                                <td style="color: white">@mt.MilestoneName</td>
+                                <td style="color: white">@mt.Days</td>
+                                <td>
+                                    <AuthorizeView Roles="Admin">
+                                        <Authorized>
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(mt)">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(mt)">Delete</button>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-3" style="background-color: transparent;">
+                <h5>@(SelectedMilestoneTemplate?.MilestoneTemplateId == 0 ? "Add Review Point" : "Edit Review Point")</h5>
+
+                <EditForm Model="@SelectedMilestoneTemplate" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label class="form-label">Milestone</label>
+                        <InputText class="form-control" @bind-Value="SelectedMilestoneTemplate.MilestoneName" />
+                        <ValidationMessage For="@(() => SelectedMilestoneTemplate.MilestoneName)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Review Description</label>
+                        <InputNumber class="form-control" @bind-Value="SelectedMilestoneTemplate.Days" />
+                        <ValidationMessage For="@(() => SelectedMilestoneTemplate.Days)" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <nobr>
+                            <button type="submit" class="btn btn-success">Save</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ResetForm">Cancel</button>
+                        </nobr>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required int SelectedProjectId { get; set; }
+
+    [Parameter]
+    public EventCallback OnItemUpdate { get; set; }
+
+    private List<MilestoneTemplate> MilestoneTemplates => manager.MilestoneTemplateDB.AllItems;
+
+    private MilestoneTemplate SelectedMilestoneTemplate = new();
+
+    protected override void OnInitialized()
+    {
+        manager.MilestoneTemplateDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        manager.MilestoneTemplateDB.PropertyChanged -= (_, __) => InvokeAsync(StateHasChanged);
+    }
+
+    private void Edit(MilestoneTemplate mt)
+    {
+        SelectedMilestoneTemplate = new MilestoneTemplate
+        {
+            MilestoneTemplateId = mt.MilestoneTemplateId,
+            MilestoneName = mt.MilestoneName,
+            Days = mt.Days
+        };
+    }
+
+    private async Task Delete(MilestoneTemplate mt)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Delete this Milestone template point?");
+        if (!confirmed) return;
+
+        await manager.MilestoneTemplateDB.DeleteAsync(mt);
+        ResetForm();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (SelectedMilestoneTemplate.MilestoneTemplateId == 0)
+        {
+            await manager.MilestoneTemplateDB.InsertAsync(SelectedMilestoneTemplate);
+
+        }
+        else
+        {
+            await manager.MilestoneTemplateDB.UpdateAsync(SelectedMilestoneTemplate);
+
+        }
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        SelectedMilestoneTemplate = new MilestoneTemplate();
+    }
+}

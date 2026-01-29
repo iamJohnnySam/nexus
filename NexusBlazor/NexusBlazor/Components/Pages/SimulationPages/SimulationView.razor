@@ -1,4 +1,6 @@
 ﻿@page "/simulation/simulate"
+@using LayoutSimulator
+@using LayoutSimulator.Test
 @implements IDisposable
 @attribute [Authorize]
 @inject Manager manager
@@ -10,8 +12,12 @@
 <PageTitle>nexus | Simulation Scenario | @LoginInfo.CurrentProject.ProjectName</PageTitle>
 
 @code {
+
+    public SimulatorLayout layout { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        layout = TestScenario.GetAutoTestLayout();
         manager.SimulationScenarioDB.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
 

@@ -26,6 +26,7 @@ public class Manager
     public LoginDataAccess LoginDB { get; }
     public TimelineItemDataAccess TimelineItemDB { get; }
     public MilestoneDataAccess MilestoneDB { get; }
+    public MilestoneTemplateDataAccess MilestoneTemplateDB { get; }
     public OEMItemDataAccess OEMItemDB { get; }
     public ProductDataAccess ProductDB { get; }
     public ProductModuleDataAccess ProductModuleDB { get; }
@@ -94,8 +95,8 @@ public class Manager
 
         TimelineItemDB = new(_connectionString, EmployeeDB, ProjectDB, ProjectStageDB);
         MilestoneDB = new(_connectionString);
+        MilestoneTemplateDB = new(_connectionString);
         OEMItemDB = new(_connectionString);
-        
         
         ProjectBlockDB = new(_connectionString);
         

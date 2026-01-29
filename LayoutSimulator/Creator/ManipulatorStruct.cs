@@ -16,7 +16,8 @@ public class ManipulatorStruct
     {
         get
         {
-            return [.. EndEffectorsCSV.Split(",")];
+            return [.. EndEffectorsCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))];
         }
         set
         {
@@ -28,7 +29,9 @@ public class ManipulatorStruct
     {
         get
         {
-            return [.. EndEffectorSlotsCSV.Split(",").Select(uint.Parse)];
+            return [.. EndEffectorSlotsCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))
+    .Select(uint.Parse)];
         }
         set
         {
@@ -40,7 +43,8 @@ public class ManipulatorStruct
     {
         get
         {
-            return [.. LocationsCSV.Split(",")];
+            return [.. LocationsCSV.Split(",", StringSplitOptions.RemoveEmptyEntries)
+    .Where(s => !string.IsNullOrWhiteSpace(s))];
         }
         set
         {
